@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: socialassistance
+      MYSQL_USER: socialassistanceapi
+      MYSQL_PASSWORD: c8c59046fca24022
+      MYSQL_ROOT_PASSWORD: a410e38c55164a82
+
+    volumes:
+      - mysqldata:/var/lib/mysql
+
+volumes:
+  mysqldata:
