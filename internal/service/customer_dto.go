@@ -13,6 +13,6 @@ type CustomersResponse struct {
 	Data []Customer `json:"data"`
 }
 
-type CreateCustomerDto struct {
+type CustomerDto struct {
 	Name string `json:"name" example:"Cláudio" binding:"required"`
 }

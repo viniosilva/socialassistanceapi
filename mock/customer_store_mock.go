@@ -79,3 +79,18 @@ func (mr *MockCustomerStoreMockRecorder) FindOneById(arg0, arg1 interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneById", reflect.TypeOf((*MockCustomerStore)(nil).FindOneById), arg0, arg1)
 }
+
+// Update mocks base method.
+func (m *MockCustomerStore) Update(arg0 context.Context, arg1 model.Customer) (*model.Customer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", arg0, arg1)
+	ret0, _ := ret[0].(*model.Customer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockCustomerStoreMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCustomerStore)(nil).Update), arg0, arg1)
+}

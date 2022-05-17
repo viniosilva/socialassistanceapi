@@ -116,20 +116,20 @@ func TestCustomerServiceFindOneByID(t *testing.T) {
 
 func TestCustomerServiceCreate(t *testing.T) {
 	cases := map[string]struct {
-		inputCustomer    service.CreateCustomerDto
+		inputCustomer    service.CustomerDto
 		expectedCustomer service.CustomerResponse
 		expectedErr      error
 		prepareMock      func(mock *mock.MockCustomerStore)
 	}{
 		"should create customer": {
-			inputCustomer:    service.CreateCustomerDto{Name: "Test"},
+			inputCustomer:    service.CustomerDto{Name: "Test"},
 			expectedCustomer: service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test"}},
 			prepareMock: func(mock *mock.MockCustomerStore) {
 				mock.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&model.Customer{ID: 1, Name: "Test"}, nil)
 			},
 		},
 		"should throw error": {
-			inputCustomer: service.CreateCustomerDto{Name: "Test"},
+			inputCustomer: service.CustomerDto{Name: "Test"},
 			expectedErr:   fmt.Errorf("error"),
 			prepareMock: func(mock *mock.MockCustomerStore) {
 				mock.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
@@ -155,6 +155,61 @@ func TestCustomerServiceCreate(t *testing.T) {
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("CustomerService.FindOneById() error = %v, expected %v", err, cs.expectedErr)
+			}
+		})
+	}
+}
+
+func TestCustomerServiceUpdate(t *testing.T) {
+	cases := map[string]struct {
+		inputCustomerID  int
+		inputCustomer    service.CustomerDto
+		expectedCustomer service.CustomerResponse
+		expectedErr      error
+		prepareMock      func(mock *mock.MockCustomerStore)
+	}{
+		"should update customer": {
+			inputCustomerID:  1,
+			inputCustomer:    service.CustomerDto{Name: "Test update"},
+			expectedCustomer: service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test update"}},
+			prepareMock: func(mock *mock.MockCustomerStore) {
+				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&model.Customer{ID: 1, Name: "Test update"}, nil)
+			},
+		},
+		"should return empty when customer not exists": {
+			inputCustomerID:  1,
+			expectedCustomer: service.CustomerResponse{},
+			prepareMock: func(mock *mock.MockCustomerStore) {
+				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, nil)
+			},
+		},
+		"should throw error": {
+			inputCustomer: service.CustomerDto{Name: "Test"},
+			expectedErr:   fmt.Errorf("error"),
+			prepareMock: func(mock *mock.MockCustomerStore) {
+				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+			},
+		},
+	}
+	for name, cs := range cases {
+		t.Run(name, func(t *testing.T) {
+			// given
+			ctrl, ctx := gomock.WithContext(context.Background(), t)
+			defer ctrl.Finish()
+			storeMock := mock.NewMockCustomerStore(ctrl)
+			cs.prepareMock(storeMock)
+
+			impl := service.NewCustomerService(storeMock)
+
+			// when
+			customer, err := impl.Update(ctx, cs.inputCustomerID, cs.inputCustomer)
+
+			// then
+			if !reflect.DeepEqual(customer, cs.expectedCustomer) {
+				t.Errorf("CustomerService.Update() = %v, expected %v", customer, cs.expectedCustomer)
+			}
+			if err != nil && err.Error() != cs.expectedErr.Error() {
+				t.Errorf("CustomerService.Update() error = %v, expected %v", err, cs.expectedErr)
 			}
 		})
 	}

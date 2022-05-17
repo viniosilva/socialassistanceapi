@@ -11,7 +11,6 @@ import (
 
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
-	"github.com/viniosilva/socialassistanceapi/internal/model"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 	"github.com/viniosilva/socialassistanceapi/internal/store"
 )
@@ -139,19 +138,19 @@ func TestComponentCustomerApiFindOneByID(t *testing.T) {
 
 func TestComponentCustomerApiCreate(t *testing.T) {
 	cases := map[string]struct {
-		inputCustomer model.Customer
+		inputCustomer service.CustomerDto
 		expectedCode  int
 		expectedBody  service.CustomerResponse
 		expectedErr   *api.HttpError
 	}{
 		"should return created customer": {
-			inputCustomer: model.Customer{Name: "Test"},
+			inputCustomer: service.CustomerDto{Name: "Test"},
 			expectedCode:  201,
 			expectedBody:  service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test"}},
 		},
 		"should throw bad request error": {
 			expectedCode: 400,
-			expectedErr:  &api.HttpError{Code: 400, Message: "Key: 'CreateCustomerDto.Name' Error:Field validation for 'Name' failed on the 'required' tag"},
+			expectedErr:  &api.HttpError{Code: 400, Message: "Key: 'CustomerDto.Name' Error:Field validation for 'Name' failed on the 'required' tag"},
 		},
 	}
 	for name, cs := range cases {
@@ -183,6 +182,84 @@ func TestComponentCustomerApiCreate(t *testing.T) {
 			}
 			if cs.expectedErr != nil && rec.Body.String() != string(expectedErr) {
 				t.Errorf("POST /api/v1/customers BodyErr = %v, expected %v", rec.Body.String(), cs.expectedErr)
+			}
+
+			// after
+			mysql.DB.Exec(`DELETE FROM customers`)
+			mysql.DB.Exec(`ALTER TABLE customers AUTO_INCREMENT=1`)
+		})
+	}
+}
+
+func TestComponentCustomerApiUpdate(t *testing.T) {
+	cases := map[string]struct {
+		before          func(db *sql.DB)
+		inputCustomerID string
+		inputCustomer   service.CustomerDto
+		expectedCode    int
+		expectedBody    service.CustomerResponse
+		expectedErr     *api.HttpError
+	}{
+		"should return updated customer": {
+			before: func(db *sql.DB) {
+				db.Exec(`INSERT INTO customers (id, name) VALUES (1, 'Test')`)
+			},
+			inputCustomerID: "1",
+			inputCustomer:   service.CustomerDto{Name: "Test update"},
+			expectedCode:    200,
+			expectedBody:    service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test update"}},
+		},
+		"should throw bad request error when customerID is not a number": {
+			before:          func(db *sql.DB) {},
+			inputCustomerID: "a",
+			expectedCode:    400,
+			expectedErr:     &api.HttpError{Code: 400, Message: "invalid customerID"},
+		},
+		"should throw bad request error": {
+			before:          func(db *sql.DB) {},
+			inputCustomerID: "1",
+			expectedCode:    400,
+			expectedErr:     &api.HttpError{Code: 400, Message: "Key: 'CustomerDto.Name' Error:Field validation for 'Name' failed on the 'required' tag"},
+		},
+		"should throw not found error when customers not exists": {
+			before:          func(db *sql.DB) {},
+			inputCustomerID: "1",
+			inputCustomer:   service.CustomerDto{Name: "Test update"},
+			expectedCode:    404,
+			expectedBody:    service.CustomerResponse{},
+		},
+	}
+	for name, cs := range cases {
+		t.Run(name, func(t *testing.T) {
+			// given
+			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			defer mysql.DB.Close()
+
+			customerStore := store.NewCustomerStore(mysql.DB)
+			customerService := service.NewCustomerService(customerStore)
+			api := api.NewApi("0.0.0.0:8080", nil, customerService)
+
+			cs.before(mysql.DB)
+
+			// when
+			b, _ := json.Marshal(cs.inputCustomer)
+			url := "/api/v1/customers/" + cs.inputCustomerID
+			rec := httptest.NewRecorder()
+			req, _ := http.NewRequest("PATCH", url, strings.NewReader(string(b)))
+			api.Gin.ServeHTTP(rec, req)
+
+			expectedBody, _ := json.Marshal(cs.expectedBody)
+			expectedErr, _ := json.Marshal(cs.expectedErr)
+
+			// then
+			if rec.Code != cs.expectedCode {
+				t.Errorf("PATCH /api/v1/customers/:customerID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
+			}
+			if cs.expectedBody.Data != nil && rec.Body.String() != string(expectedBody) {
+				t.Errorf("PATCH /api/v1/customers/:customerID Body = %v, expected %v", rec.Body.String(), cs.expectedBody)
+			}
+			if cs.expectedErr != nil && rec.Body.String() != string(expectedErr) {
+				t.Errorf("PATCH /api/v1/customers/:customerID BodyErr = %v, expected %v", rec.Body.String(), cs.expectedErr)
 			}
 
 			// after

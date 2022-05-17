@@ -12,6 +12,7 @@ type CustomerStore interface {
 	FindAll(ctx context.Context) ([]model.Customer, error)
 	FindOneById(ctx context.Context, customerID int) (*model.Customer, error)
 	Create(ctx context.Context, customer model.Customer) (*model.Customer, error)
+	Update(ctx context.Context, customer model.Customer) (*model.Customer, error)
 }
 
 type customerStore struct {
@@ -83,6 +84,25 @@ func (impl *customerStore) Create(ctx context.Context, customer model.Customer) 
 		return nil, err
 	}
 	customer.ID = int(id)
+
+	return &customer, nil
+}
+
+func (impl *customerStore) Update(ctx context.Context, customer model.Customer) (*model.Customer, error) {
+	res, err := impl.db.ExecContext(ctx, `
+		UPDATE customers
+		SET name = ?
+		WHERE id = ?
+	`, customer.Name, customer.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil || rows == 0 {
+		return nil, err
+	}
 
 	return &customer, nil
 }

@@ -34,9 +34,15 @@ func TestE2ECustomerApi(t *testing.T) {
 		}
 
 		// when create customer then create a customer
-		b, _ := json.Marshal(service.CreateCustomerDto{Name: "Test"})
+		b, _ := json.Marshal(service.CustomerDto{Name: "Test"})
 		rec = httptest.NewRecorder()
 		req, _ = http.NewRequest("POST", "/api/v1/customers", strings.NewReader(string(b)))
+		api.Gin.ServeHTTP(rec, req)
+
+		// when update customer
+		b, _ = json.Marshal(service.CustomerDto{Name: "Test updated"})
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("PATCH", "/api/v1/customers/1", strings.NewReader(string(b)))
 		api.Gin.ServeHTTP(rec, req)
 
 		customer := rec.Body.String()

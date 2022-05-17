@@ -19,6 +19,7 @@ func NewCustomerApi(router *gin.RouterGroup, service *service.CustomerService) *
 	router.GET("", impl.FindAll)
 	router.GET("/:customerID", impl.FindOneByID)
 	router.POST("", impl.Create)
+	router.PATCH("/:customerID", impl.Update)
 
 	return impl
 }
@@ -72,13 +73,13 @@ func (impl *CustomerApi) FindOneByID(c *gin.Context) {
 // @Tags	customer
 // @Accept	json
 // @Produce	json
-// @Param	account	body	service.CreateCustomerDto	true	"Create customer"
+// @Param	customer		body	service.CustomerDto	true	"Create customer"
 // @Success	201	{object}	service.CustomerResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
 // @Router	/api/v1/customers [post]
 func (impl *CustomerApi) Create(c *gin.Context) {
-	var customer service.CreateCustomerDto
+	var customer service.CustomerDto
 	err := c.ShouldBindJSON(&customer)
 	if e, ok := err.(validator.ValidationErrors); ok {
 		msg := e.Error()
@@ -93,4 +94,41 @@ func (impl *CustomerApi) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, res)
+}
+
+// @Summary	update a customer
+// @Tags	customer
+// @Accept	json
+// @Produce	json
+// @Param	customer		body	service.CustomerDto	true	"Update customer"
+// @Success	200	{object}	service.CustomerResponse
+// @Failure	400	{object}	HttpError
+// @Failure	500	{object}	HttpError
+// @Router	/api/v1/customers [patch]
+func (impl *CustomerApi) Update(c *gin.Context) {
+	customerID, err := strconv.Atoi(c.Param("customerID"))
+	if err != nil {
+		NewHttpError(c, http.StatusBadRequest, "invalid customerID")
+		return
+	}
+
+	var customer service.CustomerDto
+	err = c.ShouldBindJSON(&customer)
+	if e, ok := err.(validator.ValidationErrors); ok {
+		msg := e.Error()
+		NewHttpError(c, http.StatusBadRequest, msg)
+		return
+	}
+
+	res, err := impl.service.Update(c, customerID, customer)
+	if err != nil {
+		NewHttpInternalServerError(c)
+		return
+	}
+	if res.Data == nil {
+		c.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 }

@@ -8,14 +8,6 @@ definitions:
         example: invalid parameter
         type: string
     type: object
-  service.CreateCustomerDto:
-    properties:
-      name:
-        example: Cláudio
-        type: string
-    required:
-    - name
-    type: object
   service.Customer:
     properties:
       id:
@@ -24,6 +16,14 @@ definitions:
       name:
         example: Cláudio
         type: string
+    type: object
+  service.CustomerDto:
+    properties:
+      name:
+        example: Cláudio
+        type: string
+    required:
+    - name
     type: object
   service.CustomerResponse:
     properties:
@@ -54,16 +54,44 @@ paths:
       summary: find all customers
       tags:
       - customer
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update customer
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/service.CustomerDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.CustomerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: update a customer
+      tags:
+      - customer
     post:
       consumes:
       - application/json
       parameters:
       - description: Create customer
         in: body
-        name: account
+        name: customer
         required: true
         schema:
-          $ref: '#/definitions/service.CreateCustomerDto'
+          $ref: '#/definitions/service.CustomerDto'
       produces:
       - application/json
       responses:

@@ -34,12 +34,8 @@ func (impl *CustomerService) FindAll(ctx context.Context) (CustomersResponse, er
 
 func (impl *CustomerService) FindOneById(ctx context.Context, customerID int) (CustomerResponse, error) {
 	customer, err := impl.store.FindOneById(ctx, customerID)
-	if err != nil {
+	if err != nil || customer == nil {
 		return CustomerResponse{}, err
-	}
-
-	if customer == nil {
-		return CustomerResponse{}, nil
 	}
 
 	return CustomerResponse{
@@ -50,9 +46,26 @@ func (impl *CustomerService) FindOneById(ctx context.Context, customerID int) (C
 	}, nil
 }
 
-func (impl *CustomerService) Create(ctx context.Context, dto CreateCustomerDto) (CustomerResponse, error) {
+func (impl *CustomerService) Create(ctx context.Context, dto CustomerDto) (CustomerResponse, error) {
 	customer, err := impl.store.Create(ctx, model.Customer{Name: dto.Name})
 	if err != nil {
+		return CustomerResponse{}, err
+	}
+
+	return CustomerResponse{
+		Data: &Customer{
+			ID:   customer.ID,
+			Name: customer.Name,
+		},
+	}, nil
+}
+
+func (impl *CustomerService) Update(ctx context.Context, customerID int, dto CustomerDto) (CustomerResponse, error) {
+	customer, err := impl.store.Update(ctx, model.Customer{
+		ID:   customerID,
+		Name: dto.Name,
+	})
+	if err != nil || customer == nil {
 		return CustomerResponse{}, err
 	}
 
