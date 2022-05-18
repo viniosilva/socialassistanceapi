@@ -42,7 +42,7 @@ func TestE2ECustomerApi(t *testing.T) {
 		// when update customer
 		b, _ = json.Marshal(service.CustomerDto{Name: "Test updated"})
 		rec = httptest.NewRecorder()
-		req, _ = http.NewRequest("PATCH", "/api/v1/customers/1", strings.NewReader(string(b)))
+		req, _ = http.NewRequest("PATCH", "/api/v1/customers/:customerID", strings.NewReader(string(b)))
 		api.Gin.ServeHTTP(rec, req)
 
 		customer := rec.Body.String()
@@ -53,7 +53,16 @@ func TestE2ECustomerApi(t *testing.T) {
 		api.Gin.ServeHTTP(rec, req)
 
 		if rec.Body.String() != customer {
-			t.Errorf("POST /api/v1/customers Body = %v, expected %v", rec.Body.String(), customer)
+			t.Errorf("GET /api/v1/customers/:customerID Body = %v, expected %v", rec.Body.String(), customer)
+		}
+
+		// when delete a customer by ID then return ok
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("DELETE", "/api/v1/customers/1", nil)
+		api.Gin.ServeHTTP(rec, req)
+
+		if rec.Code != 200 {
+			t.Errorf("DELETE /api/v1/customers Code = %v, expected %v", rec.Body, 200)
 		}
 
 		// after
