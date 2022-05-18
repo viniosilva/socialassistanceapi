@@ -348,21 +348,12 @@ func TestComponentCustomerApiDelete(t *testing.T) {
 			req, _ := http.NewRequest("DELETE", url, nil)
 			impl.Gin.ServeHTTP(rec, req)
 
-			var body *service.CustomerResponse
-			json.Unmarshal(rec.Body.Bytes(), &body)
-			if body.Data != nil {
-				body.Data.UpdatedAt = ""
-			}
-
 			var httpError *api.HttpError
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
 			if rec.Code != cs.expectedCode {
 				t.Errorf("PATCH /api/v1/customers/:customerID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("PATCH /api/v1/customers/:customerID Body = %v, expected %v", body, cs.expectedBody)
 			}
 			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
 				t.Errorf("PATCH /api/v1/customers/:customerID BodyErr = %v, expected %v", httpError, cs.expectedErr)

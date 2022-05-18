@@ -20,6 +20,7 @@ func NewCustomerApi(router *gin.RouterGroup, service *service.CustomerService) *
 	router.GET("/:customerID", impl.FindOneByID)
 	router.POST("", impl.Create)
 	router.PATCH("/:customerID", impl.Update)
+	router.DELETE("/:customerID", impl.Delete)
 
 	return impl
 }
@@ -100,11 +101,12 @@ func (impl *CustomerApi) Create(c *gin.Context) {
 // @Tags	customer
 // @Accept	json
 // @Produce	json
+// @Param	id				path	int					true	"Customer ID"
 // @Param	customer		body	service.CustomerDto	true	"Update customer"
 // @Success	200	{object}	service.CustomerResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/customers [patch]
+// @Router	/api/v1/customers/{id} [patch]
 func (impl *CustomerApi) Update(c *gin.Context) {
 	customerID, err := strconv.Atoi(c.Param("customerID"))
 	if err != nil {
@@ -127,6 +129,31 @@ func (impl *CustomerApi) Update(c *gin.Context) {
 	}
 	if res.Data == nil {
 		c.JSON(http.StatusNotFound, res)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+// @Summary	delete a customer
+// @Tags	customer
+// @Accept	json
+// @Produce	json
+// @Param	id	path		int	true	"Customer ID"
+// @Success	200	{object}	service.CustomerResponse
+// @Failure	400	{object}	HttpError
+// @Failure	500	{object}	HttpError
+// @Router	/api/v1/customers/{id} [delete]
+func (impl *CustomerApi) Delete(c *gin.Context) {
+	customerID, err := strconv.Atoi(c.Param("customerID"))
+	if err != nil {
+		NewHttpError(c, http.StatusBadRequest, "invalid customerID")
+		return
+	}
+
+	res, err := impl.service.Delete(c, customerID)
+	if err != nil {
+		NewHttpInternalServerError(c)
 		return
 	}
 

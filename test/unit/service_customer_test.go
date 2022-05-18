@@ -223,7 +223,6 @@ func TestCustomerServiceUpdate(t *testing.T) {
 }
 
 func TestCustomerServiceDelete(t *testing.T) {
-	DATETIME := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	cases := map[string]struct {
 		inputCustomerID  int
 		expectedCustomer service.CustomerResponse

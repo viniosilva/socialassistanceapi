@@ -85,22 +85,7 @@ func (impl *CustomerService) Update(ctx context.Context, customerID int, dto Cus
 	}, nil
 }
 
-func (impl *CustomerService) Delete(ctx context.Context, customerID int, dto CustomerDto) (CustomerResponse, error) {
-	customer, err := impl.store.Delete(ctx, model.Customer{
-		ID:   customerID,
-		Name: dto.Name,
-	})
-	if err != nil || customer == nil {
-		return CustomerResponse{}, err
-	}
-
-	return CustomerResponse{
-		Data: &Customer{
-			ID:        customer.ID,
-			CreatedAt: customer.CreatedAt.Format("2006-01-02"),
-			UpdatedAt: customer.UpdatedAt.Format("2006-01-02"),
-			DeletedAt: customer.DeletedAt.Format("2006-01-02"),
-			Name:      customer.Name,
-		},
-	}, nil
+func (impl *CustomerService) Delete(ctx context.Context, customerID int) (CustomerResponse, error) {
+	err := impl.store.Delete(ctx, customerID)
+	return CustomerResponse{}, err
 }

@@ -13,6 +13,9 @@ definitions:
       created_at:
         example: "2000-01-01"
         type: string
+      deleted_at:
+        example: "2000-01-01"
+        type: string
       id:
         example: 1
         type: integer
@@ -60,34 +63,6 @@ paths:
       summary: find all customers
       tags:
       - customer
-    patch:
-      consumes:
-      - application/json
-      parameters:
-      - description: Update customer
-        in: body
-        name: customer
-        required: true
-        schema:
-          $ref: '#/definitions/service.CustomerDto'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/service.CustomerResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.HttpError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.HttpError'
-      summary: update a customer
-      tags:
-      - customer
     post:
       consumes:
       - application/json
@@ -117,6 +92,33 @@ paths:
       tags:
       - customer
   /api/v1/customers/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.CustomerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: delete a customer
+      tags:
+      - customer
     get:
       consumes:
       - application/json
@@ -138,6 +140,39 @@ paths:
           schema:
             $ref: '#/definitions/api.HttpError'
       summary: find customer by id
+      tags:
+      - customer
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update customer
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/service.CustomerDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.CustomerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: update a customer
       tags:
       - customer
 swagger: "2.0"

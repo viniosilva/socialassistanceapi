@@ -14,7 +14,7 @@ type CustomerStore interface {
 	FindOneById(ctx context.Context, customerID int) (*model.Customer, error)
 	Create(ctx context.Context, customer model.Customer) (*model.Customer, error)
 	Update(ctx context.Context, customer model.Customer) (*model.Customer, error)
-	Delete(ctx context.Context, customer model.Customer) (*model.Customer, error)
+	Delete(ctx context.Context, customerID int) error
 }
 
 type customerStore struct {
@@ -146,32 +146,14 @@ func (impl *customerStore) Update(ctx context.Context, customer model.Customer) 
 	return &customer, nil
 }
 
-func (impl *customerStore) Delete(ctx context.Context, customer model.Customer) (*model.Customer, error) {
-	now := time.Now()
-	t, err := impl.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := t.ExecContext(ctx, `
-		DELETE customers
+func (impl *customerStore) Delete(ctx context.Context, customerID int) error {
+	_, err := impl.db.ExecContext(ctx, `
+		UPDATE customers
+		SET deleted_at = NOW()
 		WHERE id = ?
-	`, customer.ID, now.Format("2006-01-02"), customer.ID)
+	`, customerID)
 
-	if err != nil {
-		t.Rollback()
-		return nil, err
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
-		return nil, err
-	}
-
-	if err := t.Commit(); err != nil {
-		return nil, err
-	}
-	return &customer, nil
+	return err
 }
 
 func scanCustomer(res *sql.Rows) (*model.Customer, error) {
