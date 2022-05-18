@@ -62,7 +62,7 @@ func (impl *CustomerApi) FindOneByID(c *gin.Context) {
 	}
 
 	if res.Data == nil {
-		c.JSON(http.StatusNotFound, gin.H{})
+		c.JSON(http.StatusNotFound, res)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (impl *CustomerApi) Update(c *gin.Context) {
 		return
 	}
 	if res.Data == nil {
-		c.JSON(http.StatusNotFound, gin.H{})
+		c.JSON(http.StatusNotFound, res)
 		return
 	}
 

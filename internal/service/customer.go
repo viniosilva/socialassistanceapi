@@ -24,8 +24,10 @@ func (impl *CustomerService) FindAll(ctx context.Context) (CustomersResponse, er
 	res := []Customer{}
 	for _, c := range customers {
 		res = append(res, Customer{
-			ID:   c.ID,
-			Name: c.Name,
+			ID:        c.ID,
+			CreatedAt: c.CreatedAt.Format("2006-01-02"),
+			UpdatedAt: c.UpdatedAt.Format("2006-01-02"),
+			Name:      c.Name,
 		})
 	}
 
@@ -40,8 +42,10 @@ func (impl *CustomerService) FindOneById(ctx context.Context, customerID int) (C
 
 	return CustomerResponse{
 		Data: &Customer{
-			ID:   customer.ID,
-			Name: customer.Name,
+			ID:        customer.ID,
+			CreatedAt: customer.CreatedAt.Format("2006-01-02"),
+			UpdatedAt: customer.UpdatedAt.Format("2006-01-02"),
+			Name:      customer.Name,
 		},
 	}, nil
 }
@@ -54,8 +58,10 @@ func (impl *CustomerService) Create(ctx context.Context, dto CustomerDto) (Custo
 
 	return CustomerResponse{
 		Data: &Customer{
-			ID:   customer.ID,
-			Name: customer.Name,
+			ID:        customer.ID,
+			CreatedAt: customer.CreatedAt.Format("2006-01-02"),
+			UpdatedAt: customer.UpdatedAt.Format("2006-01-02"),
+			Name:      customer.Name,
 		},
 	}, nil
 }
@@ -71,8 +77,10 @@ func (impl *CustomerService) Update(ctx context.Context, customerID int, dto Cus
 
 	return CustomerResponse{
 		Data: &Customer{
-			ID:   customer.ID,
-			Name: customer.Name,
+			ID:        customer.ID,
+			CreatedAt: customer.CreatedAt.Format("2006-01-02"),
+			UpdatedAt: customer.UpdatedAt.Format("2006-01-02"),
+			Name:      customer.Name,
 		},
 	}, nil
 }

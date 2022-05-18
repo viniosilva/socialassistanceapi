@@ -179,6 +179,10 @@ const docTemplate = `{
         "service.Customer": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2000-01-01"
+                },
                 "id": {
                     "type": "integer",
                     "example": 1
@@ -186,6 +190,10 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "Cláudio"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2000-01-01"
                 }
             }
         },

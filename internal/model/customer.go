@@ -1,6 +1,12 @@
 package model
 
+import "time"
+
 type Customer struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID        int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+
+	Name string
 }

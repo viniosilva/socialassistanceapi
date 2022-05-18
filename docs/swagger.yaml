@@ -10,11 +10,17 @@ definitions:
     type: object
   service.Customer:
     properties:
+      created_at:
+        example: "2000-01-01"
+        type: string
       id:
         example: 1
         type: integer
       name:
         example: Cláudio
+        type: string
+      updated_at:
+        example: "2000-01-01"
         type: string
     type: object
   service.CustomerDto:

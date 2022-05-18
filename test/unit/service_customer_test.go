@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
@@ -12,16 +13,19 @@ import (
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
+const DATE = "2000-01-01"
+
 func TestCustomerServiceFindAll(t *testing.T) {
+	DATETIME := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	cases := map[string]struct {
 		expectedCustomers service.CustomersResponse
 		expectedErr       error
 		prepareMock       func(mock *mock.MockCustomerStore)
 	}{
 		"should return customer list": {
-			expectedCustomers: service.CustomersResponse{Data: []service.Customer{{ID: 1, Name: "Test"}}},
+			expectedCustomers: service.CustomersResponse{Data: []service.Customer{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
 			prepareMock: func(mock *mock.MockCustomerStore) {
-				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Customer{{ID: 1, Name: "Test"}}, nil)
+				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Customer{{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}}, nil)
 			},
 		},
 		"should return empty customer list": {
@@ -62,6 +66,7 @@ func TestCustomerServiceFindAll(t *testing.T) {
 }
 
 func TestCustomerServiceFindOneByID(t *testing.T) {
+	DATETIME := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	cases := map[string]struct {
 		inputCustomerID  int
 		expectedCustomer service.CustomerResponse
@@ -70,9 +75,9 @@ func TestCustomerServiceFindOneByID(t *testing.T) {
 	}{
 		"should return customer when exists": {
 			inputCustomerID:  1,
-			expectedCustomer: service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test"}},
+			expectedCustomer: service.CustomerResponse{Data: &service.Customer{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 			prepareMock: func(mock *mock.MockCustomerStore) {
-				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(&model.Customer{ID: 1, Name: "Test"}, nil)
+				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(&model.Customer{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}, nil)
 			},
 		},
 		"should return empty when customer not exists": {
@@ -115,6 +120,7 @@ func TestCustomerServiceFindOneByID(t *testing.T) {
 }
 
 func TestCustomerServiceCreate(t *testing.T) {
+	DATETIME := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	cases := map[string]struct {
 		inputCustomer    service.CustomerDto
 		expectedCustomer service.CustomerResponse
@@ -123,9 +129,9 @@ func TestCustomerServiceCreate(t *testing.T) {
 	}{
 		"should create customer": {
 			inputCustomer:    service.CustomerDto{Name: "Test"},
-			expectedCustomer: service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test"}},
+			expectedCustomer: service.CustomerResponse{Data: &service.Customer{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 			prepareMock: func(mock *mock.MockCustomerStore) {
-				mock.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&model.Customer{ID: 1, Name: "Test"}, nil)
+				mock.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&model.Customer{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}, nil)
 			},
 		},
 		"should throw error": {
@@ -161,6 +167,7 @@ func TestCustomerServiceCreate(t *testing.T) {
 }
 
 func TestCustomerServiceUpdate(t *testing.T) {
+	DATETIME := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	cases := map[string]struct {
 		inputCustomerID  int
 		inputCustomer    service.CustomerDto
@@ -171,9 +178,9 @@ func TestCustomerServiceUpdate(t *testing.T) {
 		"should update customer": {
 			inputCustomerID:  1,
 			inputCustomer:    service.CustomerDto{Name: "Test update"},
-			expectedCustomer: service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test update"}},
+			expectedCustomer: service.CustomerResponse{Data: &service.Customer{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test update"}},
 			prepareMock: func(mock *mock.MockCustomerStore) {
-				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&model.Customer{ID: 1, Name: "Test update"}, nil)
+				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&model.Customer{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test update"}, nil)
 			},
 		},
 		"should return empty when customer not exists": {

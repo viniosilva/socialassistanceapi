@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -15,23 +16,28 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/store"
 )
 
+const DATE = "2000-01-01"
+
 func TestComponentCustomerApiFindAll(t *testing.T) {
 	cases := map[string]struct {
 		before       func(db *sql.DB)
 		expectedCode int
-		expectedBody service.CustomersResponse
+		expectedBody *service.CustomersResponse
 	}{
 		"should return customer list when customers exists": {
 			before: func(db *sql.DB) {
-				db.Exec(`INSERT INTO customers (id, name) VALUES (1, 'Test')`)
+				db.Exec(`
+					INSERT INTO customers (id, created_at, updated_at, name)
+					VALUES (1, ?, ?, 'Test')
+				`, DATE, DATE)
 			},
 			expectedCode: 200,
-			expectedBody: service.CustomersResponse{Data: []service.Customer{{ID: 1, Name: "Test"}}},
+			expectedBody: &service.CustomersResponse{Data: []service.Customer{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
 		},
 		"should return empty list when customers not exists": {
 			before:       func(db *sql.DB) {},
 			expectedCode: 200,
-			expectedBody: service.CustomersResponse{Data: []service.Customer{}},
+			expectedBody: &service.CustomersResponse{Data: []service.Customer{}},
 		},
 	}
 	for name, cs := range cases {
@@ -42,23 +48,24 @@ func TestComponentCustomerApiFindAll(t *testing.T) {
 
 			customerStore := store.NewCustomerStore(mysql.DB)
 			customerService := service.NewCustomerService(customerStore)
-			api := api.NewApi("0.0.0.0:8080", nil, customerService)
+			impl := api.NewApi("0.0.0.0:8080", nil, customerService)
 
 			cs.before(mysql.DB)
 
 			// when
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", "/api/v1/customers", nil)
-			api.Gin.ServeHTTP(rec, req)
+			impl.Gin.ServeHTTP(rec, req)
 
-			expectedBody, _ := json.Marshal(cs.expectedBody)
+			var body *service.CustomersResponse
+			json.Unmarshal(rec.Body.Bytes(), &body)
 
 			// then
 			if rec.Code != cs.expectedCode {
 				t.Errorf("GET /api/v1/customers StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
 			}
-			if rec.Body.String() != string(expectedBody) {
-				t.Errorf("GET /api/v1/customers Body = %v, expected %v", rec.Body.String(), cs.expectedBody)
+			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
+				t.Errorf("GET /api/v1/customers Body = %v, expected %v", body, cs.expectedBody)
 			}
 
 			// after
@@ -73,16 +80,19 @@ func TestComponentCustomerApiFindOneByID(t *testing.T) {
 		before          func(db *sql.DB)
 		inputCustomerID string
 		expectedCode    int
-		expectedBody    service.CustomerResponse
+		expectedBody    *service.CustomerResponse
 		expectedErr     *api.HttpError
 	}{
 		"should return customer when customers exists": {
 			before: func(db *sql.DB) {
-				db.Exec(`INSERT INTO customers (id, name) VALUES (1, 'Test')`)
+				db.Exec(`
+					INSERT INTO customers (id, created_at, updated_at, name)
+					VALUES (1, ?, ?, 'Test')
+				`, DATE, DATE)
 			},
 			inputCustomerID: "1",
 			expectedCode:    200,
-			expectedBody:    service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test"}},
+			expectedBody:    &service.CustomerResponse{Data: &service.Customer{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 		},
 		"should throw bad request error when customerID is not a number": {
 			before:          func(db *sql.DB) {},
@@ -94,7 +104,7 @@ func TestComponentCustomerApiFindOneByID(t *testing.T) {
 			before:          func(db *sql.DB) {},
 			inputCustomerID: "1",
 			expectedCode:    404,
-			expectedBody:    service.CustomerResponse{},
+			expectedBody:    &service.CustomerResponse{},
 		},
 	}
 	for name, cs := range cases {
@@ -105,7 +115,7 @@ func TestComponentCustomerApiFindOneByID(t *testing.T) {
 
 			customerStore := store.NewCustomerStore(mysql.DB)
 			customerService := service.NewCustomerService(customerStore)
-			api := api.NewApi("0.0.0.0:8080", nil, customerService)
+			impl := api.NewApi("0.0.0.0:8080", nil, customerService)
 
 			cs.before(mysql.DB)
 
@@ -113,20 +123,23 @@ func TestComponentCustomerApiFindOneByID(t *testing.T) {
 			url := "/api/v1/customers/" + cs.inputCustomerID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", url, nil)
-			api.Gin.ServeHTTP(rec, req)
+			impl.Gin.ServeHTTP(rec, req)
 
-			expectedBody, _ := json.Marshal(cs.expectedBody)
-			expectedErr, _ := json.Marshal(cs.expectedErr)
+			var body *service.CustomerResponse
+			json.Unmarshal(rec.Body.Bytes(), &body)
+
+			var httpError *api.HttpError
+			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
 			if rec.Code != cs.expectedCode {
 				t.Errorf("GET /api/v1/customers/:customerID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
 			}
-			if cs.expectedBody.Data != nil && rec.Body.String() != string(expectedBody) {
-				t.Errorf("GET /api/v1/customers/:customerID Body = %v, expected %v", rec.Body.String(), cs.expectedBody)
+			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
+				t.Errorf("GET /api/v1/customers/:customerID Body = %v, expected %v", body, cs.expectedBody)
 			}
-			if cs.expectedErr != nil && rec.Body.String() != string(expectedErr) {
-				t.Errorf("GET /api/v1/customers/:customerID BodyErr = %v, expected %v", rec.Body.String(), cs.expectedErr)
+			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
+				t.Errorf("GET /api/v1/customers/:customerID BodyErr = %v, expected %v", httpError, cs.expectedErr)
 			}
 
 			// after
@@ -140,13 +153,13 @@ func TestComponentCustomerApiCreate(t *testing.T) {
 	cases := map[string]struct {
 		inputCustomer service.CustomerDto
 		expectedCode  int
-		expectedBody  service.CustomerResponse
+		expectedBody  *service.CustomerResponse
 		expectedErr   *api.HttpError
 	}{
 		"should return created customer": {
 			inputCustomer: service.CustomerDto{Name: "Test"},
 			expectedCode:  201,
-			expectedBody:  service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test"}},
+			expectedBody:  &service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test"}},
 		},
 		"should throw bad request error": {
 			expectedCode: 400,
@@ -161,27 +174,34 @@ func TestComponentCustomerApiCreate(t *testing.T) {
 
 			customerStore := store.NewCustomerStore(mysql.DB)
 			customerService := service.NewCustomerService(customerStore)
-			api := api.NewApi("0.0.0.0:8080", nil, customerService)
+			impl := api.NewApi("0.0.0.0:8080", nil, customerService)
 
 			// when
 			b, _ := json.Marshal(cs.inputCustomer)
 			url := "/api/v1/customers"
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", url, strings.NewReader(string(b)))
-			api.Gin.ServeHTTP(rec, req)
+			impl.Gin.ServeHTTP(rec, req)
 
-			expectedBody, _ := json.Marshal(cs.expectedBody)
-			expectedErr, _ := json.Marshal(cs.expectedErr)
+			var body *service.CustomerResponse
+			json.Unmarshal(rec.Body.Bytes(), &body)
+			if body.Data != nil {
+				body.Data.CreatedAt = ""
+				body.Data.UpdatedAt = ""
+			}
+
+			var httpError *api.HttpError
+			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
 			if rec.Code != cs.expectedCode {
 				t.Errorf("POST /api/v1/customers StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
 			}
-			if cs.expectedBody.Data != nil && rec.Body.String() != string(expectedBody) {
-				t.Errorf("POST /api/v1/customers Body = %v, expected %v", rec.Body.String(), cs.expectedBody)
+			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
+				t.Errorf("POST /api/v1/customers Body = %v, expected %v", body, cs.expectedBody)
 			}
-			if cs.expectedErr != nil && rec.Body.String() != string(expectedErr) {
-				t.Errorf("POST /api/v1/customers BodyErr = %v, expected %v", rec.Body.String(), cs.expectedErr)
+			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
+				t.Errorf("POST /api/v1/customers BodyErr = %v, expected %v", httpError, cs.expectedErr)
 			}
 
 			// after
@@ -197,17 +217,20 @@ func TestComponentCustomerApiUpdate(t *testing.T) {
 		inputCustomerID string
 		inputCustomer   service.CustomerDto
 		expectedCode    int
-		expectedBody    service.CustomerResponse
+		expectedBody    *service.CustomerResponse
 		expectedErr     *api.HttpError
 	}{
 		"should return updated customer": {
 			before: func(db *sql.DB) {
-				db.Exec(`INSERT INTO customers (id, name) VALUES (1, 'Test')`)
+				db.Exec(`
+					INSERT INTO customers (id, created_at, updated_at, name)
+					VALUES (1, ?, ?, 'Test')
+				`, DATE, DATE)
 			},
 			inputCustomerID: "1",
 			inputCustomer:   service.CustomerDto{Name: "Test update"},
 			expectedCode:    200,
-			expectedBody:    service.CustomerResponse{Data: &service.Customer{ID: 1, Name: "Test update"}},
+			expectedBody:    &service.CustomerResponse{Data: &service.Customer{ID: 1, CreatedAt: DATE, Name: "Test update"}},
 		},
 		"should throw bad request error when customerID is not a number": {
 			before:          func(db *sql.DB) {},
@@ -226,7 +249,7 @@ func TestComponentCustomerApiUpdate(t *testing.T) {
 			inputCustomerID: "1",
 			inputCustomer:   service.CustomerDto{Name: "Test update"},
 			expectedCode:    404,
-			expectedBody:    service.CustomerResponse{},
+			expectedBody:    &service.CustomerResponse{},
 		},
 	}
 	for name, cs := range cases {
@@ -237,7 +260,7 @@ func TestComponentCustomerApiUpdate(t *testing.T) {
 
 			customerStore := store.NewCustomerStore(mysql.DB)
 			customerService := service.NewCustomerService(customerStore)
-			api := api.NewApi("0.0.0.0:8080", nil, customerService)
+			impl := api.NewApi("0.0.0.0:8080", nil, customerService)
 
 			cs.before(mysql.DB)
 
@@ -246,20 +269,26 @@ func TestComponentCustomerApiUpdate(t *testing.T) {
 			url := "/api/v1/customers/" + cs.inputCustomerID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("PATCH", url, strings.NewReader(string(b)))
-			api.Gin.ServeHTTP(rec, req)
+			impl.Gin.ServeHTTP(rec, req)
 
-			expectedBody, _ := json.Marshal(cs.expectedBody)
-			expectedErr, _ := json.Marshal(cs.expectedErr)
+			var body *service.CustomerResponse
+			json.Unmarshal(rec.Body.Bytes(), &body)
+			if body.Data != nil {
+				body.Data.UpdatedAt = ""
+			}
+
+			var httpError *api.HttpError
+			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
 			if rec.Code != cs.expectedCode {
 				t.Errorf("PATCH /api/v1/customers/:customerID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
 			}
-			if cs.expectedBody.Data != nil && rec.Body.String() != string(expectedBody) {
-				t.Errorf("PATCH /api/v1/customers/:customerID Body = %v, expected %v", rec.Body.String(), cs.expectedBody)
+			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
+				t.Errorf("PATCH /api/v1/customers/:customerID Body = %v, expected %v", body, cs.expectedBody)
 			}
-			if cs.expectedErr != nil && rec.Body.String() != string(expectedErr) {
-				t.Errorf("PATCH /api/v1/customers/:customerID BodyErr = %v, expected %v", rec.Body.String(), cs.expectedErr)
+			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
+				t.Errorf("PATCH /api/v1/customers/:customerID BodyErr = %v, expected %v", httpError, cs.expectedErr)
 			}
 
 			// after
