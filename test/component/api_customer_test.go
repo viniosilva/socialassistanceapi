@@ -297,3 +297,80 @@ func TestComponentCustomerApiUpdate(t *testing.T) {
 		})
 	}
 }
+
+func TestComponentCustomerApiDelete(t *testing.T) {
+	cases := map[string]struct {
+		before          func(db *sql.DB)
+		inputCustomerID string
+		expectedCode    int
+		expectedBody    *service.CustomerResponse
+		expectedErr     *api.HttpError
+	}{
+		"should be successfull": {
+			before: func(db *sql.DB) {
+				db.Exec(`
+					INSERT INTO customers (id, created_at, updated_at, name)
+					VALUES (1, ?, ?, 'Test')
+				`, DATE, DATE)
+			},
+			inputCustomerID: "1",
+			expectedCode:    200,
+			expectedBody:    &service.CustomerResponse{},
+		},
+		"should throw bad request error when customerID is not a number": {
+			before:          func(db *sql.DB) {},
+			inputCustomerID: "a",
+			expectedCode:    400,
+			expectedErr:     &api.HttpError{Code: 400, Message: "invalid customerID"},
+		},
+		"should be successfull when customers not exists": {
+			before:          func(db *sql.DB) {},
+			inputCustomerID: "1",
+			expectedCode:    200,
+			expectedBody:    &service.CustomerResponse{},
+		},
+	}
+	for name, cs := range cases {
+		t.Run(name, func(t *testing.T) {
+			// given
+			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			defer mysql.DB.Close()
+
+			customerStore := store.NewCustomerStore(mysql.DB)
+			customerService := service.NewCustomerService(customerStore)
+			impl := api.NewApi("0.0.0.0:8080", nil, customerService)
+
+			cs.before(mysql.DB)
+
+			// when
+			url := "/api/v1/customers/" + cs.inputCustomerID
+			rec := httptest.NewRecorder()
+			req, _ := http.NewRequest("DELETE", url, nil)
+			impl.Gin.ServeHTTP(rec, req)
+
+			var body *service.CustomerResponse
+			json.Unmarshal(rec.Body.Bytes(), &body)
+			if body.Data != nil {
+				body.Data.UpdatedAt = ""
+			}
+
+			var httpError *api.HttpError
+			json.Unmarshal(rec.Body.Bytes(), &httpError)
+
+			// then
+			if rec.Code != cs.expectedCode {
+				t.Errorf("PATCH /api/v1/customers/:customerID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
+			}
+			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
+				t.Errorf("PATCH /api/v1/customers/:customerID Body = %v, expected %v", body, cs.expectedBody)
+			}
+			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
+				t.Errorf("PATCH /api/v1/customers/:customerID BodyErr = %v, expected %v", httpError, cs.expectedErr)
+			}
+
+			// after
+			mysql.DB.Exec(`DELETE FROM customers`)
+			mysql.DB.Exec(`ALTER TABLE customers AUTO_INCREMENT=1`)
+		})
+	}
+}

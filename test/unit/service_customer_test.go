@@ -221,3 +221,50 @@ func TestCustomerServiceUpdate(t *testing.T) {
 		})
 	}
 }
+
+func TestCustomerServiceDelete(t *testing.T) {
+	DATETIME := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+	cases := map[string]struct {
+		inputCustomerID  int
+		expectedCustomer service.CustomerResponse
+		expectedErr      error
+		prepareMock      func(mock *mock.MockCustomerStore)
+	}{
+		"should delete customer": {
+			inputCustomerID:  1,
+			expectedCustomer: service.CustomerResponse{},
+			prepareMock: func(mock *mock.MockCustomerStore) {
+				mock.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+		"should throw error": {
+			inputCustomerID: 1,
+			expectedErr:     fmt.Errorf("error"),
+			prepareMock: func(mock *mock.MockCustomerStore) {
+				mock.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
+			},
+		},
+	}
+	for name, cs := range cases {
+		t.Run(name, func(t *testing.T) {
+			// given
+			ctrl, ctx := gomock.WithContext(context.Background(), t)
+			defer ctrl.Finish()
+			storeMock := mock.NewMockCustomerStore(ctrl)
+			cs.prepareMock(storeMock)
+
+			impl := service.NewCustomerService(storeMock)
+
+			// when
+			customer, err := impl.Delete(ctx, cs.inputCustomerID)
+
+			// then
+			if !reflect.DeepEqual(customer, cs.expectedCustomer) {
+				t.Errorf("CustomerService.Delete() = %v, expected %v", customer, cs.expectedCustomer)
+			}
+			if err != nil && err.Error() != cs.expectedErr.Error() {
+				t.Errorf("CustomerService.Delete() error = %v, expected %v", err, cs.expectedErr)
+			}
+		})
+	}
+}
