@@ -4,6 +4,7 @@ type Customer struct {
 	ID        int    `json:"id" example:"1"`
 	CreatedAt string `json:"created_at" example:"2000-01-01"`
 	UpdatedAt string `json:"updated_at" example:"2000-01-01"`
+	DeletedAt string `json:"deleted_at" example:"2000-01-01"`
 	Name      string `json:"name" example:"Cláudio"`
 }
 
