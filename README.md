@@ -1,6 +1,6 @@
-# Assistencia Social API
+# AssistenciaSocial API
 
-Gestão de recursos da assistencia social
+Management of social assistance resources
 
 ## Requiriments
 

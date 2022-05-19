@@ -16,9 +16,9 @@ type Api struct {
 
 // @title Ipanema Box API
 // @version 1.0
-// @description Customer, budget and service management
+// @description person, budget and service management
 // @BasePath /api/v1
-func NewApi(addr string, healthService *service.HealthService, customerService *service.CustomerService) *Api {
+func NewApi(addr string, healthService *service.HealthService, personService *service.PersonService) *Api {
 	api := gin.Default()
 	api.Use(cors.Default())
 
@@ -26,7 +26,7 @@ func NewApi(addr string, healthService *service.HealthService, customerService *
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	NewHealthApi(api.Group("/api/health"), healthService)
-	NewCustomerApi(api.Group("/api/v1/customers"), customerService)
+	NewPersonApi(api.Group("/api/v1/people"), personService)
 
 	return &Api{api, addr}
 }
