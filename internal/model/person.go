@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type Customer struct {
+type Person struct {
 	ID        int
 	CreatedAt time.Time
 	UpdatedAt time.Time

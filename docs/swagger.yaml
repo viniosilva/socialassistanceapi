@@ -8,13 +8,20 @@ definitions:
         example: invalid parameter
         type: string
     type: object
-  service.Customer:
+  service.PeopleResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/service.Person'
+        type: array
+    type: object
+  service.Person:
     properties:
       created_at:
-        example: "2000-01-01"
+        example: 2000-01-01T12:03:00
         type: string
       deleted_at:
-        example: "2000-01-01"
+        example: 2000-01-01T12:03:00
         type: string
       id:
         example: 1
@@ -23,10 +30,10 @@ definitions:
         example: Cláudio
         type: string
       updated_at:
-        example: "2000-01-01"
+        example: 2000-01-01T12:03:00
         type: string
     type: object
-  service.CustomerDto:
+  service.PersonDto:
     properties:
       name:
         example: Cláudio
@@ -34,22 +41,15 @@ definitions:
     required:
     - name
     type: object
-  service.CustomerResponse:
+  service.PersonResponse:
     properties:
       data:
-        $ref: '#/definitions/service.Customer'
-    type: object
-  service.CustomersResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/service.Customer'
-        type: array
+        $ref: '#/definitions/service.Person'
     type: object
 info:
   contact: {}
 paths:
-  /api/v1/customers:
+  /api/v1/people:
     get:
       consumes:
       - application/json
@@ -59,27 +59,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.CustomersResponse'
-      summary: find all customers
+            $ref: '#/definitions/service.PeopleResponse'
+      summary: find all people
       tags:
-      - customer
+      - person
     post:
       consumes:
       - application/json
       parameters:
-      - description: Create customer
+      - description: Create person
         in: body
-        name: customer
+        name: person
         required: true
         schema:
-          $ref: '#/definitions/service.CustomerDto'
+          $ref: '#/definitions/service.PersonDto'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/service.CustomerResponse'
+            $ref: '#/definitions/service.PersonResponse'
         "400":
           description: Bad Request
           schema:
@@ -88,15 +88,15 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.HttpError'
-      summary: create a customer
+      summary: create a person
       tags:
-      - customer
-  /api/v1/customers/{id}:
+      - person
+  /api/v1/people/{id}:
     delete:
       consumes:
       - application/json
       parameters:
-      - description: Customer ID
+      - description: person ID
         in: path
         name: id
         required: true
@@ -107,7 +107,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.CustomerResponse'
+            $ref: '#/definitions/service.PersonResponse'
         "400":
           description: Bad Request
           schema:
@@ -116,14 +116,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.HttpError'
-      summary: delete a customer
+      summary: delete a person
       tags:
-      - customer
+      - person
     get:
       consumes:
       - application/json
       parameters:
-      - description: Customer ID
+      - description: person ID
         in: path
         name: id
         required: true
@@ -134,36 +134,36 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.CustomersResponse'
+            $ref: '#/definitions/service.PeopleResponse'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/api.HttpError'
-      summary: find customer by id
+      summary: find person by id
       tags:
-      - customer
+      - person
     patch:
       consumes:
       - application/json
       parameters:
-      - description: Customer ID
+      - description: person ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Update customer
+      - description: Update person
         in: body
-        name: customer
+        name: person
         required: true
         schema:
-          $ref: '#/definitions/service.CustomerDto'
+          $ref: '#/definitions/service.PersonDto'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.CustomerResponse'
+            $ref: '#/definitions/service.PersonResponse'
         "400":
           description: Bad Request
           schema:
@@ -172,7 +172,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.HttpError'
-      summary: update a customer
+      summary: update a person
       tags:
-      - customer
+      - person
 swagger: "2.0"

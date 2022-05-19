@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/customers": {
+        "/api/v1/people": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -25,14 +25,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "customer"
+                    "person"
                 ],
-                "summary": "find all customers",
+                "summary": "find all people",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.CustomersResponse"
+                            "$ref": "#/definitions/service.PeopleResponse"
                         }
                     }
                 }
@@ -45,17 +45,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "customer"
+                    "person"
                 ],
-                "summary": "create a customer",
+                "summary": "create a person",
                 "parameters": [
                     {
-                        "description": "Create customer",
-                        "name": "customer",
+                        "description": "Create person",
+                        "name": "person",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.CustomerDto"
+                            "$ref": "#/definitions/service.PersonDto"
                         }
                     }
                 ],
@@ -63,7 +63,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/service.CustomerResponse"
+                            "$ref": "#/definitions/service.PersonResponse"
                         }
                     },
                     "400": {
@@ -81,7 +81,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/customers/{id}": {
+        "/api/v1/people/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -90,13 +90,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "customer"
+                    "person"
                 ],
-                "summary": "find customer by id",
+                "summary": "find person by id",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Customer ID",
+                        "description": "person ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -106,7 +106,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.CustomersResponse"
+                            "$ref": "#/definitions/service.PeopleResponse"
                         }
                     },
                     "404": {
@@ -125,13 +125,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "customer"
+                    "person"
                 ],
-                "summary": "delete a customer",
+                "summary": "delete a person",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Customer ID",
+                        "description": "person ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -141,7 +141,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.CustomerResponse"
+                            "$ref": "#/definitions/service.PersonResponse"
                         }
                     },
                     "400": {
@@ -166,24 +166,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "customer"
+                    "person"
                 ],
-                "summary": "update a customer",
+                "summary": "update a person",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Customer ID",
+                        "description": "person ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Update customer",
-                        "name": "customer",
+                        "description": "Update person",
+                        "name": "person",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.CustomerDto"
+                            "$ref": "#/definitions/service.PersonDto"
                         }
                     }
                 ],
@@ -191,7 +191,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.CustomerResponse"
+                            "$ref": "#/definitions/service.PersonResponse"
                         }
                     },
                     "400": {
@@ -224,16 +224,27 @@ const docTemplate = `{
                 }
             }
         },
-        "service.Customer": {
+        "service.PeopleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.Person"
+                    }
+                }
+            }
+        },
+        "service.Person": {
             "type": "object",
             "properties": {
                 "created_at": {
                     "type": "string",
-                    "example": "2000-01-01"
+                    "example": "2000-01-01T12:03:00"
                 },
                 "deleted_at": {
                     "type": "string",
-                    "example": "2000-01-01"
+                    "example": "2000-01-01T12:03:00"
                 },
                 "id": {
                     "type": "integer",
@@ -245,11 +256,11 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string",
-                    "example": "2000-01-01"
+                    "example": "2000-01-01T12:03:00"
                 }
             }
         },
-        "service.CustomerDto": {
+        "service.PersonDto": {
             "type": "object",
             "required": [
                 "name"
@@ -261,22 +272,11 @@ const docTemplate = `{
                 }
             }
         },
-        "service.CustomerResponse": {
+        "service.PersonResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/service.Customer"
-                }
-            }
-        },
-        "service.CustomersResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.Customer"
-                    }
+                    "$ref": "#/definitions/service.Person"
                 }
             }
         }
