@@ -16,9 +16,9 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/store"
 )
 
-const DATE = "2000-01-01T12:03:00"
-
 func TestComponentPersonApiFindAll(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
+
 	cases := map[string]struct {
 		before       func(db *sql.DB)
 		expectedCode int
@@ -49,7 +49,7 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 
 			personStore := store.NewPersonStore(mysql.DB)
 			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService)
+			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
 
 			cs.before(mysql.DB)
 
@@ -77,6 +77,8 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 }
 
 func TestComponentPersonApiFindOneByID(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
+
 	cases := map[string]struct {
 		before        func(db *sql.DB)
 		inputPersonID string
@@ -116,7 +118,7 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 
 			personStore := store.NewPersonStore(mysql.DB)
 			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService)
+			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
 
 			cs.before(mysql.DB)
 
@@ -175,7 +177,7 @@ func TestComponentPersonApiCreate(t *testing.T) {
 
 			personStore := store.NewPersonStore(mysql.DB)
 			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService)
+			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
 
 			// when
 			b, _ := json.Marshal(cs.inputPerson)
@@ -213,6 +215,8 @@ func TestComponentPersonApiCreate(t *testing.T) {
 }
 
 func TestComponentPersonApiUpdate(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
+
 	cases := map[string]struct {
 		before        func(db *sql.DB)
 		inputPersonID string
@@ -261,7 +265,7 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 
 			personStore := store.NewPersonStore(mysql.DB)
 			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService)
+			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
 
 			cs.before(mysql.DB)
 
@@ -300,6 +304,8 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 }
 
 func TestComponentPersonApiDelete(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
+
 	cases := map[string]struct {
 		before        func(db *sql.DB)
 		inputPersonID string
@@ -339,7 +345,7 @@ func TestComponentPersonApiDelete(t *testing.T) {
 
 			personStore := store.NewPersonStore(mysql.DB)
 			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService)
+			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
 
 			cs.before(mysql.DB)
 

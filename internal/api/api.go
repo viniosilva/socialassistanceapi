@@ -18,7 +18,11 @@ type Api struct {
 // @version 1.0
 // @description person, budget and service management
 // @BasePath /api/v1
-func NewApi(addr string, healthService *service.HealthService, personService *service.PersonService) *Api {
+func NewApi(addr string,
+	healthService *service.HealthService,
+	personService *service.PersonService,
+	addressService *service.AddressService,
+) *Api {
 	api := gin.Default()
 	api.Use(cors.Default())
 
@@ -27,6 +31,7 @@ func NewApi(addr string, healthService *service.HealthService, personService *se
 
 	NewHealthApi(api.Group("/api/health"), healthService)
 	NewPersonApi(api.Group("/api/v1/people"), personService)
+	NewAddressApi(api.Group("/api/v1/addresses"), addressService)
 
 	return &Api{api, addr}
 }

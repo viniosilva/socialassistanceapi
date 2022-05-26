@@ -47,5 +47,4 @@ test/e2e: infra/up
 	go test ./test/e2e/...
 
 .PHONY: test
-test: infra/up
-	go test ./test/...
+test: infra/up test/unit test/component test/e2e

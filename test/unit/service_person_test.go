@@ -13,22 +13,22 @@ import (
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
-const DATE = "2000-01-01T12:03:00"
-
 func TestPersonServiceFindAll(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
+
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 	cases := map[string]struct {
 		expectedPeople service.PeopleResponse
 		expectedErr    error
 		prepareMock    func(mock *mock.MockPersonStore)
 	}{
-		"should return person list": {
+		"should return people list": {
 			expectedPeople: service.PeopleResponse{Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Person{{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}}, nil)
 			},
 		},
-		"should return empty person list": {
+		"should return empty people list": {
 			expectedPeople: service.PeopleResponse{Data: []service.Person{}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Person{}, nil)
@@ -66,7 +66,9 @@ func TestPersonServiceFindAll(t *testing.T) {
 }
 
 func TestPersonServiceFindOneByID(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
+
 	cases := map[string]struct {
 		inputPersonID  int
 		expectedPerson service.PersonResponse
@@ -120,7 +122,9 @@ func TestPersonServiceFindOneByID(t *testing.T) {
 }
 
 func TestPersonServiceCreate(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
+
 	cases := map[string]struct {
 		inputPerson    service.PersonDto
 		expectedPerson service.PersonResponse
@@ -167,7 +171,9 @@ func TestPersonServiceCreate(t *testing.T) {
 }
 
 func TestPersonServiceUpdate(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
+
 	cases := map[string]struct {
 		inputPersonID  int
 		inputPerson    service.PersonDto
