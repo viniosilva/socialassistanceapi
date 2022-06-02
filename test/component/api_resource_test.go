@@ -16,9 +16,9 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/store"
 )
 
-const DATE = "2000-01-01T12:03:00"
-
 func TestComponentResourceApiFindAll(t *testing.T) {
+	const DATE = "2000-01-01T12:03:00"
+
 	cases := map[string]struct {
 		before       func(db *sql.DB)
 		expectedCode int
@@ -77,6 +77,8 @@ func TestComponentResourceApiFindAll(t *testing.T) {
 }
 
 func TestComponentResourceApiFindOneByID(t *testing.T) {
+	const DATE = "2000-01-01T12:03:00"
+
 	cases := map[string]struct {
 		before          func(db *sql.DB)
 		inputResourceID string
@@ -213,6 +215,8 @@ func TestComponentResourceApiCreate(t *testing.T) {
 }
 
 func TestComponentResourceApiUpdate(t *testing.T) {
+	const DATE = "2000-01-01T12:03:00"
+
 	cases := map[string]struct {
 		before          func(db *sql.DB)
 		inputResourceID string
@@ -299,6 +303,8 @@ func TestComponentResourceApiUpdate(t *testing.T) {
 	}
 }
 func TestComponentResourceApiDelete(t *testing.T) {
+	const DATE = "2000-01-01T12:03:00"
+
 	cases := map[string]struct {
 		before          func(db *sql.DB)
 		inputResourceID string
