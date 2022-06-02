@@ -83,8 +83,7 @@ func (impl *PersonApi) Create(c *gin.Context) {
 	var person service.PersonDto
 	err := c.ShouldBindJSON(&person)
 	if e, ok := err.(validator.ValidationErrors); ok {
-		msg := e.Error()
-		NewHttpError(c, http.StatusBadRequest, msg)
+		NewHttpError(c, http.StatusBadRequest, e.Error())
 		return
 	}
 

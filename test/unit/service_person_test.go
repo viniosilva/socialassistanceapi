@@ -22,13 +22,13 @@ func TestPersonServiceFindAll(t *testing.T) {
 		expectedErr    error
 		prepareMock    func(mock *mock.MockPersonStore)
 	}{
-		"should return person list": {
+		"should return people list": {
 			expectedPeople: service.PeopleResponse{Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Person{{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}}, nil)
 			},
 		},
-		"should return empty person list": {
+		"should return empty people list": {
 			expectedPeople: service.PeopleResponse{Data: []service.Person{}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Person{}, nil)
@@ -171,7 +171,7 @@ func TestPersonServiceCreate(t *testing.T) {
 }
 
 func TestPersonServiceUpdate(t *testing.T) {
-	const DATE = "2000-01-01T12:03:00"
+	DATE := "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {

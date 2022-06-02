@@ -22,7 +22,7 @@ func TestE2EApi(t *testing.T) {
 
 		personStore := store.NewPersonStore(mysql.DB)
 		personService := service.NewPersonService(personStore)
-		api := api.NewApi("0.0.0.0:8080", nil, personService)
+		api := api.NewApi("0.0.0.0:8080", nil, personService, nil)
 
 		// when find all people then returns empty list
 		rec := httptest.NewRecorder()
