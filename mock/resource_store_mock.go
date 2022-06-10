@@ -24,7 +24,7 @@ type MockResourceStoreMockRecorder struct {
 }
 
 // NewMockResourceStore creates a new mock instance.
-func NewMockPersonStore(ctrl *gomock.Controller) *MockResourceStore {
+func NewMockResourceStore(ctrl *gomock.Controller) *MockResourceStore {
 	mock := &MockResourceStore{ctrl: ctrl}
 	mock.recorder := &MockResourceStoreMockRecorder{mock}
 	return mock
