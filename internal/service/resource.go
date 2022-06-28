@@ -15,10 +15,10 @@ func NewResourceService(store store.ResourceStore) *ResourceService {
 	return &ResourceService{store}
 }
 
-func (impl *ResourceService) FindAll(ctx context.Context) (ResourceResponse, error) {
+func (impl *ResourceService) FindAll(ctx context.Context) (ResourcesResponse, error) {
 	resource, err := impl.store.FindAll(ctx)
 	if err != nil {
-		return ResourceResponse{}, err
+		return ResourcesResponse{}, err
 	}
 
 	res := []Resource{}
@@ -31,7 +31,7 @@ func (impl *ResourceService) FindAll(ctx context.Context) (ResourceResponse, err
 		})
 	}
 
-	return ResourceResponse{Data: res}, nil
+	return ResourcesResponse{Data: res}, nil
 }
 
 func (impl *ResourceService) FindOneById(ctx context.Context, resourceID int) (ResourceResponse, error) {

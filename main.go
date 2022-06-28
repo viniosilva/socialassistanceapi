@@ -23,6 +23,6 @@ func main() {
 	resourceService := service.NewResourceService(resourceStore)
 	addressService := service.NewAddressService(addressStore)
 
-	api := api.NewApi("0.0.0.0:8080", healthService, personService, addressService, resourceService)
+	api := api.NewApi("localhost:8080", healthService, personService, addressService, resourceService)
 	api.Start()
 }

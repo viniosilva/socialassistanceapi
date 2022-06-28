@@ -33,6 +33,7 @@ func NewApi(addr string,
 	NewHealthApi(api.Group("/api/health"), healthService)
 	NewPersonApi(api.Group("/api/v1/people"), personService)
 	NewAddressApi(api.Group("/api/v1/addresses"), addressService)
+	NewResourceApi(api.Group("/api/v1/resource"), resourceService)
 
 	return &Api{api, addr}
 }

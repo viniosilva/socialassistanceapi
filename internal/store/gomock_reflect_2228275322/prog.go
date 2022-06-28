@@ -24,7 +24,7 @@ func main() {
 		typ reflect.Type
 	}{
 		
-		{ "AddressStore", reflect.TypeOf((*pkg_.AddressStore)(nil)).Elem()},
+		{ "HealthStore", reflect.TypeOf((*pkg_.HealthStore)(nil)).Elem()},
 		
 	}
 	pkg := &model.Package{
