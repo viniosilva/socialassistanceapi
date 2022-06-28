@@ -22,6 +22,7 @@ func NewApi(addr string,
 	healthService *service.HealthService,
 	personService *service.PersonService,
 	addressService *service.AddressService,
+	resourceService *service.ResourceService,
 ) *Api {
 	api := gin.Default()
 	api.Use(cors.Default())

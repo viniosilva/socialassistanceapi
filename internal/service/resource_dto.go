@@ -14,6 +14,10 @@ type ResourceResponse struct {
 	Data *Resource `json:"data"`
 }
 
+type ResourcesResponse struct {
+	Data []Resource `json:"data"`
+}
+
 type ResourceDto struct {
 	Name string `json:"name" example:"Cláudio" binding:"required"`
 }

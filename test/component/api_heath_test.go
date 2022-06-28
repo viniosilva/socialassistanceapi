@@ -37,7 +37,7 @@ func TestComponentHealthApiHealth(t *testing.T) {
 
 			healthStore := store.NewHealthStore(mysql.DB)
 			healthService := service.NewHealthService(healthStore)
-			api := api.NewApi("0.0.0.0:8080", healthService, nil, nil)
+			api := api.NewApi("0.0.0.0:8080", healthService, nil, nil, nil)
 
 			// when
 			rec := httptest.NewRecorder()

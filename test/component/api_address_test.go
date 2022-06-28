@@ -62,7 +62,7 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 
 			addressStore := store.NewAddressStore(mysql.DB)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			cs.before(mysql.DB)
 
@@ -144,7 +144,7 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 
 			addressStore := store.NewAddressStore(mysql.DB)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			cs.before(mysql.DB)
 
@@ -234,7 +234,7 @@ func TestComponentAddressApiCreate(t *testing.T) {
 
 			addressStore := store.NewAddressStore(mysql.DB)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			// when
 			b, _ := json.Marshal(cs.inputAddress)
@@ -376,7 +376,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 
 			addressStore := store.NewAddressStore(mysql.DB)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			cs.before(mysql.DB)
 
@@ -457,7 +457,7 @@ func TestComponentAddressApiDelete(t *testing.T) {
 
 			addressStore := store.NewAddressStore(mysql.DB)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			cs.before(mysql.DB)
 

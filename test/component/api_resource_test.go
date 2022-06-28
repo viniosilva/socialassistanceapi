@@ -22,7 +22,7 @@ func TestComponentResourceApiFindAll(t *testing.T) {
 	cases := map[string]struct {
 		before       func(db *sql.DB)
 		expectedCode int
-		expectedBody *service.ResourceResponse
+		expectedBody *service.ResourcesResponse
 	}{
 		"should return resource list when resource exists": {
 			before: func(db *sql.DB) {
@@ -33,12 +33,12 @@ func TestComponentResourceApiFindAll(t *testing.T) {
 				`, date, date)
 			},
 			expectedCode: 200,
-			expectedBody: &service.ResourceResponse{Data: []service.Resource{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
+			expectedBody: &service.ResourcesResponse{Data: []service.Resource{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
 		},
 		"should return empty list when resource not exists": {
 			before:       func(bd *sql.DB) {},
 			expectedCode: 200,
-			expectedBody: &service.ResourceResponse{Data: []service.Resource{}},
+			expectedBody: &service.ResourcesResponse{Data: []service.Resource{}},
 		},
 	}
 	for name, cs := range cases {
@@ -49,7 +49,7 @@ func TestComponentResourceApiFindAll(t *testing.T) {
 
 			resourceStore := store.NewResourceStore(mysql.DB)
 			resourceService := service.NewResourceService(resourceStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, resourceService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
 			cs.before(mysql.DB)
 
@@ -95,7 +95,7 @@ func TestComponentResourceApiFindOneByID(t *testing.T) {
 			},
 			inputResourceID: "1",
 			expectedCode:    200,
-			expectedBody:    &service.ResourceResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
+			expectedBody:    &service.ResourceResponse{Data: &service.Resource{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 		},
 		"should throw bad request error when reosurceID is not a number": {
 			before:          func(db *sql.DB) {},
@@ -118,7 +118,7 @@ func TestComponentResourceApiFindOneByID(t *testing.T) {
 
 			resourceStore := store.NewResourceStore(mysql.DB)
 			resourceService := service.NewResourceService(resourceStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, resourceService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
 			cs.before(mysql.DB)
 
@@ -176,8 +176,8 @@ func TestComponentResourceApiCreate(t *testing.T) {
 			defer mysql.DB.Close()
 
 			resourceStore := store.NewResourceStore(mysql.DB)
-			resourceService := service.NewPersonService(resourceStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, resourceService)
+			resourceService := service.NewResourceService(resourceStore)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
 			// when
 			b, _ := json.Marshal(cs.inputResource)
@@ -263,9 +263,9 @@ func TestComponentResourceApiUpdate(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			resourceStore := store.NewPersonStore(mysql.DB)
-			resourceService := service.NewPersonService(resourceStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, resourceService)
+			resourceStore := store.NewResourceStore(mysql.DB)
+			resourceService := service.NewResourceService(resourceStore)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
 			cs.before(mysql.DB)
 
@@ -342,9 +342,9 @@ func TestComponentResourceApiDelete(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			resourceStore := store.NewPersonStore(mysql.DB)
-			resourceService := service.NewPersonService(resourceStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, resourceService)
+			resourceStore := store.NewResourceStore(mysql.DB)
+			resourceService := service.NewResourceService(resourceStore)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
 			cs.before(mysql.DB)
 
