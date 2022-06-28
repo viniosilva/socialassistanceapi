@@ -9,7 +9,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
 
-//go:generate mockgem -destination ../../mock/resource_store_mock.go -package mock . ResourceStore
+//go:generate mockgen -destination ../../mock/resource_store_mock.go -package mock . ResourceStore
 type ResourceStore interface {
 	FindAll(ctx context.Context) ([]model.Resource, error)
 	FindOneById(ctx context.Context, resourceID int) (*model.Resource, error)
