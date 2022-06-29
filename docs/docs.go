@@ -138,11 +138,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/service.AddressResponse"
-                        }
+                    "204": {
+                        "description": ""
                     },
                     "400": {
                         "description": "Bad Request",
@@ -209,7 +206,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/people": {
+        "/api/v1/persons": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -220,12 +217,12 @@ const docTemplate = `{
                 "tags": [
                     "person"
                 ],
-                "summary": "find all people",
+                "summary": "find all persons",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.PeopleResponse"
+                            "$ref": "#/definitions/service.PersonResponse"
                         }
                     }
                 }
@@ -274,7 +271,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/people/{id}": {
+        "/api/v1/persons/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -299,7 +296,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.PeopleResponse"
+                            "$ref": "#/definitions/service.PersonsResponse"
                         }
                     },
                     "404": {
@@ -310,6 +307,161 @@ const docTemplate = `{
                     }
                 }
             },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "person"
+                ],
+                "summary": "delete a person",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "person ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "person"
+                ],
+                "summary": "update a person",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "person ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update person",
+                        "name": "person",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.PersonDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.PersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resources": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "find resource by id",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.ResourceResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "create a resource",
+                "parameters": [
+                    {
+                        "description": "Create resource",
+                        "name": "resource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.ResourceDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/service.ResourceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resources/{id}": {
             "delete": {
                 "consumes": [
                     "application/json"
@@ -331,11 +483,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/service.ResourceResponse"
-                        }
+                    "204": {
+                        "description": ""
                     },
                     "400": {
                         "description": "Bad Request",
@@ -383,71 +532,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/service.ResourceResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.HttpError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.HttpError"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/resource": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "find resource by id",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/service.ResourceResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "create a resource",
-                "parameters": [
-                    {
-                        "description": "Create resource",
-                        "name": "resource",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/service.ResourceDto"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/service.ResourceResponse"
                         }
@@ -601,17 +685,6 @@ const docTemplate = `{
                 }
             }
         },
-        "service.PeopleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.Person"
-                    }
-                }
-            }
-        },
         "service.Person": {
             "type": "object",
             "properties": {
@@ -657,24 +730,43 @@ const docTemplate = `{
                 }
             }
         },
+        "service.PersonsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.Person"
+                    }
+                }
+            }
+        },
         "service.Resource": {
             "type": "object",
             "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 5
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2000-01-01T12:03:00"
                 },
                 "deleted_at": {
                     "type": "string",
-                    "example": "2000-01-01T12:03:00"
+                    "example": ""
                 },
                 "id": {
                     "type": "integer",
                     "example": 1
                 },
+                "measurement": {
+                    "type": "string",
+                    "example": "Kg"
+                },
                 "name_at": {
                     "type": "string",
-                    "example": "2000-01-01T12:03:00"
+                    "example": "Arroz"
                 },
                 "updated_at": {
                     "type": "string",
@@ -684,13 +776,18 @@ const docTemplate = `{
         },
         "service.ResourceDto": {
             "type": "object",
-            "required": [
-                "name"
-            ],
             "properties": {
-                "name": {
+                "amount": {
+                    "type": "number",
+                    "example": 5
+                },
+                "measurement": {
                     "type": "string",
-                    "example": "Cláudio"
+                    "example": "Kg"
+                },
+                "name_at": {
+                    "type": "string",
+                    "example": "Arroz"
                 }
             }
         },
@@ -699,6 +796,17 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/service.Resource"
+                }
+            }
+        },
+        "service.ResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.Resource"
+                    }
                 }
             }
         }

@@ -12,17 +12,17 @@ import (
 
 func TestHealthServiceHealth(t *testing.T) {
 	cases := map[string]struct {
-		expectedHealth service.Health
-		prepareMock    func(mock *mock.MockHealthStore)
+		expectedRes service.Health
+		prepareMock func(mock *mock.MockHealthStore)
 	}{
 		"should return health status up": {
-			expectedHealth: service.Health{Status: service.HealthStatusUp},
+			expectedRes: service.Health{Status: service.HealthStatusUp},
 			prepareMock: func(mock *mock.MockHealthStore) {
 				mock.EXPECT().Health(gomock.Any()).Return(true)
 			},
 		},
 		"should return health status down": {
-			expectedHealth: service.Health{Status: service.HealthStatusDown},
+			expectedRes: service.Health{Status: service.HealthStatusDown},
 			prepareMock: func(mock *mock.MockHealthStore) {
 				mock.EXPECT().Health(gomock.Any()).Return(false)
 			},
@@ -39,11 +39,11 @@ func TestHealthServiceHealth(t *testing.T) {
 			impl := service.NewHealthService(healthMock)
 
 			// when
-			health := impl.Health(ctx)
+			res := impl.Health(ctx)
 
 			// then
-			if !reflect.DeepEqual(health, cs.expectedHealth) {
-				t.Errorf("HealthService.Health() = %v, expected %v", health, cs.expectedHealth)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("HealthService.Health() = %v, expected %v", res, cs.expectedRes)
 			}
 		})
 	}

@@ -85,7 +85,6 @@ func (impl *ResourceService) Update(ctx context.Context, ResourceID int, dto Res
 	}, nil
 }
 
-func (impl *ResourceService) Delete(ctx context.Context, resourceID int) (ResourceResponse, error) {
-	err := impl.store.Delete(ctx, resourceID)
-	return ResourceResponse{}, err
+func (impl *ResourceService) Delete(ctx context.Context, resourceID int) error {
+	return impl.store.Delete(ctx, resourceID)
 }

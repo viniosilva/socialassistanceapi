@@ -95,13 +95,6 @@ definitions:
           $ref: '#/definitions/service.Address'
         type: array
     type: object
-  service.PeopleResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/service.Person'
-        type: array
-    type: object
   service.Person:
     properties:
       created_at:
@@ -133,19 +126,32 @@ definitions:
       data:
         $ref: '#/definitions/service.Person'
     type: object
+  service.PersonsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/service.Person'
+        type: array
+    type: object
   service.Resource:
     properties:
+      amount:
+        example: 5
+        type: number
       created_at:
         example: 2000-01-01T12:03:00
         type: string
       deleted_at:
-        example: 2000-01-01T12:03:00
+        example: ""
         type: string
       id:
         example: 1
         type: integer
+      measurement:
+        example: Kg
+        type: string
       name_at:
-        example: 2000-01-01T12:03:00
+        example: Arroz
         type: string
       updated_at:
         example: 2000-01-01T12:03:00
@@ -153,16 +159,27 @@ definitions:
     type: object
   service.ResourceDto:
     properties:
-      name:
-        example: Cláudio
+      amount:
+        example: 5
+        type: number
+      measurement:
+        example: Kg
         type: string
-    required:
-    - name
+      name_at:
+        example: Arroz
+        type: string
     type: object
   service.ResourceResponse:
     properties:
       data:
         $ref: '#/definitions/service.Resource'
+    type: object
+  service.ResourcesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/service.Resource'
+        type: array
     type: object
 info:
   contact: {}
@@ -222,10 +239,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/service.AddressResponse'
+        "204":
+          description: ""
         "400":
           description: Bad Request
           schema:
@@ -293,7 +308,7 @@ paths:
       summary: update an address
       tags:
       - address
-  /api/v1/people:
+  /api/v1/persons:
     get:
       consumes:
       - application/json
@@ -303,8 +318,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.PeopleResponse'
-      summary: find all people
+            $ref: '#/definitions/service.PersonResponse'
+      summary: find all persons
       tags:
       - person
     post:
@@ -335,12 +350,12 @@ paths:
       summary: create a person
       tags:
       - person
-  /api/v1/people/{id}:
+  /api/v1/persons/{id}:
     delete:
       consumes:
       - application/json
       parameters:
-      - description: resource ID
+      - description: person ID
         in: path
         name: id
         required: true
@@ -348,10 +363,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/service.ResourceResponse'
+        "204":
+          description: ""
         "400":
           description: Bad Request
           schema:
@@ -360,9 +373,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.HttpError'
-      summary: delete a resource
+      summary: delete a person
       tags:
-      - resource
+      - person
     get:
       consumes:
       - application/json
@@ -378,7 +391,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.PeopleResponse'
+            $ref: '#/definitions/service.PersonsResponse'
         "404":
           description: Not Found
           schema:
@@ -390,24 +403,24 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: resource ID
+      - description: person ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Update resource
+      - description: Update person
         in: body
-        name: resource
+        name: person
         required: true
         schema:
-          $ref: '#/definitions/service.ResourceDto'
+          $ref: '#/definitions/service.PersonDto'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.ResourceResponse'
+            $ref: '#/definitions/service.PersonResponse'
         "400":
           description: Bad Request
           schema:
@@ -416,10 +429,10 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.HttpError'
-      summary: update a resource
+      summary: update a person
       tags:
-      - resource
-  /api/v1/resource:
+      - person
+  /api/v1/resources:
     get:
       consumes:
       - application/json
@@ -459,6 +472,65 @@ paths:
           schema:
             $ref: '#/definitions/api.HttpError'
       summary: create a resource
+      tags:
+      - resource
+  /api/v1/resources/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: delete a resource
+      tags:
+      - resource
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update resource
+        in: body
+        name: resource
+        required: true
+        schema:
+          $ref: '#/definitions/service.ResourceDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.ResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: update a resource
       tags:
       - resource
 swagger: "2.0"

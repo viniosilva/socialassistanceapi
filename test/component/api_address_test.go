@@ -433,7 +433,7 @@ func TestComponentAddressApiDelete(t *testing.T) {
 				`, DATE, DATE)
 			},
 			inputAddressID: "1",
-			expectedCode:   200,
+			expectedCode:   204,
 			expectedBody:   &service.AddressResponse{},
 		},
 		"should throw bad request error when addressID is not a number": {
@@ -445,7 +445,7 @@ func TestComponentAddressApiDelete(t *testing.T) {
 		"should be successfull when addresses not exists": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
-			expectedCode:   200,
+			expectedCode:   204,
 			expectedBody:   &service.AddressResponse{},
 		},
 	}

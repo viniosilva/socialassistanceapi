@@ -27,14 +27,14 @@ func NewPersonStore(db *sql.DB) PersonStore {
 }
 
 func (impl *personStore) FindAll(ctx context.Context) ([]model.Person, error) {
-	people := []model.Person{}
+	persons := []model.Person{}
 
 	res, err := impl.db.Query(`
 		SELECT id,
 			created_at,
 			updated_at,
 			name
-		FROM people
+		FROM persons
 		WHERE deleted_at IS NULL
 	`)
 	if err != nil {
@@ -47,10 +47,10 @@ func (impl *personStore) FindAll(ctx context.Context) ([]model.Person, error) {
 			return nil, err
 		}
 
-		people = append(people, *person)
+		persons = append(persons, *person)
 	}
 
-	return people, nil
+	return persons, nil
 }
 
 func (impl *personStore) FindOneById(ctx context.Context, personID int) (*model.Person, error) {
@@ -59,7 +59,7 @@ func (impl *personStore) FindOneById(ctx context.Context, personID int) (*model.
 			created_at,
 			updated_at,
 			name
-		FROM people
+		FROM persons
 		WHERE id = ?
 		LIMIT 1
 	`, personID)
@@ -82,7 +82,7 @@ func (impl *personStore) Create(ctx context.Context, person model.Person) (*mode
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
 	res, err := impl.db.ExecContext(ctx, `
-		INSERT INTO people (created_at, updated_at, name)
+		INSERT INTO persons (created_at, updated_at, name)
 		VALUES (?, ?, ?)
 	`, nowMysql, nowMysql, person.Name)
 	if err != nil {
@@ -108,7 +108,7 @@ func (impl *personStore) Update(ctx context.Context, person model.Person) (*mode
 	}
 
 	res, err := t.ExecContext(ctx, `
-		UPDATE people
+		UPDATE persons
 		SET name = ?,
 			updated_at = ?
 		WHERE id = ?
@@ -128,7 +128,7 @@ func (impl *personStore) Update(ctx context.Context, person model.Person) (*mode
 	var createdAt string
 	impl.db.QueryRowContext(ctx, `
 		SELECT created_at
-		FROM people
+		FROM persons
 		WHERE id = ?
 		LIMIT 1
 	`, person.ID).Scan(&createdAt)
@@ -149,7 +149,7 @@ func (impl *personStore) Update(ctx context.Context, person model.Person) (*mode
 
 func (impl *personStore) Delete(ctx context.Context, personID int) error {
 	_, err := impl.db.ExecContext(ctx, `
-		UPDATE people
+		UPDATE persons
 		SET deleted_at = NOW()
 		WHERE id = ?
 	`, personID)

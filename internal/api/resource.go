@@ -25,12 +25,12 @@ func NewResourceApi(router *gin.RouterGroup, service *service.ResourceService) *
 	return impl
 }
 
-// @Summary find all resource
+// @Summary find all resources
 // @tags 	resource
 // @Accept 	json
 // @produce json
-// @Success 200 {object} service.ResourceResponse
-// @Router 	/api/v1/resource [get]
+// @Success 200 {object} service.ResourcesResponse
+// @Router 	/api/v1/resources [get]
 func (impl *ResourceApi) FindAll(c *gin.Context) {
 	res, err := impl.service.FindAll(c)
 	if err != nil {
@@ -48,7 +48,7 @@ func (impl *ResourceApi) FindAll(c *gin.Context) {
 // Param 	id path			int true	"resource ID"
 // @Success 200 {object} 	service.ResourceResponse
 // Failure	404 {objetc}	HttpError
-// @Router /api/v1/resource [get]
+// @Router /api/v1/resources [get]
 func (impl *ResourceApi) FindOneByID(c *gin.Context) {
 	resourceID, err := strconv.Atoi(c.Param("resourceID"))
 	if err != nil {
@@ -78,7 +78,7 @@ func (impl *ResourceApi) FindOneByID(c *gin.Context) {
 // @Success	201	{object}	service.ResourceResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/resource [post]
+// @Router	/api/v1/resources [post]
 func (impl *ResourceApi) Create(c *gin.Context) {
 	var resource service.ResourceDto
 	err := c.ShouldBindJSON(&resource)
@@ -106,7 +106,7 @@ func (impl *ResourceApi) Create(c *gin.Context) {
 // @Success	200	{object}	service.ResourceResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/people/{id} [patch]
+// @Router	/api/v1/resources/{id} [patch]
 func (impl *ResourceApi) Update(c *gin.Context) {
 	resourceID, err := strconv.Atoi(c.Param("resourceID"))
 	if err != nil {
@@ -140,10 +140,10 @@ func (impl *ResourceApi) Update(c *gin.Context) {
 // @Accept	json
 // @Produce	json
 // @Param	id	path		int	true	"resource ID"
-// @Success	200	{object}	service.ResourceResponse
+// @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/people/{id} [delete]
+// @Router	/api/v1/resources/{id} [delete]
 func (impl *ResourceApi) Delete(c *gin.Context) {
 	resourceID, err := strconv.Atoi(c.Param("resourceID"))
 	if err != nil {
@@ -151,11 +151,11 @@ func (impl *ResourceApi) Delete(c *gin.Context) {
 		return
 	}
 
-	res, err := impl.service.Delete(c, resourceID)
+	err = impl.service.Delete(c, resourceID)
 	if err != nil {
 		NewHttpInternalServerError(c)
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Status(http.StatusNoContent)
 }

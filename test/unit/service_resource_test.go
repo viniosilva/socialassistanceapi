@@ -18,18 +18,18 @@ func TestResourceServiceFindAll(t *testing.T) {
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		expectedData service.ResourcesResponse
-		expectedErr  error
-		prepareMock  func(mock *mock.MockResourceStore)
+		expectedRes service.ResourcesResponse
+		expectedErr error
+		prepareMock func(mock *mock.MockResourceStore)
 	}{
 		"should return resource list": {
-			expectedData: service.ResourcesResponse{Data: []service.Resource{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
+			expectedRes: service.ResourcesResponse{Data: []service.Resource{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Resource{{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}}, nil)
 			},
 		},
 		"should return empty resource list": {
-			expectedData: service.ResourcesResponse{Data: []service.Resource{}},
+			expectedRes: service.ResourcesResponse{Data: []service.Resource{}},
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Resource{}, nil)
 			},
@@ -52,11 +52,11 @@ func TestResourceServiceFindAll(t *testing.T) {
 			impl := service.NewResourceService(storeMock)
 
 			// when
-			resource, err := impl.FindAll(ctx)
+			res, err := impl.FindAll(ctx)
 
 			// then
-			if !reflect.DeepEqual(resource, cs.expectedData) {
-				t.Errorf("ResourceService.FindAll() = %v, expected %v", resource, cs.expectedData)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("ResourceService.FindAll() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("ResourceService.FindAll() error = %v, expected %v", err, cs.expectedErr)
@@ -71,20 +71,20 @@ func TestResourceServiceFindOneByID(t *testing.T) {
 
 	cases := map[string]struct {
 		inputResourceID int
-		expectedData    service.ResourceResponse
+		expectedRes     service.ResourceResponse
 		expectedErr     error
 		prepareMock     func(mock *mock.MockResourceStore)
 	}{
 		"should return resource when exists": {
 			inputResourceID: 1,
-			expectedData:    service.ResourceResponse{Data: &service.Resource{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
+			expectedRes:     service.ResourceResponse{Data: &service.Resource{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(&model.Resource{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}, nil)
 			},
 		},
 		"should return when resource not exists": {
 			inputResourceID: 1,
-			expectedData:    service.ResourceResponse{},
+			expectedRes:     service.ResourceResponse{},
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(nil, nil)
 			},
@@ -108,11 +108,11 @@ func TestResourceServiceFindOneByID(t *testing.T) {
 			impl := service.NewResourceService(storeMock)
 
 			// when
-			resource, err := impl.FindOneById(ctx, cs.inputResourceID)
+			res, err := impl.FindOneById(ctx, cs.inputResourceID)
 
 			// then
-			if !reflect.DeepEqual(resource, cs.expectedData) {
-				t.Errorf("Resource.Service.FindOneById() = %v, expected %v", resource, cs.expectedData)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("Resource.Service.FindOneById() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("ResourceService.FindOneById() error = %v, epected %v", err, cs.expectedErr)
@@ -127,13 +127,13 @@ func TestResourceServiceCreate(t *testing.T) {
 
 	cases := map[string]struct {
 		inputResource service.ResourceDto
-		expectedData  service.ResourceResponse
+		expectedRes   service.ResourceResponse
 		expectedErr   error
 		prepareMock   func(mock *mock.MockResourceStore)
 	}{
 		"should create resource": {
 			inputResource: service.ResourceDto{Name: "Teste"},
-			expectedData:  service.ResourceResponse{Data: &service.Resource{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
+			expectedRes:   service.ResourceResponse{Data: &service.Resource{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().Create(gomock.All(), gomock.All()).Return(&model.Resource{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}, nil)
 			},
@@ -158,11 +158,11 @@ func TestResourceServiceCreate(t *testing.T) {
 			impl := service.NewResourceService(storeMock)
 
 			// when
-			resource, err := impl.Create(ctx, cs.inputResource)
+			res, err := impl.Create(ctx, cs.inputResource)
 
 			// then
-			if !reflect.DeepEqual(resource, cs.expectedData) {
-				t.Errorf("ResourceService.FindOneById() = %v, expected %v", resource, cs.expectedData)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("ResourceService.FindOneById() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("ResourceService.FindOneById() error = %v, expected %v", err, cs.expectedErr)
@@ -178,21 +178,21 @@ func TestResourceServiceUpdate(t *testing.T) {
 	cases := map[string]struct {
 		inputResourceID int
 		inputResource   service.ResourceDto
-		expectedData    service.ResourceResponse
+		expectedRes     service.ResourceResponse
 		expectedErr     error
 		prepareMock     func(mock *mock.MockResourceStore)
 	}{
 		"should update resource": {
 			inputResourceID: 1,
 			inputResource:   service.ResourceDto{Name: "Test update"},
-			expectedData:    service.ResourceResponse{Data: &service.Resource{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test update"}},
+			expectedRes:     service.ResourceResponse{Data: &service.Resource{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test update"}},
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().Update(gomock.All(), gomock.All()).Return(&model.Resource{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test update"}, nil)
 			},
 		},
 		"should return empty when resource not exists": {
 			inputResourceID: 1,
-			expectedData:    service.ResourceResponse{},
+			expectedRes:     service.ResourceResponse{},
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().Update(gomock.All(), gomock.All()).Return(nil, nil)
 			},
@@ -216,11 +216,11 @@ func TestResourceServiceUpdate(t *testing.T) {
 			impl := service.NewResourceService(storeMock)
 
 			// when
-			resource, err := impl.Update(ctx, cs.inputResourceID, cs.inputResource)
+			res, err := impl.Update(ctx, cs.inputResourceID, cs.inputResource)
 
 			// then
-			if !reflect.DeepEqual(resource, cs.expectedData) {
-				t.Errorf("ResourceService.Update() = %v, expected %v", resource, cs.expectedData)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("ResourceService.Update() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("ResourceService.Update() error = %v, expected %v", err, cs.expectedErr)
@@ -231,14 +231,12 @@ func TestResourceServiceUpdate(t *testing.T) {
 
 func TestResourceServiceDelete(t *testing.T) {
 	cases := map[string]struct {
-		inputResourceID  int
-		expectedResource service.ResourceResponse
-		expectedErr      error
-		prepareMock      func(mock *mock.MockResourceStore)
+		inputResourceID int
+		expectedErr     error
+		prepareMock     func(mock *mock.MockResourceStore)
 	}{
 		"should delete person": {
-			inputResourceID:  1,
-			expectedResource: service.ResourceResponse{},
+			inputResourceID: 1,
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
 			},
@@ -262,12 +260,9 @@ func TestResourceServiceDelete(t *testing.T) {
 			impl := service.NewResourceService(storeMock)
 
 			// when
-			resource, err := impl.Delete(ctx, cs.inputResourceID)
+			err := impl.Delete(ctx, cs.inputResourceID)
 
 			// then
-			if !reflect.DeepEqual(resource, cs.expectedResource) {
-				t.Errorf("ResourcenService.Delete() = %v, expected %v", resource, cs.expectedResource)
-			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("ResourcenService.Delete() error = %v, expected %v", err, cs.expectedErr)
 			}

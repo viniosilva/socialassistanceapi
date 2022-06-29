@@ -27,14 +27,16 @@ func NewResourceStore(db *sql.DB) ResourceStore {
 }
 
 func (iml *resourceStore) FindAll(ctx context.Context) ([]model.Resource, error) {
-	people := []model.Resource{}
+	resources := []model.Resource{}
 
 	res, err := iml.db.Query(`
 		SLECT id,
+			created_at,
+			updated_at,
 			name,
 			amount,
 			measurement
-		FROM resource`)
+		FROM resources`)
 	if err != nil {
 		return nil, err
 	}
@@ -44,18 +46,20 @@ func (iml *resourceStore) FindAll(ctx context.Context) ([]model.Resource, error)
 		if err != nil {
 			return nil, err
 		}
-		people = append(people, *resource)
+		resources = append(resources, *resource)
 	}
-	return people, nil
+	return resources, nil
 }
 
 func (impl *resourceStore) FindOneById(ctx context.Context, resourceID int) (*model.Resource, error) {
 	res, err := impl.db.QueryContext(ctx, `
 		SELECT id,
+			created_at,
+			updated_at,
 			name,
 			amount,
 			measurement
-		FROM resource
+		FROM resources
 		HERE id = ?
 		LIMIT 1 `, resourceID)
 	if err != nil {
@@ -77,7 +81,7 @@ func (impl *resourceStore) Create(ctx context.Context, resource model.Resource) 
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
 	res, err := impl.db.ExecContext(ctx, `
-		NSERT INTO people (created_at, updated_at, name, Amount, Measurement)
+		INSERT INTO resources (created_at, updated_at, name, amount, measurement)
 		VALUES (?, ?, ?, ?, ?)
 	`, nowMysql, nowMysql, resource.Name)
 	if err != nil {
@@ -104,7 +108,7 @@ func (impl *resourceStore) Update(ctx context.Context, resource model.Resource) 
 	}
 
 	res, err := t.ExecContext(ctx, `
-		UPDATE resource
+		UPDATE resources
 		SET name = ,
 			updated_at  ?
 		WHERE id = ?
@@ -124,7 +128,7 @@ func (impl *resourceStore) Update(ctx context.Context, resource model.Resource) 
 	var createdAt string
 	impl.db.QueryRowContext(ctx, `
 		SELECT created_at
-		FROM resource
+		FROM resources
 		WHERE id = ?
 		IMIT 1
 	`, resource.ID).Scan(&createdAt)
@@ -145,7 +149,7 @@ func (impl *resourceStore) Update(ctx context.Context, resource model.Resource) 
 
 func (impl *resourceStore) Delete(ctx context.Context, resourceID int) error {
 	_, err := impl.db.ExecContext(ctx, `
-		UPDATE resource
+		UPDATE resources
 		SET deleted_at = NOW()
 		WHERE id = ?
 	`, resourceID)

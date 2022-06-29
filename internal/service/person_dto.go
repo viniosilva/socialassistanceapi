@@ -12,7 +12,7 @@ type PersonResponse struct {
 	Data *Person `json:"data"`
 }
 
-type PeopleResponse struct {
+type PersonsResponse struct {
 	Data []Person `json:"data"`
 }
 

@@ -18,12 +18,12 @@ func TestAddressServiceFindAll(t *testing.T) {
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		expectedAddresses service.AddressesResponse
-		expectedErr       error
-		prepareMock       func(mock *mock.MockAddressStore)
+		expectedRes service.AddressesResponse
+		expectedErr error
+		prepareMock func(mock *mock.MockAddressStore)
 	}{
 		"should return addresses list": {
-			expectedAddresses: service.AddressesResponse{Data: []service.Address{{
+			expectedRes: service.AddressesResponse{Data: []service.Address{{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -53,7 +53,7 @@ func TestAddressServiceFindAll(t *testing.T) {
 			},
 		},
 		"should return empty addresses list": {
-			expectedAddresses: service.AddressesResponse{Data: []service.Address{}},
+			expectedRes: service.AddressesResponse{Data: []service.Address{}},
 			prepareMock: func(mock *mock.MockAddressStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Address{}, nil)
 			},
@@ -76,11 +76,11 @@ func TestAddressServiceFindAll(t *testing.T) {
 			impl := service.NewAddressService(storeMock)
 
 			// when
-			addresses, err := impl.FindAll(ctx)
+			res, err := impl.FindAll(ctx)
 
 			// then
-			if !reflect.DeepEqual(addresses, cs.expectedAddresses) {
-				t.Errorf("AddressService.FindAll() = %v, expected %v", addresses, cs.expectedAddresses)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("AddressService.FindAll() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("AddressService.FindAll() error = %v, expected %v", err, cs.expectedErr)
@@ -94,14 +94,14 @@ func TestAddressServiceFindOneByID(t *testing.T) {
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputAddressID  int
-		expectedAddress service.AddressResponse
-		expectedErr     error
-		prepareMock     func(mock *mock.MockAddressStore)
+		inputAddressID int
+		expectedRes    service.AddressResponse
+		expectedErr    error
+		prepareMock    func(mock *mock.MockAddressStore)
 	}{
 		"should return address when exists": {
 			inputAddressID: 1,
-			expectedAddress: service.AddressResponse{Data: &service.Address{
+			expectedRes: service.AddressResponse{Data: &service.Address{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -131,8 +131,8 @@ func TestAddressServiceFindOneByID(t *testing.T) {
 			},
 		},
 		"should return empty when address not exists": {
-			inputAddressID:  1,
-			expectedAddress: service.AddressResponse{},
+			inputAddressID: 1,
+			expectedRes:    service.AddressResponse{},
 			prepareMock: func(mock *mock.MockAddressStore) {
 				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(nil, nil)
 			},
@@ -156,11 +156,11 @@ func TestAddressServiceFindOneByID(t *testing.T) {
 			impl := service.NewAddressService(storeMock)
 
 			// when
-			address, err := impl.FindOneById(ctx, cs.inputAddressID)
+			res, err := impl.FindOneById(ctx, cs.inputAddressID)
 
 			// then
-			if !reflect.DeepEqual(address, cs.expectedAddress) {
-				t.Errorf("AddressService.FindOneById() = %v, expected %v", address, cs.expectedAddress)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("AddressService.FindOneById() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("AddressService.FindOneById() error = %v, expected %v", err, cs.expectedErr)
@@ -174,10 +174,10 @@ func TestAddressServiceCreate(t *testing.T) {
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputAddress    service.AddressDto
-		expectedAddress service.AddressResponse
-		expectedErr     error
-		prepareMock     func(mock *mock.MockAddressStore)
+		inputAddress service.AddressDto
+		expectedRes  service.AddressResponse
+		expectedErr  error
+		prepareMock  func(mock *mock.MockAddressStore)
 	}{
 		"should create address": {
 			inputAddress: service.AddressDto{
@@ -190,7 +190,7 @@ func TestAddressServiceCreate(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			},
-			expectedAddress: service.AddressResponse{Data: &service.Address{
+			expectedRes: service.AddressResponse{Data: &service.Address{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -247,11 +247,11 @@ func TestAddressServiceCreate(t *testing.T) {
 			impl := service.NewAddressService(storeMock)
 
 			// when
-			address, err := impl.Create(ctx, cs.inputAddress)
+			res, err := impl.Create(ctx, cs.inputAddress)
 
 			// then
-			if !reflect.DeepEqual(address, cs.expectedAddress) {
-				t.Errorf("AddressService.FindOneById() = %v, expected %v", address, cs.expectedAddress)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("AddressService.FindOneById() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("AddressService.FindOneById() error = %v, expected %v", err, cs.expectedErr)
@@ -265,11 +265,11 @@ func TestAddressServiceUpdate(t *testing.T) {
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputAddressID  int
-		inputAddress    service.AddressDto
-		expectedAddress service.AddressResponse
-		expectedErr     error
-		prepareMock     func(mock *mock.MockAddressStore)
+		inputAddressID int
+		inputAddress   service.AddressDto
+		expectedRes    service.AddressResponse
+		expectedErr    error
+		prepareMock    func(mock *mock.MockAddressStore)
 	}{
 		"should update address": {
 			inputAddressID: 1,
@@ -282,7 +282,7 @@ func TestAddressServiceUpdate(t *testing.T) {
 				Number:       "1",
 				Zipcode:      "91755450",
 			},
-			expectedAddress: service.AddressResponse{Data: &service.Address{
+			expectedRes: service.AddressResponse{Data: &service.Address{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -310,8 +310,8 @@ func TestAddressServiceUpdate(t *testing.T) {
 			},
 		},
 		"should return empty when address not exists": {
-			inputAddressID:  1,
-			expectedAddress: service.AddressResponse{},
+			inputAddressID: 1,
+			expectedRes:    service.AddressResponse{},
 			prepareMock: func(mock *mock.MockAddressStore) {
 				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, nil)
 			},
@@ -343,11 +343,11 @@ func TestAddressServiceUpdate(t *testing.T) {
 			impl := service.NewAddressService(storeMock)
 
 			// when
-			address, err := impl.Update(ctx, cs.inputAddressID, cs.inputAddress)
+			res, err := impl.Update(ctx, cs.inputAddressID, cs.inputAddress)
 
 			// then
-			if !reflect.DeepEqual(address, cs.expectedAddress) {
-				t.Errorf("AddressService.Update() = %v, expected %v", address, cs.expectedAddress)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("AddressService.Update() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("AddressService.Update() error = %v, expected %v", err, cs.expectedErr)
@@ -358,14 +358,12 @@ func TestAddressServiceUpdate(t *testing.T) {
 
 func TestAddressServiceDelete(t *testing.T) {
 	cases := map[string]struct {
-		inputAddressID  int
-		expectedAddress service.AddressResponse
-		expectedErr     error
-		prepareMock     func(mock *mock.MockAddressStore)
+		inputAddressID int
+		expectedErr    error
+		prepareMock    func(mock *mock.MockAddressStore)
 	}{
 		"should delete address": {
-			inputAddressID:  1,
-			expectedAddress: service.AddressResponse{},
+			inputAddressID: 1,
 			prepareMock: func(mock *mock.MockAddressStore) {
 				mock.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
 			},
@@ -389,12 +387,9 @@ func TestAddressServiceDelete(t *testing.T) {
 			impl := service.NewAddressService(storeMock)
 
 			// when
-			address, err := impl.Delete(ctx, cs.inputAddressID)
+			err := impl.Delete(ctx, cs.inputAddressID)
 
 			// then
-			if !reflect.DeepEqual(address, cs.expectedAddress) {
-				t.Errorf("AddressService.Delete() = %v, expected %v", address, cs.expectedAddress)
-			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("AddressService.Delete() error = %v, expected %v", err, cs.expectedErr)
 			}

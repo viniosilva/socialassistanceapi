@@ -31,9 +31,9 @@ func NewApi(addr string,
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	NewHealthApi(api.Group("/api/health"), healthService)
-	NewPersonApi(api.Group("/api/v1/people"), personService)
+	NewPersonApi(api.Group("/api/v1/persons"), personService)
 	NewAddressApi(api.Group("/api/v1/addresses"), addressService)
-	NewResourceApi(api.Group("/api/v1/resource"), resourceService)
+	NewResourceApi(api.Group("/api/v1/resources"), resourceService)
 
 	return &Api{api, addr}
 }

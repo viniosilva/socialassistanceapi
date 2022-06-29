@@ -144,7 +144,7 @@ func (impl *AddressApi) Update(c *gin.Context) {
 // @Accept	json
 // @Produce	json
 // @Param	id	path		int	true	"address ID"
-// @Success	200	{object}	service.AddressResponse
+// @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
 // @Router	/api/v1/addresses/{id} [delete]
@@ -155,11 +155,11 @@ func (impl *AddressApi) Delete(c *gin.Context) {
 		return
 	}
 
-	res, err := impl.service.Delete(c, addressID)
+	err = impl.service.Delete(c, addressID)
 	if err != nil {
 		NewHttpInternalServerError(c)
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Status(http.StatusNoContent)
 }

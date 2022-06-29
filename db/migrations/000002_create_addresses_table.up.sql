@@ -5,10 +5,10 @@ CREATE TABLE addresses (
    deleted_at DATETIME,
    country VARCHAR(2) NOT NULL,
    state VARCHAR(2) NOT NULL,
-   city VARCHAR(128) NOT NULL,
-   neighborhood VARCHAR(128) NOT NULL,
-   street VARCHAR(128) NOT NULL,
+   city TEXT NOT NULL,
+   neighborhood TEXT NOT NULL,
+   street TEXT NOT NULL,
    number VARCHAR(15) NOT NULL,
-   complement VARCHAR(128) NOT NULL,
+   complement TEXT NOT NULL,
    zipcode VARCHAR(16) NOT NULL
 );

@@ -25,12 +25,12 @@ func NewPersonApi(router *gin.RouterGroup, service *service.PersonService) *Pers
 	return impl
 }
 
-// @Summary find all people
+// @Summary find all persons
 // @Tags person
 // @Accept json
 // @Produce json
-// @Success 200 {object} service.PeopleResponse
-// @Router /api/v1/people [get]
+// @Success 200 {object} service.PersonResponse
+// @Router /api/v1/persons [get]
 func (impl *PersonApi) FindAll(c *gin.Context) {
 	res, err := impl.service.FindAll(c)
 	if err != nil {
@@ -46,9 +46,9 @@ func (impl *PersonApi) FindAll(c *gin.Context) {
 // @Accept	json
 // @Produce	json
 // @Param	id	path		int	true	"person ID"
-// @Success	200	{object}	service.PeopleResponse
+// @Success	200	{object}	service.PersonsResponse
 // @Failure	404	{object}	HttpError
-// @Router	/api/v1/people/{id} [get]
+// @Router	/api/v1/persons/{id} [get]
 func (impl *PersonApi) FindOneByID(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("personID"))
 	if err != nil {
@@ -78,7 +78,7 @@ func (impl *PersonApi) FindOneByID(c *gin.Context) {
 // @Success	201	{object}	service.PersonResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/people [post]
+// @Router	/api/v1/persons [post]
 func (impl *PersonApi) Create(c *gin.Context) {
 	var person service.PersonDto
 	err := c.ShouldBindJSON(&person)
@@ -105,7 +105,7 @@ func (impl *PersonApi) Create(c *gin.Context) {
 // @Success	200	{object}	service.PersonResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/people/{id} [patch]
+// @Router	/api/v1/persons/{id} [patch]
 func (impl *PersonApi) Update(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("personID"))
 	if err != nil {
@@ -139,10 +139,10 @@ func (impl *PersonApi) Update(c *gin.Context) {
 // @Accept	json
 // @Produce	json
 // @Param	id	path		int	true	"person ID"
-// @Success	200	{object}	service.PersonResponse
+// @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/people/{id} [delete]
+// @Router	/api/v1/persons/{id} [delete]
 func (impl *PersonApi) Delete(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("personID"))
 	if err != nil {
@@ -150,11 +150,11 @@ func (impl *PersonApi) Delete(c *gin.Context) {
 		return
 	}
 
-	res, err := impl.service.Delete(c, personID)
+	err = impl.service.Delete(c, personID)
 	if err != nil {
 		NewHttpInternalServerError(c)
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Status(http.StatusNoContent)
 }

@@ -2,8 +2,6 @@ package model
 
 import (
 	"time"
-
-	"github.com/shopspring/decimal"
 )
 
 type Resource struct {
@@ -13,6 +11,6 @@ type Resource struct {
 	DeletedAt *time.Time
 
 	Name        string
-	Amount      decimal.Decimal
+	Amount      float32
 	Measurement string
 }
