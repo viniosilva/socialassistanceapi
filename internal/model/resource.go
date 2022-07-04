@@ -8,7 +8,6 @@ type Resource struct {
 	ID        int
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt *time.Time
 
 	Name        string
 	Amount      float32

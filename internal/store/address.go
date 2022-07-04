@@ -119,9 +119,9 @@ func (impl *addressStore) Create(ctx context.Context, address model.Address) (*m
 }
 
 func (impl *addressStore) Update(ctx context.Context, address model.Address) (*model.Address, error) {
-	fields, values := getNotEmptyData(address)
+	fields, values := getNotEmptyAddressFields(address)
 	if len(fields) == 0 {
-		return nil, exception.NewEmptyAddressModelException()
+		return nil, exception.NewEmptyModelException("address")
 	}
 
 	query := fmt.Sprintf(`
@@ -225,7 +225,7 @@ func scanAddress(res *sql.Rows) (*model.Address, error) {
 	return address, nil
 }
 
-func getNotEmptyData(address model.Address) ([]string, []interface{}) {
+func getNotEmptyAddressFields(address model.Address) ([]string, []interface{}) {
 	fields := []string{}
 	values := []interface{}{}
 

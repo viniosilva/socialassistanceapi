@@ -3,9 +3,11 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
 
@@ -15,7 +17,6 @@ type ResourceStore interface {
 	FindOneById(ctx context.Context, resourceID int) (*model.Resource, error)
 	Create(ctx context.Context, resource model.Resource) (*model.Resource, error)
 	Update(ctx context.Context, resource model.Resource) (*model.Resource, error)
-	Delete(ctx context.Context, resourceID int) error
 }
 
 type resourceStore struct {
@@ -30,7 +31,7 @@ func (iml *resourceStore) FindAll(ctx context.Context) ([]model.Resource, error)
 	resources := []model.Resource{}
 
 	res, err := iml.db.Query(`
-		SLECT id,
+		SELECT id,
 			created_at,
 			updated_at,
 			name,
@@ -60,7 +61,7 @@ func (impl *resourceStore) FindOneById(ctx context.Context, resourceID int) (*mo
 			amount,
 			measurement
 		FROM resources
-		HERE id = ?
+		WHERE id = ?
 		LIMIT 1 `, resourceID)
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ func (impl *resourceStore) Create(ctx context.Context, resource model.Resource) 
 	res, err := impl.db.ExecContext(ctx, `
 		INSERT INTO resources (created_at, updated_at, name, amount, measurement)
 		VALUES (?, ?, ?, ?, ?)
-	`, nowMysql, nowMysql, resource.Name)
+	`, nowMysql, nowMysql, resource.Name, resource.Amount, resource.Measurement)
 	if err != nil {
 		return nil, err
 	}
@@ -101,67 +102,80 @@ func (impl *resourceStore) Create(ctx context.Context, resource model.Resource) 
 }
 
 func (impl *resourceStore) Update(ctx context.Context, resource model.Resource) (*model.Resource, error) {
+	fields, values := getNotEmptyResourceFields(map[string]interface{}{
+		"name":        resource.Name,
+		"measurement": resource.Measurement,
+	})
+	if len(fields) == 0 {
+		return nil, exception.NewEmptyModelException("resource")
+	}
+
+	query := fmt.Sprintf(`
+		UPDATE resources
+		SET updated_at = ?, %s
+		WHERE id = ?
+	`, strings.Join(fields, ", "))
+
 	now := time.Now()
 	t, err := impl.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := t.ExecContext(ctx, `
-		UPDATE resources
-		SET name = ,
-			updated_at  ?
-		WHERE id = ?
-	`, resource.Name, now.Format("2006-01-02T15:04:05"), resource.ID)
+	values = append([]interface{}{now.Format("2006-01-02T15:04:05")}, values...)
+	values = append(values, resource.ID)
 
+	res, err := t.ExecContext(ctx, query, values...)
 	if err != nil {
-		t.Rollback()
+		if err = t.Rollback(); err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 
 	rows, err := res.RowsAffected()
 	if err != nil || rows == 0 {
-		t.Rollback()
+		if err = t.Rollback(); err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 
-	var createdAt string
-	impl.db.QueryRowContext(ctx, `
-		SELECT created_at
+	resS, err := t.QueryContext(ctx, `
+		SELECT id,
+			created_at,
+			updated_at,
+			name,
+			amount,
+			measurement
 		FROM resources
 		WHERE id = ?
-		IMIT 1
-	`, resource.ID).Scan(&createdAt)
+		LIMIT 1
+	`, resource.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var r *model.Resource
+	for resS.Next() {
+		r, err = scanResource(resS)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if err := t.Commit(); err != nil {
 		return nil, err
 	}
 
-	c, err := time.Parse("006-01-02T15:04:05", strings.Replace(createdAt, " ", "T", 1))
-	if err != nil {
-		return nil, err
-	}
-
-	resource.CreatedAt = c
-	resource.UpdatedAt = now
-	return &resource, nil
-}
-
-func (impl *resourceStore) Delete(ctx context.Context, resourceID int) error {
-	_, err := impl.db.ExecContext(ctx, `
-		UPDATE resources
-		SET deleted_at = NOW()
-		WHERE id = ?
-	`, resourceID)
-
-	return err
+	return r, nil
 }
 
 func scanResource(res *sql.Rows) (*model.Resource, error) {
 	var resource = &model.Resource{}
 	var createdAt, updatedAt string
 
-	if err := res.Scan(&resource.ID, &createdAt, &updatedAt, &resource.Name); err != nil {
+	if err := res.Scan(&resource.ID, &createdAt, &updatedAt, &resource.Name, &resource.Amount, &resource.Measurement); err != nil {
 		return nil, err
 	}
 
@@ -178,4 +192,18 @@ func scanResource(res *sql.Rows) (*model.Resource, error) {
 	resource.UpdatedAt = t
 
 	return resource, nil
+}
+
+func getNotEmptyResourceFields(data map[string]interface{}) ([]string, []interface{}) {
+	fields := []string{}
+	values := []interface{}{}
+
+	for field, value := range data {
+		if value != "" {
+			fields = append(fields, field+" = ?")
+			values = append(values, value)
+		}
+	}
+
+	return fields, values
 }

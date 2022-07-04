@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
@@ -20,7 +21,6 @@ func NewResourceApi(router *gin.RouterGroup, service *service.ResourceService) *
 	router.GET("/:resourceID", impl.FindOneByID)
 	router.POST("", impl.Create)
 	router.PATCH("/:resourceID", impl.Update)
-	router.DELETE("/:resourceID", impl.Delete)
 
 	return impl
 }
@@ -52,7 +52,7 @@ func (impl *ResourceApi) FindAll(c *gin.Context) {
 func (impl *ResourceApi) FindOneByID(c *gin.Context) {
 	resourceID, err := strconv.Atoi(c.Param("resourceID"))
 	if err != nil {
-		NewHttpError(c, http.StatusBadRequest, "Invalid resourceID")
+		NewHttpError(c, http.StatusBadRequest, "invalid resourceID")
 		return
 	}
 
@@ -94,7 +94,7 @@ func (impl *ResourceApi) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusCreated, res)
 }
 
 // @Summary	update a resource
@@ -116,15 +116,19 @@ func (impl *ResourceApi) Update(c *gin.Context) {
 
 	var resource service.ResourceDto
 	err = c.ShouldBindJSON(&resource)
-	if e, ok := err.(validator.ValidationErrors); ok {
-		msg := e.Error()
-		NewHttpError(c, http.StatusBadRequest, msg)
+	if e, ok := err.(validator.ValidationErrors); e != nil && !ok {
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
 		return
 	}
 
 	res, err := impl.service.Update(c, resourceID, resource)
 	if err != nil {
-		NewHttpInternalServerError(c)
+		if e, ok := err.(*exception.EmptyModelException); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+		} else {
+			NewHttpInternalServerError(c)
+		}
+
 		return
 	}
 	if res.Data == nil {
@@ -133,29 +137,4 @@ func (impl *ResourceApi) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, res)
-}
-
-// @Summary	delete a resource
-// @Tags	resource
-// @Accept	json
-// @Produce	json
-// @Param	id	path		int	true	"resource ID"
-// @Success	204
-// @Failure	400	{object}	HttpError
-// @Failure	500	{object}	HttpError
-// @Router	/api/v1/resources/{id} [delete]
-func (impl *ResourceApi) Delete(c *gin.Context) {
-	resourceID, err := strconv.Atoi(c.Param("resourceID"))
-	if err != nil {
-		NewHttpError(c, http.StatusBadRequest, "invalid resourceID")
-		return
-	}
-
-	err = impl.service.Delete(c, resourceID)
-	if err != nil {
-		NewHttpInternalServerError(c)
-		return
-	}
-
-	c.Status(http.StatusNoContent)
 }

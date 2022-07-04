@@ -184,10 +184,20 @@ func TestResourceServiceUpdate(t *testing.T) {
 	}{
 		"should update resource": {
 			inputResourceID: 1,
-			inputResource:   service.ResourceDto{Name: "Test update"},
-			expectedRes:     service.ResourceResponse{Data: &service.Resource{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test update"}},
+			inputResource:   service.ResourceDto{Name: "Test"},
+			expectedRes: service.ResourceResponse{Data: &service.Resource{
+				ID: 1, CreatedAt: DATE, UpdatedAt: DATE,
+				Name:        "Test",
+				Amount:      1,
+				Measurement: "Kg",
+			}},
 			prepareMock: func(mock *mock.MockResourceStore) {
-				mock.EXPECT().Update(gomock.All(), gomock.All()).Return(&model.Resource{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test update"}, nil)
+				mock.EXPECT().Update(gomock.All(), gomock.All()).Return(&model.Resource{
+					ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME,
+					Name:        "Test",
+					Amount:      1,
+					Measurement: "Kg",
+				}, nil)
 			},
 		},
 		"should return empty when resource not exists": {
@@ -197,7 +207,7 @@ func TestResourceServiceUpdate(t *testing.T) {
 				mock.EXPECT().Update(gomock.All(), gomock.All()).Return(nil, nil)
 			},
 		},
-		"should thorw error": {
+		"should throw error": {
 			inputResource: service.ResourceDto{Name: "Test"},
 			expectedErr:   fmt.Errorf("error"),
 			prepareMock: func(mock *mock.MockResourceStore) {
@@ -224,47 +234,6 @@ func TestResourceServiceUpdate(t *testing.T) {
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("ResourceService.Update() error = %v, expected %v", err, cs.expectedErr)
-			}
-		})
-	}
-}
-
-func TestResourceServiceDelete(t *testing.T) {
-	cases := map[string]struct {
-		inputResourceID int
-		expectedErr     error
-		prepareMock     func(mock *mock.MockResourceStore)
-	}{
-		"should delete person": {
-			inputResourceID: 1,
-			prepareMock: func(mock *mock.MockResourceStore) {
-				mock.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
-			},
-		},
-		"should throw error": {
-			inputResourceID: 1,
-			expectedErr:     fmt.Errorf("error"),
-			prepareMock: func(mock *mock.MockResourceStore) {
-				mock.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
-			},
-		},
-	}
-	for name, cs := range cases {
-		t.Run(name, func(t *testing.T) {
-			// given
-			ctrl, ctx := gomock.WithContext(context.Background(), t)
-			defer ctrl.Finish()
-			storeMock := mock.NewMockResourceStore(ctrl)
-			cs.prepareMock(storeMock)
-
-			impl := service.NewResourceService(storeMock)
-
-			// when
-			err := impl.Delete(ctx, cs.inputResourceID)
-
-			// then
-			if err != nil && err.Error() != cs.expectedErr.Error() {
-				t.Errorf("ResourcenService.Delete() error = %v, expected %v", err, cs.expectedErr)
 			}
 		})
 	}

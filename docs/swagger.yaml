@@ -168,6 +168,10 @@ definitions:
       name_at:
         example: Arroz
         type: string
+    required:
+    - amount
+    - measurement
+    - name_at
     type: object
   service.ResourceResponse:
     properties:

@@ -349,7 +349,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
 			expectedCode:   400,
-			expectedErr:    &api.HttpError{Code: 400, Message: "empty payload"},
+			expectedErr:    &api.HttpError{Code: 400, Message: "empty model: address"},
 		},
 		"should throw not found error when addresses not exists": {
 			before:         func(db *sql.DB) {},

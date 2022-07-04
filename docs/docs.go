@@ -776,6 +776,11 @@ const docTemplate = `{
         },
         "service.ResourceDto": {
             "type": "object",
+            "required": [
+                "amount",
+                "measurement",
+                "name_at"
+            ],
             "properties": {
                 "amount": {
                     "type": "number",

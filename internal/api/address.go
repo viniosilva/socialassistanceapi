@@ -124,8 +124,8 @@ func (impl *AddressApi) Update(c *gin.Context) {
 
 	res, err := impl.service.Update(c, addressID, address)
 	if err != nil {
-		if _, ok := err.(*exception.EmptyAddressModelException); ok {
-			NewHttpError(c, http.StatusBadRequest, "empty payload")
+		if e, ok := err.(*exception.EmptyModelException); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
 			return
 		}
 		NewHttpInternalServerError(c)

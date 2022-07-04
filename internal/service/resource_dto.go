@@ -19,7 +19,7 @@ type ResourcesResponse struct {
 }
 
 type ResourceDto struct {
-	Name        string  `json:"name_at" example:"Arroz"`
-	Amount      float32 `json:"amount" example:"5"`
-	Measurement string  `json:"measurement" example:"Kg"`
+	Name        string  `json:"name_at" example:"Arroz" binding:"required"`
+	Amount      float32 `json:"amount" example:"5" binding:"required"`
+	Measurement string  `json:"measurement" example:"Kg" binding:"required"`
 }

@@ -24,10 +24,12 @@ func (impl *ResourceService) FindAll(ctx context.Context) (ResourcesResponse, er
 	res := []Resource{}
 	for _, c := range resource {
 		res = append(res, Resource{
-			ID:        c.ID,
-			CreatedAt: c.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: c.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:      c.Name,
+			ID:          c.ID,
+			CreatedAt:   c.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt:   c.UpdatedAt.Format("2006-01-02T15:04:05"),
+			Name:        c.Name,
+			Amount:      c.Amount,
+			Measurement: c.Measurement,
 		})
 	}
 
@@ -42,34 +44,43 @@ func (impl *ResourceService) FindOneById(ctx context.Context, resourceID int) (R
 
 	return ResourceResponse{
 		Data: &Resource{
-			ID:        resource.ID,
-			CreatedAt: resource.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: resource.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:      resource.Name,
+			ID:          resource.ID,
+			CreatedAt:   resource.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt:   resource.UpdatedAt.Format("2006-01-02T15:04:05"),
+			Name:        resource.Name,
+			Amount:      resource.Amount,
+			Measurement: resource.Measurement,
 		},
 	}, nil
 }
 
 func (impl *ResourceService) Create(ctx context.Context, dto ResourceDto) (ResourceResponse, error) {
-	resource, err := impl.store.Create(ctx, model.Resource{Name: dto.Name})
+	resource, err := impl.store.Create(ctx, model.Resource{
+		Name:        dto.Name,
+		Amount:      dto.Amount,
+		Measurement: dto.Measurement,
+	})
 	if err != nil {
 		return ResourceResponse{}, err
 	}
 
 	return ResourceResponse{
 		Data: &Resource{
-			ID:        resource.ID,
-			CreatedAt: resource.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: resource.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:      resource.Name,
+			ID:          resource.ID,
+			CreatedAt:   resource.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt:   resource.UpdatedAt.Format("2006-01-02T15:04:05"),
+			Name:        resource.Name,
+			Amount:      resource.Amount,
+			Measurement: resource.Measurement,
 		},
 	}, nil
 }
 
 func (impl *ResourceService) Update(ctx context.Context, ResourceID int, dto ResourceDto) (ResourceResponse, error) {
 	resource, err := impl.store.Update(ctx, model.Resource{
-		ID:   ResourceID,
-		Name: dto.Name,
+		ID:          ResourceID,
+		Name:        dto.Name,
+		Measurement: dto.Measurement,
 	})
 	if err != nil || resource == nil {
 		return ResourceResponse{}, err
@@ -77,14 +88,12 @@ func (impl *ResourceService) Update(ctx context.Context, ResourceID int, dto Res
 
 	return ResourceResponse{
 		Data: &Resource{
-			ID:        resource.ID,
-			CreatedAt: resource.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: resource.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:      resource.Name,
+			ID:          resource.ID,
+			CreatedAt:   resource.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt:   resource.UpdatedAt.Format("2006-01-02T15:04:05"),
+			Name:        resource.Name,
+			Amount:      resource.Amount,
+			Measurement: resource.Measurement,
 		},
 	}, nil
-}
-
-func (impl *ResourceService) Delete(ctx context.Context, resourceID int) error {
-	return impl.store.Delete(ctx, resourceID)
 }
