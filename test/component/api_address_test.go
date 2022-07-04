@@ -60,7 +60,7 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
@@ -142,7 +142,7 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
@@ -232,7 +232,7 @@ func TestComponentAddressApiCreate(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
@@ -374,7 +374,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
@@ -455,7 +455,7 @@ func TestComponentAddressApiDelete(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 

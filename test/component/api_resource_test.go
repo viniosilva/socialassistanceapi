@@ -52,7 +52,7 @@ func TestComponentResourceApiFindAll(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			resourceStore := store.NewResourceStore(mysql.DB)
+			resourceStore := store.NewResourceStore(mysql)
 			resourceService := service.NewResourceService(resourceStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
@@ -127,7 +127,7 @@ func TestComponentResourceApiFindOneByID(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			resourceStore := store.NewResourceStore(mysql.DB)
+			resourceStore := store.NewResourceStore(mysql)
 			resourceService := service.NewResourceService(resourceStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
@@ -192,7 +192,7 @@ func TestComponentResourceApiCreate(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			resourceStore := store.NewResourceStore(mysql.DB)
+			resourceStore := store.NewResourceStore(mysql)
 			resourceService := service.NewResourceService(resourceStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
@@ -286,7 +286,7 @@ func TestComponentResourceApiUpdate(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			resourceStore := store.NewResourceStore(mysql.DB)
+			resourceStore := store.NewResourceStore(mysql)
 			resourceService := service.NewResourceService(resourceStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
 
@@ -325,73 +325,3 @@ func TestComponentResourceApiUpdate(t *testing.T) {
 		})
 	}
 }
-
-// func TestComponentResourceApiDelete(t *testing.T) {
-// 	const DATE = "2000-01-01T12:03:00"
-
-// 	cases := map[string]struct {
-// 		before          func(db *sql.DB)
-// 		inputResourceID string
-// 		expectedCode    int
-// 		expectedBody    *service.ResourceResponse
-// 		expectedErr     *api.HttpError
-// 	}{
-// 		"should be successfull": {
-// 			before: func(db *sql.DB) {
-// 				db.Exec(`
-// 					INSERT INTO resource (id, created_at, updated_at, name, amount, measurement)
-// 					VALUES (1, ?, ?, ?, ?, ? 'Test')
-// 				`, DATE, DATE)
-// 			},
-// 			inputResourceID: "1",
-// 			expectedCode:    200,
-// 			expectedBody:    &service.ResourceResponse{},
-// 		},
-// 		"should throw bad request error when resourceID is not a number": {
-// 			before:          func(db *sql.DB) {},
-// 			inputResourceID: "a",
-// 			expectedCode:    400,
-// 			expectedErr:     &api.HttpError{Code: 400, Message: "invalid resourceID"},
-// 		},
-// 		"should be successfull when resources not exists": {
-// 			before:          func(db *sql.DB) {},
-// 			inputResourceID: "1",
-// 			expectedCode:    200,
-// 			expectedBody:    &service.ResourceResponse{},
-// 		},
-// 	}
-// 	for name, cs := range cases {
-// 		t.Run(name, func(t *testing.T) {
-// 			// given
-// 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
-// 			defer mysql.DB.Close()
-
-// 			resourceStore := store.NewResourceStore(mysql.DB)
-// 			resourceService := service.NewResourceService(resourceStore)
-// 			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
-
-// 			cs.before(mysql.DB)
-
-// 			// when
-// 			url := "/api/v1/resources/" + cs.inputResourceID
-// 			rec := httptest.NewRecorder()
-// 			req, _ := http.NewRequest("DELETE", url, nil)
-// 			impl.Gin.ServeHTTP(rec, req)
-
-// 			var httpError *api.HttpError
-// 			json.Unmarshal(rec.Body.Bytes(), &httpError)
-
-// 			// then
-// 			if rec.Code != cs.expectedCode {
-// 				t.Errorf("PATCH /api/v1/resources/:resourceID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-// 			}
-// 			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-// 				t.Errorf("PATCH /api/v1/resources/:resourceID BodyErr = %v, expected %v", httpError, cs.expectedErr)
-// 			}
-
-// 			// after
-// 			mysql.DB.Exec(`DELETE FROM resource`)
-// 			mysql.DB.Exec(`ALTER TABLE resource AUTO_INCREMENT=1`)
-// 		})
-// 	}
-// }

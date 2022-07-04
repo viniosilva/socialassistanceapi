@@ -50,20 +50,6 @@ func (mr *MockResourceStoreMockRecorder) Create(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockResourceStore)(nil).Create), arg0, arg1)
 }
 
-// Delete mocks base method.
-func (m *MockResourceStore) Delete(arg0 context.Context, arg1 int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Delete indicates an expected call of Delete.
-func (mr *MockResourceStoreMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockResourceStore)(nil).Delete), arg0, arg1)
-}
-
 // FindAll mocks base method.
 func (m *MockResourceStore) FindAll(arg0 context.Context) ([]model.Resource, error) {
 	m.ctrl.T.Helper()

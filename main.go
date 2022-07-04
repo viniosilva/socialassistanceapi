@@ -13,10 +13,10 @@ func main() {
 	mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 	defer mysql.DB.Close()
 
-	personStore := store.NewPersonStore(mysql.DB)
-	healthStore := store.NewHealthStore(mysql.DB)
-	resourceStore := store.NewResourceStore(mysql.DB)
-	addressStore := store.NewAddressStore(mysql.DB)
+	personStore := store.NewPersonStore(mysql)
+	healthStore := store.NewHealthStore(mysql)
+	resourceStore := store.NewResourceStore(mysql)
+	addressStore := store.NewAddressStore(mysql)
 
 	personService := service.NewPersonService(personStore)
 	healthService := service.NewHealthService(healthStore)

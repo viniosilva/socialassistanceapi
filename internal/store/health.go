@@ -2,7 +2,8 @@ package store
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/viniosilva/socialassistanceapi/internal/configuration"
 )
 
 //go:generate mockgen -destination ../../mock/health_store_mock.go -package mock . HealthStore
@@ -11,15 +12,17 @@ type HealthStore interface {
 }
 
 type healthStore struct {
-	db *sql.DB
+	db configuration.MySQL
 }
 
-func NewHealthStore(db *sql.DB) HealthStore {
-	return &healthStore{db}
+func NewHealthStore(db configuration.MySQL) HealthStore {
+	return &healthStore{
+		db: db,
+	}
 }
 
 func (impl *healthStore) Health(ctx context.Context) bool {
-	if err := impl.db.PingContext(ctx); err != nil {
+	if err := impl.db.DB.PingContext(ctx); err != nil {
 		return false
 	}
 

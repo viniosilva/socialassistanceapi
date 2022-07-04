@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/viniosilva/socialassistanceapi/internal/configuration"
 	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
@@ -20,17 +21,19 @@ type ResourceStore interface {
 }
 
 type resourceStore struct {
-	db *sql.DB
+	db configuration.MySQL
 }
 
-func NewResourceStore(db *sql.DB) ResourceStore {
-	return &resourceStore{db}
+func NewResourceStore(db configuration.MySQL) ResourceStore {
+	return &resourceStore{
+		db: db,
+	}
 }
 
-func (iml *resourceStore) FindAll(ctx context.Context) ([]model.Resource, error) {
+func (impl *resourceStore) FindAll(ctx context.Context) ([]model.Resource, error) {
 	resources := []model.Resource{}
 
-	res, err := iml.db.Query(`
+	res, err := impl.db.DB.Query(`
 		SELECT id,
 			created_at,
 			updated_at,
@@ -53,7 +56,7 @@ func (iml *resourceStore) FindAll(ctx context.Context) ([]model.Resource, error)
 }
 
 func (impl *resourceStore) FindOneById(ctx context.Context, resourceID int) (*model.Resource, error) {
-	res, err := impl.db.QueryContext(ctx, `
+	res, err := impl.db.DB.QueryContext(ctx, `
 		SELECT id,
 			created_at,
 			updated_at,
@@ -81,7 +84,7 @@ func (impl *resourceStore) FindOneById(ctx context.Context, resourceID int) (*mo
 func (impl *resourceStore) Create(ctx context.Context, resource model.Resource) (*model.Resource, error) {
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
-	res, err := impl.db.ExecContext(ctx, `
+	res, err := impl.db.DB.ExecContext(ctx, `
 		INSERT INTO resources (created_at, updated_at, name, amount, measurement)
 		VALUES (?, ?, ?, ?, ?)
 	`, nowMysql, nowMysql, resource.Name, resource.Amount, resource.Measurement)
@@ -102,7 +105,7 @@ func (impl *resourceStore) Create(ctx context.Context, resource model.Resource) 
 }
 
 func (impl *resourceStore) Update(ctx context.Context, resource model.Resource) (*model.Resource, error) {
-	fields, values := getNotEmptyResourceFields(map[string]interface{}{
+	fields, values := impl.db.BuildUpdateData(map[string]interface{}{
 		"name":        resource.Name,
 		"measurement": resource.Measurement,
 	})
@@ -117,7 +120,7 @@ func (impl *resourceStore) Update(ctx context.Context, resource model.Resource) 
 	`, strings.Join(fields, ", "))
 
 	now := time.Now()
-	t, err := impl.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	t, err := impl.db.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return nil, err
 	}
@@ -192,18 +195,4 @@ func scanResource(res *sql.Rows) (*model.Resource, error) {
 	resource.UpdatedAt = t
 
 	return resource, nil
-}
-
-func getNotEmptyResourceFields(data map[string]interface{}) ([]string, []interface{}) {
-	fields := []string{}
-	values := []interface{}{}
-
-	for field, value := range data {
-		if value != "" {
-			fields = append(fields, field+" = ?")
-			values = append(values, value)
-		}
-	}
-
-	return fields, values
 }

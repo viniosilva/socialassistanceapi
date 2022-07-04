@@ -20,7 +20,7 @@ func TestE2EApi(t *testing.T) {
 		mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 		defer mysql.DB.Close()
 
-		personStore := store.NewPersonStore(mysql.DB)
+		personStore := store.NewPersonStore(mysql)
 		personService := service.NewPersonService(personStore)
 		api := api.NewApi("0.0.0.0:8080", nil, personService, nil, nil)
 
