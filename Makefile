@@ -36,7 +36,12 @@ migrate/new:
 
 .PHONY: test/unit
 test/unit:
-	go test ./test/unit/...
+	go test -coverprofile=coverage.out ./internal/...
+
+.PHONY: test/unit/cov
+test/unit/cov:
+	go tool cover -html=coverage.out
+
 
 .PHONY: test/component
 test/component: infra/up

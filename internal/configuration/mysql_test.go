@@ -1,4 +1,4 @@
-package unit
+package configuration_test
 
 import (
 	"reflect"
@@ -40,11 +40,35 @@ func TestConfigurationMySQLBuildUpdateData(t *testing.T) {
 			fields, values := impl.BuildUpdateData(cs.inputData)
 
 			// then
-			if !reflect.DeepEqual(fields, cs.expectedFields) {
+			if len(fields) != len(cs.expectedFields) {
 				t.Errorf("MySQLConfiguration.GetNotEmptyFields() fields: = %v, expected %v", fields, cs.expectedFields)
 			}
-			if !reflect.DeepEqual(values, cs.expectedValues) {
+			if len(values) != len(cs.expectedValues) {
 				t.Errorf("MySQLConfiguration.GetNotEmptyFields() values: = %v, expected %v", values, cs.expectedValues)
+			}
+
+			for _, e := range cs.expectedFields {
+				for i, f := range fields {
+					if reflect.DeepEqual(e, f) {
+						break
+					}
+
+					if i == len(fields)-1 {
+						t.Errorf("MySQLConfiguration.GetNotEmptyFields() fields: = %v, expected %v", fields, cs.expectedFields)
+					}
+				}
+			}
+
+			for _, e := range cs.expectedValues {
+				for i, v := range values {
+					if reflect.DeepEqual(e, v) {
+						break
+					}
+
+					if i == len(values)-1 {
+						t.Errorf("MySQLConfiguration.GetNotEmptyFields() values: = %v, expected %v", values, cs.expectedValues)
+					}
+				}
 			}
 		})
 	}
