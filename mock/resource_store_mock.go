@@ -80,6 +80,21 @@ func (mr *MockResourceStoreMockRecorder) FindOneById(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneById", reflect.TypeOf((*MockResourceStore)(nil).FindOneById), arg0, arg1)
 }
 
+// TransferAmount mocks base method.
+func (m *MockResourceStore) TransferAmount(arg0 context.Context, arg1 model.Resource) (*model.Resource, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TransferAmount", arg0, arg1)
+	ret0, _ := ret[0].(*model.Resource)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TransferAmount indicates an expected call of TransferAmount.
+func (mr *MockResourceStoreMockRecorder) TransferAmount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransferAmount", reflect.TypeOf((*MockResourceStore)(nil).TransferAmount), arg0, arg1)
+}
+
 // Update mocks base method.
 func (m *MockResourceStore) Update(arg0 context.Context, arg1 model.Resource) (*model.Resource, error) {
 	m.ctrl.T.Helper()

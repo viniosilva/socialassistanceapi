@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
 
@@ -123,9 +124,16 @@ func (impl *personStore) Update(ctx context.Context, person model.Person) (*mode
 	}
 
 	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
+	if err != nil {
 		t.Rollback()
 		return nil, err
+	}
+
+	if rows == 0 {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, exception.NewNotFoundException("person")
 	}
 
 	var createdAt string

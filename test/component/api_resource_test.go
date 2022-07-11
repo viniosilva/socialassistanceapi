@@ -325,3 +325,129 @@ func TestComponentResourceApiUpdate(t *testing.T) {
 		})
 	}
 }
+
+func TestComponentResourceApiTransferAmount(t *testing.T) {
+	const DATE = "2000-01-01T12:03:00"
+
+	cases := map[string]struct {
+		before          func(db *sql.DB)
+		inputResourceID string
+		inputResource   service.ResourceTransferAmountDto
+		expectedCode    int
+		expectedBody    *service.ResourceResponse
+		expectedErr     *api.HttpError
+	}{
+		"should return updated resource amount when add a value": {
+			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
+				db.Exec(`
+					INSERT INTO resources (id, created_at, updated_at, name, amount, measurement)
+					VALUES (1, ?, ?, 'Test', '1', 'Kg')
+				`, date, date)
+			},
+			inputResourceID: "1",
+			inputResource:   service.ResourceTransferAmountDto{Amount: 2},
+			expectedCode:    200,
+			expectedBody: &service.ResourceResponse{Data: &service.Resource{
+				ID: 1, CreatedAt: DATE,
+				Name:        "Test",
+				Amount:      3,
+				Measurement: "Kg",
+			}},
+		},
+		"should return updated resource amount when remove resource to zero": {
+			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
+				db.Exec(`
+					INSERT INTO resources (id, created_at, updated_at, name, amount, measurement)
+					VALUES (1, ?, ?, 'Test', '1', 'Kg')
+				`, date, date)
+			},
+			inputResourceID: "1",
+			inputResource:   service.ResourceTransferAmountDto{Amount: -1},
+			expectedCode:    200,
+			expectedBody: &service.ResourceResponse{Data: &service.Resource{
+				ID: 1, CreatedAt: DATE,
+				Name:        "Test",
+				Amount:      0,
+				Measurement: "Kg",
+			}},
+		},
+		"should throw bad request error when amount result is negative": {
+			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
+				db.Exec(`
+					INSERT INTO resources (id, created_at, updated_at, name, amount, measurement)
+					VALUES (1, ?, ?, 'Test', '1', 'Kg')
+				`, date, date)
+			},
+			inputResourceID: "1",
+			inputResource:   service.ResourceTransferAmountDto{Amount: -2},
+			expectedCode:    400,
+			expectedErr:     &api.HttpError{Code: 400, Message: "negative value in: resource"},
+		},
+		"should throw bad request error when resourceID id not number": {
+			before:          func(db *sql.DB) {},
+			inputResourceID: "a",
+			expectedCode:    400,
+			expectedErr:     &api.HttpError{Code: 400, Message: "invalid resourceID"},
+		},
+		"should throw bad resquest error": {
+			before:          func(db *sql.DB) {},
+			inputResourceID: "1",
+			expectedCode:    400,
+			expectedErr:     &api.HttpError{Code: 400, Message: "Key: 'ResourceTransferAmountDto.Amount' Error:Field validation for 'Amount' failed on the 'required' tag"},
+		},
+		"should throw not found error when resources not exists": {
+			before:          func(db *sql.DB) {},
+			inputResourceID: "1",
+			inputResource:   service.ResourceTransferAmountDto{Amount: 2},
+			expectedCode:    404,
+			expectedBody:    &service.ResourceResponse{},
+		},
+	}
+	for name, cs := range cases {
+		t.Run(name, func(t *testing.T) {
+			// given
+			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			defer mysql.DB.Close()
+
+			resourceStore := store.NewResourceStore(mysql)
+			resourceService := service.NewResourceService(resourceStore)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, nil, resourceService)
+
+			cs.before(mysql.DB)
+
+			// when
+			b, _ := json.Marshal(cs.inputResource)
+			url := "/api/v1/resources/" + cs.inputResourceID + "/amount/transfer"
+			rec := httptest.NewRecorder()
+			req, _ := http.NewRequest("POST", url, strings.NewReader(string(b)))
+			impl.Gin.ServeHTTP(rec, req)
+
+			var body *service.ResourceResponse
+			json.Unmarshal(rec.Body.Bytes(), &body)
+			if body.Data != nil {
+				body.Data.UpdatedAt = ""
+			}
+
+			var httpError *api.HttpError
+			json.Unmarshal(rec.Body.Bytes(), &httpError)
+
+			// then
+			if rec.Code != cs.expectedCode {
+				t.Errorf("POST /api/v1/resources/:resourceID/amount/transfer StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
+			}
+			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
+				t.Errorf("POST /api/v1/resources/:resourceID/amount/transfer Body = %v, expected %v", body, cs.expectedBody)
+			}
+			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
+				t.Errorf("POST /api/v1/resources/:resourceID/amount/transfer BodyErr = %v, expected %v", httpError, cs.expectedErr)
+			}
+
+			// after
+			mysql.DB.Exec(`DELETE FROM resources`)
+			mysql.DB.Exec(`ALTER TABLE resources AUTO_INCREMENT=1`)
+		})
+	}
+}

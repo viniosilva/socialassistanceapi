@@ -21,6 +21,7 @@ func NewResourceApi(router *gin.RouterGroup, service *service.ResourceService) *
 	router.GET("/:resourceID", impl.FindOneByID)
 	router.POST("", impl.Create)
 	router.PATCH("/:resourceID", impl.Update)
+	router.POST("/:resourceID/amount/transfer", impl.TransferAmount)
 
 	return impl
 }
@@ -83,8 +84,7 @@ func (impl *ResourceApi) Create(c *gin.Context) {
 	var resource service.ResourceDto
 	err := c.ShouldBindJSON(&resource)
 	if e, ok := err.(validator.ValidationErrors); ok {
-		msg := e.Error()
-		NewHttpError(c, http.StatusBadRequest, msg)
+		NewHttpError(c, http.StatusBadRequest, e.Error())
 		return
 	}
 
@@ -102,7 +102,7 @@ func (impl *ResourceApi) Create(c *gin.Context) {
 // @Accept	json
 // @Produce	json
 // @Param	id				path	int			true	"resource ID"
-// @Param	resource	body	service.ResourceDto	true	"Update resource"
+// @Param	resource	body	service.ResourceUpdateDto	true	"Update resource"
 // @Success	200	{object}	service.ResourceResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
@@ -114,7 +114,7 @@ func (impl *ResourceApi) Update(c *gin.Context) {
 		return
 	}
 
-	var resource service.ResourceDto
+	var resource service.ResourceUpdateDto
 	err = c.ShouldBindJSON(&resource)
 	if e, ok := err.(validator.ValidationErrors); e != nil && !ok {
 		NewHttpError(c, http.StatusBadRequest, "invalid payload")
@@ -125,6 +125,50 @@ func (impl *ResourceApi) Update(c *gin.Context) {
 	if err != nil {
 		if e, ok := err.(*exception.EmptyModelException); ok {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
+		} else if _, ok := err.(*exception.NotFoundException); ok {
+			c.JSON(http.StatusNotFound, res)
+		} else {
+			NewHttpInternalServerError(c)
+		}
+
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+// @Summary	transfer amount to resource
+// @Tags	resource
+// @Accept	json
+// @Produce	json
+// @Param	id					path	int							true	"resource ID"
+// @Param	resource	body	service.ResourceTransferAmountDto	true	"Update resource"
+// @Success	200	{object}	service.ResourceResponse
+// @Failure	400	{object}	HttpError
+// @Failure	500	{object}	HttpError
+// @Router	/api/v1/resources/{id}/amount/transfer [post]
+func (impl *ResourceApi) TransferAmount(c *gin.Context) {
+	resourceID, err := strconv.Atoi(c.Param("resourceID"))
+	if err != nil {
+		NewHttpError(c, http.StatusBadRequest, "invalid resourceID")
+		return
+	}
+
+	var resource service.ResourceTransferAmountDto
+	err = c.ShouldBindJSON(&resource)
+	if e, ok := err.(validator.ValidationErrors); ok {
+		NewHttpError(c, http.StatusBadRequest, e.Error())
+		return
+	}
+
+	res, err := impl.service.TransferAmount(c, resourceID, resource.Amount)
+	if err != nil {
+		if e, ok := err.(*exception.EmptyModelException); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+		} else if e, ok := err.(*exception.NegativeException); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+		} else if _, ok := err.(*exception.NotFoundException); ok {
+			c.JSON(http.StatusNotFound, res)
 		} else {
 			NewHttpInternalServerError(c)
 		}

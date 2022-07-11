@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
@@ -116,18 +117,20 @@ func (impl *PersonApi) Update(c *gin.Context) {
 	var person service.PersonDto
 	err = c.ShouldBindJSON(&person)
 	if e, ok := err.(validator.ValidationErrors); ok {
-		msg := e.Error()
-		NewHttpError(c, http.StatusBadRequest, msg)
+		NewHttpError(c, http.StatusBadRequest, e.Error())
 		return
 	}
 
 	res, err := impl.service.Update(c, personID, person)
 	if err != nil {
-		NewHttpInternalServerError(c)
-		return
-	}
-	if res.Data == nil {
-		c.JSON(http.StatusNotFound, res)
+		if e, ok := err.(*exception.EmptyModelException); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+		} else if _, ok := err.(*exception.NotFoundException); ok {
+			c.JSON(http.StatusNotFound, res)
+		} else {
+			NewHttpInternalServerError(c)
+		}
+
 		return
 	}
 

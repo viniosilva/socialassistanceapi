@@ -177,14 +177,14 @@ func TestResourceServiceUpdate(t *testing.T) {
 
 	cases := map[string]struct {
 		inputResourceID int
-		inputResource   service.ResourceDto
+		inputResource   service.ResourceUpdateDto
 		expectedRes     service.ResourceResponse
 		expectedErr     error
 		prepareMock     func(mock *mock.MockResourceStore)
 	}{
 		"should update resource": {
 			inputResourceID: 1,
-			inputResource:   service.ResourceDto{Name: "Test"},
+			inputResource:   service.ResourceUpdateDto{Name: "Test"},
 			expectedRes: service.ResourceResponse{Data: &service.Resource{
 				ID: 1, CreatedAt: DATE, UpdatedAt: DATE,
 				Name:        "Test",
@@ -208,7 +208,7 @@ func TestResourceServiceUpdate(t *testing.T) {
 			},
 		},
 		"should throw error": {
-			inputResource: service.ResourceDto{Name: "Test"},
+			inputResource: service.ResourceUpdateDto{Name: "Test"},
 			expectedErr:   fmt.Errorf("error"),
 			prepareMock: func(mock *mock.MockResourceStore) {
 				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))

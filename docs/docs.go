@@ -462,44 +462,6 @@ const docTemplate = `{
             }
         },
         "/api/v1/resources/{id}": {
-            "delete": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "delete a resource",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "resource ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": ""
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.HttpError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.HttpError"
-                        }
-                    }
-                }
-            },
             "patch": {
                 "consumes": [
                     "application/json"
@@ -525,7 +487,59 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.ResourceDto"
+                            "$ref": "#/definitions/service.ResourceUpdateDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.ResourceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resources/{id}/amount/transfer": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "transfer amount to resource",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update resource",
+                        "name": "resource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.ResourceTransferAmountDto"
                         }
                     }
                 ],
@@ -764,7 +778,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Kg"
                 },
-                "name_at": {
+                "name": {
                     "type": "string",
                     "example": "Arroz"
                 },
@@ -779,7 +793,7 @@ const docTemplate = `{
             "required": [
                 "amount",
                 "measurement",
-                "name_at"
+                "name"
             ],
             "properties": {
                 "amount": {
@@ -790,7 +804,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Kg"
                 },
-                "name_at": {
+                "name": {
                     "type": "string",
                     "example": "Arroz"
                 }
@@ -801,6 +815,31 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/service.Resource"
+                }
+            }
+        },
+        "service.ResourceTransferAmountDto": {
+            "type": "object",
+            "required": [
+                "amount"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 5
+                }
+            }
+        },
+        "service.ResourceUpdateDto": {
+            "type": "object",
+            "properties": {
+                "measurement": {
+                    "type": "string",
+                    "example": "Kg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Arroz"
                 }
             }
         },

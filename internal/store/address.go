@@ -153,18 +153,25 @@ func (impl *addressStore) Update(ctx context.Context, address model.Address) (*m
 
 	res, err := t.ExecContext(ctx, query, values...)
 	if err != nil {
-		if err = t.Rollback(); err != nil {
+		if err := t.Rollback(); err != nil {
 			return nil, err
 		}
 		return nil, err
 	}
 
 	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
-		if err = t.Rollback(); err != nil {
+	if err != nil {
+		if err := t.Rollback(); err != nil {
 			return nil, err
 		}
 		return nil, err
+	}
+
+	if rows == 0 {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, exception.NewNotFoundException("address")
 	}
 
 	resS, err := t.QueryContext(ctx, `

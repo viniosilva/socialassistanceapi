@@ -18,6 +18,7 @@ type ResourceStore interface {
 	FindOneById(ctx context.Context, resourceID int) (*model.Resource, error)
 	Create(ctx context.Context, resource model.Resource) (*model.Resource, error)
 	Update(ctx context.Context, resource model.Resource) (*model.Resource, error)
+	TransferAmount(ctx context.Context, resource model.Resource) (*model.Resource, error)
 }
 
 type resourceStore struct {
@@ -130,18 +131,25 @@ func (impl *resourceStore) Update(ctx context.Context, resource model.Resource) 
 
 	res, err := t.ExecContext(ctx, query, values...)
 	if err != nil {
-		if err = t.Rollback(); err != nil {
+		if err := t.Rollback(); err != nil {
 			return nil, err
 		}
 		return nil, err
 	}
 
 	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
-		if err = t.Rollback(); err != nil {
+	if err != nil {
+		if err := t.Rollback(); err != nil {
 			return nil, err
 		}
 		return nil, err
+	}
+
+	if rows == 0 {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, exception.NewNotFoundException("resource")
 	}
 
 	resS, err := t.QueryContext(ctx, `
@@ -170,6 +178,85 @@ func (impl *resourceStore) Update(ctx context.Context, resource model.Resource) 
 	if err := t.Commit(); err != nil {
 		return nil, err
 	}
+
+	return r, nil
+}
+
+func (impl *resourceStore) TransferAmount(ctx context.Context, resource model.Resource) (*model.Resource, error) {
+	t, err := impl.db.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return nil, err
+	}
+
+	resS, err := t.QueryContext(ctx, `
+		SELECT id,
+			created_at,
+			updated_at,
+			name,
+			amount,
+			measurement
+		FROM resources
+		WHERE id = ?
+		LIMIT 1
+	`, resource.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var r *model.Resource
+	for resS.Next() {
+		r, err = scanResource(resS)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if r == nil {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, exception.NewNotFoundException("resource")
+	}
+
+	newAmount := r.Amount + resource.Amount
+	if newAmount < 0 {
+		if err := t.Commit(); err != nil {
+			return nil, err
+		}
+
+		return nil, exception.NewNegativeException("resource")
+	}
+
+	query := `
+		UPDATE resources
+		SET updated_at = ?,
+			amount = ?
+		WHERE id = ?
+	`
+
+	now := time.Now()
+	res, err := t.ExecContext(ctx, query, now.Format("2006-01-02T15:04:05"), newAmount, resource.ID)
+	if err != nil {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil || rows == 0 {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	if err := t.Commit(); err != nil {
+		return nil, err
+	}
+
+	r.Amount = newAmount
+	r.UpdatedAt = now
 
 	return r, nil
 }

@@ -84,8 +84,7 @@ func (impl *AddressApi) Create(c *gin.Context) {
 	var address service.AddressDto
 	err := c.ShouldBindJSON(&address)
 	if e, ok := err.(validator.ValidationErrors); ok {
-		msg := e.Error()
-		NewHttpError(c, http.StatusBadRequest, msg)
+		NewHttpError(c, http.StatusBadRequest, e.Error())
 		return
 	}
 
@@ -126,13 +125,12 @@ func (impl *AddressApi) Update(c *gin.Context) {
 	if err != nil {
 		if e, ok := err.(*exception.EmptyModelException); ok {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
-			return
+		} else if _, ok := err.(*exception.NotFoundException); ok {
+			c.JSON(http.StatusNotFound, res)
+		} else {
+			NewHttpInternalServerError(c)
 		}
-		NewHttpInternalServerError(c)
-		return
-	}
-	if res.Data == nil {
-		c.JSON(http.StatusNotFound, res)
+
 		return
 	}
 

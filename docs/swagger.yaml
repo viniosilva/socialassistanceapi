@@ -150,7 +150,7 @@ definitions:
       measurement:
         example: Kg
         type: string
-      name_at:
+      name:
         example: Arroz
         type: string
       updated_at:
@@ -165,18 +165,35 @@ definitions:
       measurement:
         example: Kg
         type: string
-      name_at:
+      name:
         example: Arroz
         type: string
     required:
     - amount
     - measurement
-    - name_at
+    - name
     type: object
   service.ResourceResponse:
     properties:
       data:
         $ref: '#/definitions/service.Resource'
+    type: object
+  service.ResourceTransferAmountDto:
+    properties:
+      amount:
+        example: 5
+        type: number
+    required:
+    - amount
+    type: object
+  service.ResourceUpdateDto:
+    properties:
+      measurement:
+        example: Kg
+        type: string
+      name:
+        example: Arroz
+        type: string
     type: object
   service.ResourcesResponse:
     properties:
@@ -479,31 +496,6 @@ paths:
       tags:
       - resource
   /api/v1/resources/{id}:
-    delete:
-      consumes:
-      - application/json
-      parameters:
-      - description: resource ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.HttpError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.HttpError'
-      summary: delete a resource
-      tags:
-      - resource
     patch:
       consumes:
       - application/json
@@ -518,7 +510,7 @@ paths:
         name: resource
         required: true
         schema:
-          $ref: '#/definitions/service.ResourceDto'
+          $ref: '#/definitions/service.ResourceUpdateDto'
       produces:
       - application/json
       responses:
@@ -535,6 +527,40 @@ paths:
           schema:
             $ref: '#/definitions/api.HttpError'
       summary: update a resource
+      tags:
+      - resource
+  /api/v1/resources/{id}/amount/transfer:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update resource
+        in: body
+        name: resource
+        required: true
+        schema:
+          $ref: '#/definitions/service.ResourceTransferAmountDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.ResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: transfer amount to resource
       tags:
       - resource
 swagger: "2.0"

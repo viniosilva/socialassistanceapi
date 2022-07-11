@@ -76,11 +76,32 @@ func (impl *ResourceService) Create(ctx context.Context, dto ResourceDto) (Resou
 	}, nil
 }
 
-func (impl *ResourceService) Update(ctx context.Context, ResourceID int, dto ResourceDto) (ResourceResponse, error) {
+func (impl *ResourceService) Update(ctx context.Context, ResourceID int, dto ResourceUpdateDto) (ResourceResponse, error) {
 	resource, err := impl.store.Update(ctx, model.Resource{
 		ID:          ResourceID,
 		Name:        dto.Name,
 		Measurement: dto.Measurement,
+	})
+	if err != nil || resource == nil {
+		return ResourceResponse{}, err
+	}
+
+	return ResourceResponse{
+		Data: &Resource{
+			ID:          resource.ID,
+			CreatedAt:   resource.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt:   resource.UpdatedAt.Format("2006-01-02T15:04:05"),
+			Name:        resource.Name,
+			Amount:      resource.Amount,
+			Measurement: resource.Measurement,
+		},
+	}, nil
+}
+
+func (impl *ResourceService) TransferAmount(ctx context.Context, ResourceID int, amount float32) (ResourceResponse, error) {
+	resource, err := impl.store.TransferAmount(ctx, model.Resource{
+		ID:     ResourceID,
+		Amount: amount,
 	})
 	if err != nil || resource == nil {
 		return ResourceResponse{}, err
