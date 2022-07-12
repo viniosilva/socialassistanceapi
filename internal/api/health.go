@@ -7,19 +7,21 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-type HealthApi struct {
-	service *service.HealthService
+//go:generate mockgen -destination ../../mock/health_api_mock.go -package mock . HealthApi
+type HealthApi interface {
+	Configure()
 }
 
-func NewHealthApi(router *gin.RouterGroup, service *service.HealthService) *HealthApi {
-	impl := &HealthApi{service}
-
-	router.GET("", impl.Health)
-
-	return impl
+type HealthApiImpl struct {
+	Router        *gin.RouterGroup
+	HealthService service.HealthService
 }
 
-func (impl *HealthApi) Health(c *gin.Context) {
-	res := impl.service.Health(c)
+func (impl *HealthApiImpl) Configure() {
+	impl.Router.GET("", impl.HealthCheck)
+}
+
+func (impl *HealthApiImpl) HealthCheck(c *gin.Context) {
+	res := impl.HealthService.Ping(c)
 	c.JSON(http.StatusOK, res)
 }

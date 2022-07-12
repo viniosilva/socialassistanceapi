@@ -4,38 +4,44 @@ import (
 	"context"
 
 	"github.com/viniosilva/socialassistanceapi/internal/model"
-	"github.com/viniosilva/socialassistanceapi/internal/store"
+	"github.com/viniosilva/socialassistanceapi/internal/repository"
 )
 
-type PersonService struct {
-	store store.PersonStore
+//go:generate mockgen -destination ../../mock/person_service_mock.go -package mock . PersonService
+type PersonService interface {
+	FindAll(ctx context.Context) (PersonsResponse, error)
+	FindOneById(ctx context.Context, personID int) (PersonResponse, error)
+	Create(ctx context.Context, dto CreatePersonDto) (PersonResponse, error)
+	Update(ctx context.Context, personID int, dto UpdatePersonDto) error
+	Delete(ctx context.Context, personID int) error
 }
 
-func NewPersonService(store store.PersonStore) *PersonService {
-	return &PersonService{store}
+type PersonServiceImpl struct {
+	PersonRepository repository.PersonRepository
 }
 
-func (impl *PersonService) FindAll(ctx context.Context) (PeopleResponse, error) {
-	people, err := impl.store.FindAll(ctx)
+func (impl *PersonServiceImpl) FindAll(ctx context.Context) (PersonsResponse, error) {
+	persons, err := impl.PersonRepository.FindAll(ctx)
 	if err != nil {
-		return PeopleResponse{}, err
+		return PersonsResponse{}, err
 	}
 
 	res := []Person{}
-	for _, c := range people {
+	for _, p := range persons {
 		res = append(res, Person{
-			ID:        c.ID,
-			CreatedAt: c.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: c.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:      c.Name,
+			ID:        p.ID,
+			CreatedAt: p.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt: p.UpdatedAt.Format("2006-01-02T15:04:05"),
+			AddressID: p.AddressID,
+			Name:      p.Name,
 		})
 	}
 
-	return PeopleResponse{Data: res}, nil
+	return PersonsResponse{Data: res}, nil
 }
 
-func (impl *PersonService) FindOneById(ctx context.Context, personID int) (PersonResponse, error) {
-	person, err := impl.store.FindOneById(ctx, personID)
+func (impl *PersonServiceImpl) FindOneById(ctx context.Context, personID int) (PersonResponse, error) {
+	person, err := impl.PersonRepository.FindOneById(ctx, personID)
 	if err != nil || person == nil {
 		return PersonResponse{}, err
 	}
@@ -45,13 +51,17 @@ func (impl *PersonService) FindOneById(ctx context.Context, personID int) (Perso
 			ID:        person.ID,
 			CreatedAt: person.CreatedAt.Format("2006-01-02T15:04:05"),
 			UpdatedAt: person.UpdatedAt.Format("2006-01-02T15:04:05"),
+			AddressID: person.AddressID,
 			Name:      person.Name,
 		},
 	}, nil
 }
 
-func (impl *PersonService) Create(ctx context.Context, dto PersonDto) (PersonResponse, error) {
-	person, err := impl.store.Create(ctx, model.Person{Name: dto.Name})
+func (impl *PersonServiceImpl) Create(ctx context.Context, dto CreatePersonDto) (PersonResponse, error) {
+	person, err := impl.PersonRepository.Create(ctx, model.Person{
+		AddressID: dto.AddressID,
+		Name:      dto.Name,
+	})
 	if err != nil {
 		return PersonResponse{}, err
 	}
@@ -61,31 +71,20 @@ func (impl *PersonService) Create(ctx context.Context, dto PersonDto) (PersonRes
 			ID:        person.ID,
 			CreatedAt: person.CreatedAt.Format("2006-01-02T15:04:05"),
 			UpdatedAt: person.UpdatedAt.Format("2006-01-02T15:04:05"),
+			AddressID: person.AddressID,
 			Name:      person.Name,
 		},
 	}, nil
 }
 
-func (impl *PersonService) Update(ctx context.Context, personID int, dto PersonDto) (PersonResponse, error) {
-	person, err := impl.store.Update(ctx, model.Person{
-		ID:   personID,
-		Name: dto.Name,
+func (impl *PersonServiceImpl) Update(ctx context.Context, personID int, dto UpdatePersonDto) error {
+	return impl.PersonRepository.Update(ctx, model.Person{
+		ID:        personID,
+		AddressID: dto.AddressID,
+		Name:      dto.Name,
 	})
-	if err != nil || person == nil {
-		return PersonResponse{}, err
-	}
-
-	return PersonResponse{
-		Data: &Person{
-			ID:        person.ID,
-			CreatedAt: person.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: person.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:      person.Name,
-		},
-	}, nil
 }
 
-func (impl *PersonService) Delete(ctx context.Context, personID int) (PersonResponse, error) {
-	err := impl.store.Delete(ctx, personID)
-	return PersonResponse{}, err
+func (impl *PersonServiceImpl) Delete(ctx context.Context, personID int) error {
+	return impl.PersonRepository.Delete(ctx, personID)
 }

@@ -3,81 +3,95 @@ package component
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
-	"github.com/viniosilva/socialassistanceapi/internal/store"
 )
 
 func TestComponentPersonApiFindAll(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
+	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
 		before       func(db *sql.DB)
 		expectedCode int
-		expectedBody *service.PeopleResponse
+		expectedBody *service.PersonsResponse
 	}{
-		"should return person list when people exists": {
+		"should return person list when persons exists": {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO people (id, created_at, updated_at, name)
-					VALUES (1, ?, ?, 'Test')
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+
+				db.Exec(`
+					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					VALUES (1, ?, ?, 1, 'Test')
 				`, date, date)
 			},
-			expectedCode: 200,
-			expectedBody: &service.PeopleResponse{Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
+			expectedCode: http.StatusOK,
+			expectedBody: &service.PersonsResponse{
+				Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, AddressID: 1, Name: "Test"}},
+			},
 		},
-		"should return empty list when people not exists": {
+		"should return empty list when persons not exists": {
 			before:       func(db *sql.DB) {},
-			expectedCode: 200,
-			expectedBody: &service.PeopleResponse{Data: []service.Person{}},
+			expectedCode: http.StatusOK,
+			expectedBody: &service.PersonsResponse{Data: []service.Person{}},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			personStore := store.NewPersonStore(mysql.DB)
-			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
+			personRepository := &repository.PersonRepositoryImpl{DB: mysql}
+			personService := &service.PersonServiceImpl{PersonRepository: personRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", PersonService: personService}
+			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/api/v1/people", nil)
+			req, _ := http.NewRequest("GET", "/api/v1/persons", nil)
 			impl.Gin.ServeHTTP(rec, req)
 
-			var body *service.PeopleResponse
+			var body *service.PersonsResponse
 			json.Unmarshal(rec.Body.Bytes(), &body)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("GET /api/v1/people StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("GET /api/v1/people Body = %v, expected %v", body, cs.expectedBody)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedBody, body)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM people`)
-			mysql.DB.Exec(`ALTER TABLE people AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }
 
 func TestComponentPersonApiFindOneByID(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
+	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
 		before        func(db *sql.DB)
@@ -86,44 +100,63 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 		expectedBody  *service.PersonResponse
 		expectedErr   *api.HttpError
 	}{
-		"should return person when people exists": {
+		"should return person when persons exists": {
 			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO people (id, created_at, updated_at, name)
-					VALUES (1, ?, ?, 'Test')
-				`, DATE, DATE)
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+
+				db.Exec(`
+					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					VALUES (1, ?, ?, 1, 'Test')
+				`, date, date)
 			},
 			inputPersonID: "1",
-			expectedCode:  200,
-			expectedBody:  &service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
+			expectedCode:  http.StatusOK,
+			expectedBody: &service.PersonResponse{
+				Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, AddressID: 1, Name: "Test"},
+			},
+			expectedErr: &api.HttpError{},
 		},
 		"should throw bad request error when personID is not a number": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "a",
-			expectedCode:  400,
-			expectedErr:   &api.HttpError{Code: 400, Message: "invalid personID"},
+			expectedCode:  http.StatusBadRequest,
+			expectedBody:  &service.PersonResponse{},
+			expectedErr:   &api.HttpError{Code: http.StatusBadRequest, Message: "invalid personID"},
 		},
-		"should throw not found error when people not exists": {
+		"should throw not found error when persons not exists": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "1",
-			expectedCode:  404,
+			expectedCode:  http.StatusNotFound,
 			expectedBody:  &service.PersonResponse{},
+			expectedErr:   &api.HttpError{Code: http.StatusNotFound, Message: "person 1 not found"},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			personStore := store.NewPersonStore(mysql.DB)
-			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
+			personRepository := &repository.PersonRepositoryImpl{DB: mysql}
+			personService := &service.PersonServiceImpl{PersonRepository: personRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", PersonService: personService}
+			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
-			url := "/api/v1/people/" + cs.inputPersonID
+			url := "/api/v1/persons/" + cs.inputPersonID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", url, nil)
 			impl.Gin.ServeHTTP(rec, req)
@@ -135,53 +168,76 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("GET /api/v1/people/:personID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("GET /api/v1/people/:personID Body = %v, expected %v", body, cs.expectedBody)
-			}
-			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-				t.Errorf("GET /api/v1/people/:personID BodyErr = %v, expected %v", httpError, cs.expectedErr)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedBody, body)
+			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM people`)
-			mysql.DB.Exec(`ALTER TABLE people AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }
 
 func TestComponentPersonApiCreate(t *testing.T) {
 	cases := map[string]struct {
-		inputPerson  service.PersonDto
+		before       func(db *sql.DB)
+		inputDto     service.CreatePersonDto
 		expectedCode int
 		expectedBody *service.PersonResponse
 		expectedErr  *api.HttpError
 	}{
 		"should return created person": {
-			inputPerson:  service.PersonDto{Name: "Test"},
-			expectedCode: 201,
-			expectedBody: &service.PersonResponse{Data: &service.Person{ID: 1, Name: "Test"}},
+			before: func(db *sql.DB) {
+				date := "2000-01-01 12:03:00"
+				db.Exec(`
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+			},
+			inputDto:     service.CreatePersonDto{AddressID: 1, Name: "Test"},
+			expectedCode: http.StatusCreated,
+			expectedBody: &service.PersonResponse{Data: &service.Person{ID: 1, AddressID: 1, Name: "Test"}},
+			expectedErr:  &api.HttpError{},
 		},
 		"should throw bad request error": {
-			expectedCode: 400,
-			expectedErr:  &api.HttpError{Code: 400, Message: "Key: 'PersonDto.Name' Error:Field validation for 'Name' failed on the 'required' tag"},
+			before:       func(db *sql.DB) {},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: &service.PersonResponse{},
+			expectedErr: &api.HttpError{
+				Code: http.StatusBadRequest,
+				Message: strings.Join([]string{
+					"Key: 'CreatePersonDto.AddressID' Error:Field validation for 'AddressID' failed on the 'required' tag",
+					"Key: 'CreatePersonDto.Name' Error:Field validation for 'Name' failed on the 'required' tag",
+				}, "\n"),
+			},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			personStore := store.NewPersonStore(mysql.DB)
-			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
+			personRepository := &repository.PersonRepositoryImpl{DB: mysql}
+			personService := &service.PersonServiceImpl{PersonRepository: personRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", PersonService: personService}
+			impl.Configure()
+
+			cs.before(mysql.DB)
 
 			// when
-			b, _ := json.Marshal(cs.inputPerson)
-			url := "/api/v1/people"
+			b, _ := json.Marshal(cs.inputDto)
+			url := "/api/v1/persons"
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", url, strings.NewReader(string(b)))
 			impl.Gin.ServeHTTP(rec, req)
@@ -197,114 +253,111 @@ func TestComponentPersonApiCreate(t *testing.T) {
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("POST /api/v1/people StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("POST /api/v1/people Body = %v, expected %v", body, cs.expectedBody)
-			}
-			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-				t.Errorf("POST /api/v1/people BodyErr = %v, expected %v", httpError, cs.expectedErr)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedBody, body)
+			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM people`)
-			mysql.DB.Exec(`ALTER TABLE people AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }
 
 func TestComponentPersonApiUpdate(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
+	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
 		before        func(db *sql.DB)
 		inputPersonID string
-		inputPerson   service.PersonDto
+		inputDto      service.CreatePersonDto
 		expectedCode  int
-		expectedBody  *service.PersonResponse
 		expectedErr   *api.HttpError
 	}{
-		"should return updated person": {
+		"should update person": {
 			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO people (id, created_at, updated_at, name)
-					VALUES (1, ?, ?, 'Test')
-				`, DATE, DATE)
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+
+				db.Exec(`
+					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					VALUES (1, ?, ?, 1, 'Test')
+				`, date, date)
 			},
 			inputPersonID: "1",
-			inputPerson:   service.PersonDto{Name: "Test update"},
-			expectedCode:  200,
-			expectedBody:  &service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, Name: "Test update"}},
+			inputDto:      service.CreatePersonDto{Name: "Test update"},
+			expectedCode:  http.StatusNoContent,
 		},
 		"should throw bad request error when personID is not a number": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "a",
-			expectedCode:  400,
-			expectedErr:   &api.HttpError{Code: 400, Message: "invalid personID"},
+			expectedCode:  http.StatusBadRequest,
+			expectedErr:   &api.HttpError{Code: http.StatusBadRequest, Message: "invalid personID"},
 		},
 		"should throw bad request error": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "1",
-			expectedCode:  400,
-			expectedErr:   &api.HttpError{Code: 400, Message: "Key: 'PersonDto.Name' Error:Field validation for 'Name' failed on the 'required' tag"},
+			expectedCode:  http.StatusBadRequest,
+			expectedErr:   &api.HttpError{Code: http.StatusBadRequest, Message: "empty person model"},
 		},
-		"should throw not found error when people not exists": {
+		"should throw not found error when persons not exists": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "1",
-			inputPerson:   service.PersonDto{Name: "Test update"},
-			expectedCode:  404,
-			expectedBody:  &service.PersonResponse{},
+			inputDto:      service.CreatePersonDto{Name: "Test update"},
+			expectedCode:  http.StatusNotFound,
+			expectedErr:   &api.HttpError{Code: http.StatusNotFound, Message: "person 1 not found"},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			personStore := store.NewPersonStore(mysql.DB)
-			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
+			personRepository := &repository.PersonRepositoryImpl{DB: mysql}
+			personService := &service.PersonServiceImpl{PersonRepository: personRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", PersonService: personService}
+			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
-			b, _ := json.Marshal(cs.inputPerson)
-			url := "/api/v1/people/" + cs.inputPersonID
+			b, _ := json.Marshal(cs.inputDto)
+			url := "/api/v1/persons/" + cs.inputPersonID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("PATCH", url, strings.NewReader(string(b)))
 			impl.Gin.ServeHTTP(rec, req)
-
-			var body *service.PersonResponse
-			json.Unmarshal(rec.Body.Bytes(), &body)
-			if body.Data != nil {
-				body.Data.UpdatedAt = ""
-			}
 
 			var httpError *api.HttpError
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("PATCH /api/v1/people/:personID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("PATCH /api/v1/people/:personID Body = %v, expected %v", body, cs.expectedBody)
-			}
-			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-				t.Errorf("PATCH /api/v1/people/:personID BodyErr = %v, expected %v", httpError, cs.expectedErr)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM people`)
-			mysql.DB.Exec(`ALTER TABLE people AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }
 
 func TestComponentPersonApiDelete(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
+	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
 		before        func(db *sql.DB)
@@ -315,42 +368,56 @@ func TestComponentPersonApiDelete(t *testing.T) {
 	}{
 		"should be successfull": {
 			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO people (id, created_at, updated_at, name)
-					VALUES (1, ?, ?, 'Test')
-				`, DATE, DATE)
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+
+				db.Exec(`
+					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					VALUES (1, ?, ?, 1, 'Test')
+				`, date, date)
 			},
 			inputPersonID: "1",
-			expectedCode:  200,
+			expectedCode:  http.StatusNoContent,
 			expectedBody:  &service.PersonResponse{},
 		},
 		"should throw bad request error when personID is not a number": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "a",
-			expectedCode:  400,
+			expectedCode:  http.StatusBadRequest,
 			expectedErr:   &api.HttpError{Code: 400, Message: "invalid personID"},
 		},
-		"should be successfull when people not exists": {
+		"should be successfull when persons not exists": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "1",
-			expectedCode:  200,
+			expectedCode:  http.StatusNoContent,
 			expectedBody:  &service.PersonResponse{},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			personStore := store.NewPersonStore(mysql.DB)
-			personService := service.NewPersonService(personStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil)
+			personRepository := &repository.PersonRepositoryImpl{DB: mysql}
+			personService := &service.PersonServiceImpl{PersonRepository: personRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", PersonService: personService}
+			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
-			url := "/api/v1/people/" + cs.inputPersonID
+			url := "/api/v1/persons/" + cs.inputPersonID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("DELETE", url, nil)
 			impl.Gin.ServeHTTP(rec, req)
@@ -359,16 +426,14 @@ func TestComponentPersonApiDelete(t *testing.T) {
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("PATCH /api/v1/people/:personID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-				t.Errorf("PATCH /api/v1/people/:personID BodyErr = %v, expected %v", httpError, cs.expectedErr)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM people`)
-			mysql.DB.Exec(`ALTER TABLE people AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }

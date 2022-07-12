@@ -5,34 +5,36 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-type PersonApi struct {
-	service *service.PersonService
+//go:generate mockgen -destination ../../mock/person_api_mock.go -package mock . PersonApi
+type PersonApi interface {
+	Configure()
 }
 
-func NewPersonApi(router *gin.RouterGroup, service *service.PersonService) *PersonApi {
-	impl := &PersonApi{service}
-
-	router.GET("", impl.FindAll)
-	router.GET("/:personID", impl.FindOneByID)
-	router.POST("", impl.Create)
-	router.PATCH("/:personID", impl.Update)
-	router.DELETE("/:personID", impl.Delete)
-
-	return impl
+type PersonApiImpl struct {
+	Router        *gin.RouterGroup
+	PersonService service.PersonService
 }
 
-// @Summary find all people
+func (impl *PersonApiImpl) Configure() {
+	impl.Router.GET("", impl.FindAll)
+	impl.Router.GET("/:personID", impl.FindOneByID)
+	impl.Router.POST("", impl.Create)
+	impl.Router.PATCH("/:personID", impl.Update)
+	impl.Router.DELETE("/:personID", impl.Delete)
+}
+
+// @Summary find all persons
 // @Tags person
 // @Accept json
 // @Produce json
-// @Success 200 {object} service.PeopleResponse
-// @Router /api/v1/people [get]
-func (impl *PersonApi) FindAll(c *gin.Context) {
-	res, err := impl.service.FindAll(c)
+// @Success 200 {object} service.PersonResponse
+// @Router /api/v1/persons [get]
+func (impl *PersonApiImpl) FindAll(c *gin.Context) {
+	res, err := impl.PersonService.FindAll(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, res)
 		return
@@ -46,24 +48,24 @@ func (impl *PersonApi) FindAll(c *gin.Context) {
 // @Accept	json
 // @Produce	json
 // @Param	id	path		int	true	"person ID"
-// @Success	200	{object}	service.PeopleResponse
+// @Success	200	{object}	service.PersonsResponse
 // @Failure	404	{object}	HttpError
-// @Router	/api/v1/people/{id} [get]
-func (impl *PersonApi) FindOneByID(c *gin.Context) {
+// @Router	/api/v1/persons/{id} [get]
+func (impl *PersonApiImpl) FindOneByID(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("personID"))
 	if err != nil {
 		NewHttpError(c, http.StatusBadRequest, "invalid personID")
 		return
 	}
 
-	res, err := impl.service.FindOneById(c, personID)
+	res, err := impl.PersonService.FindOneById(c, personID)
 	if err != nil {
-		NewHttpInternalServerError(c)
-		return
-	}
+		if e, ok := err.(*exception.NotFoundException); ok {
+			NewHttpError(c, http.StatusNotFound, e.Error())
+		} else {
+			NewHttpInternalServerError(c)
+		}
 
-	if res.Data == nil {
-		c.JSON(http.StatusNotFound, res)
 		return
 	}
 
@@ -74,20 +76,19 @@ func (impl *PersonApi) FindOneByID(c *gin.Context) {
 // @Tags	person
 // @Accept	json
 // @Produce	json
-// @Param	person		body	service.PersonDto	true	"Create person"
+// @Param	person		body	service.CreatePersonDto	true	"Create person"
 // @Success	201	{object}	service.PersonResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/people [post]
-func (impl *PersonApi) Create(c *gin.Context) {
-	var person service.PersonDto
-	err := c.ShouldBindJSON(&person)
-	if e, ok := err.(validator.ValidationErrors); ok {
-		NewHttpError(c, http.StatusBadRequest, e.Error())
+// @Router	/api/v1/persons [post]
+func (impl *PersonApiImpl) Create(c *gin.Context) {
+	var dto service.CreatePersonDto
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		NewHttpError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	res, err := impl.service.Create(c, person)
+	res, err := impl.PersonService.Create(c, dto)
 	if err != nil {
 		NewHttpInternalServerError(c)
 		return
@@ -100,38 +101,37 @@ func (impl *PersonApi) Create(c *gin.Context) {
 // @Tags	person
 // @Accept	json
 // @Produce	json
-// @Param	id				path	int					true	"person ID"
-// @Param	person		body	service.PersonDto	true	"Update person"
-// @Success	200	{object}	service.PersonResponse
+// @Param	id			path	int					true	"person ID"
+// @Param	person		body	service.UpdatePersonDto	true	"Update person"
+// @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/people/{id} [patch]
-func (impl *PersonApi) Update(c *gin.Context) {
+// @Router	/api/v1/persons/{id} [patch]
+func (impl *PersonApiImpl) Update(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("personID"))
 	if err != nil {
 		NewHttpError(c, http.StatusBadRequest, "invalid personID")
 		return
 	}
 
-	var person service.PersonDto
-	err = c.ShouldBindJSON(&person)
-	if e, ok := err.(validator.ValidationErrors); ok {
-		msg := e.Error()
-		NewHttpError(c, http.StatusBadRequest, msg)
+	var dto service.UpdatePersonDto
+	if err = c.ShouldBindJSON(&dto); err != nil {
+		NewHttpError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	res, err := impl.service.Update(c, personID, person)
-	if err != nil {
-		NewHttpInternalServerError(c)
-		return
-	}
-	if res.Data == nil {
-		c.JSON(http.StatusNotFound, res)
+	if err = impl.PersonService.Update(c, personID, dto); err != nil {
+		if e, ok := err.(*exception.EmptyModelException); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+		} else if e, ok := err.(*exception.NotFoundException); ok {
+			NewHttpError(c, http.StatusNotFound, e.Error())
+		} else {
+			NewHttpInternalServerError(c)
+		}
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Status(http.StatusNoContent)
 }
 
 // @Summary	delete a person
@@ -139,22 +139,21 @@ func (impl *PersonApi) Update(c *gin.Context) {
 // @Accept	json
 // @Produce	json
 // @Param	id	path		int	true	"person ID"
-// @Success	200	{object}	service.PersonResponse
+// @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
-// @Router	/api/v1/people/{id} [delete]
-func (impl *PersonApi) Delete(c *gin.Context) {
+// @Router	/api/v1/persons/{id} [delete]
+func (impl *PersonApiImpl) Delete(c *gin.Context) {
 	personID, err := strconv.Atoi(c.Param("personID"))
 	if err != nil {
 		NewHttpError(c, http.StatusBadRequest, "invalid personID")
 		return
 	}
 
-	res, err := impl.service.Delete(c, personID)
-	if err != nil {
+	if err = impl.PersonService.Delete(c, personID); err != nil {
 		NewHttpInternalServerError(c)
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Status(http.StatusNoContent)
 }

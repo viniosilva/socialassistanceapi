@@ -17,6 +17,16 @@ Run the command:
 make
 ```
 
+## Configuration
+
+To run locally, create the `.env` file as in the example below:
+
+```
+GIN_MODE=debug
+MIGRATION_URL=mysql://socialassistanceapi:c8c59046fca24022@tcp\(localhost:3306\)/socialassistance
+MYSQL_PASSWORD=c8c59046fca24022
+```
+
 ## Migrations
 
 Run the command:
@@ -42,6 +52,7 @@ Run the commands:
 ```shel
 make test/unit
 make test/component
+make test/e2e
 
 # all
 make test

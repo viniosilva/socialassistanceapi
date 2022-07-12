@@ -1,24 +1,47 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
-	"github.com/viniosilva/socialassistanceapi/internal/store"
 )
 
 func main() {
-	mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+	cfg, err := configuration.LoadConfig(".")
+	if err != nil {
+		log.Fatal("cannot load config: ", err)
+	}
+
+	mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+		cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 	defer mysql.DB.Close()
 
-	personStore := store.NewPersonStore(mysql.DB)
-	healthStore := store.NewHealthStore(mysql.DB)
+	healthRepository := &repository.HealthRepositoryImpl{DB: mysql}
+	personRepository := &repository.PersonRepositoryImpl{DB: mysql}
+	resourceRepository := &repository.ResourceRepositoryImpl{DB: mysql}
+	addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
+	resourceToAddressRepository := &repository.ResourceToAddressRepositoryImpl{DB: mysql}
 
-	personService := service.NewPersonService(personStore)
-	healthService := service.NewHealthService(healthStore)
+	healthService := &service.HealthServiceImpl{HealthRepository: healthRepository}
+	personService := &service.PersonServiceImpl{PersonRepository: personRepository}
+	resourceService := &service.ResourceServiceImpl{ResourceRepository: resourceRepository}
+	addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+	resourceToAddressService := &service.ResourceToAddressServiceImpl{ResourceToAddressRepository: resourceToAddressRepository}
 
-	api := api.NewApi("0.0.0.0:8080", healthService, personService)
+	api := &api.ApiImpl{
+		Addr:                     fmt.Sprintf("%s:%d", cfg.Http.Host, cfg.Http.Port),
+		HealthService:            healthService,
+		PersonService:            personService,
+		AddressService:           addressService,
+		ResourceService:          resourceService,
+		ResourceToAddressService: resourceToAddressService,
+	}
+
+	api.Configure()
 	api.Start()
 }

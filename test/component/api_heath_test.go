@@ -2,57 +2,57 @@ package component
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
-	"github.com/viniosilva/socialassistanceapi/internal/store"
-	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
-func TestComponentHealthApiHealth(t *testing.T) {
+func TestComponentHealthApiPing(t *testing.T) {
 	cases := map[string]struct {
 		expectedCode int
-		expectedBody service.Health
-		prepareMock  func(mock *mock.MockHealthStore)
+		expectedBody *service.HealthResponse
 	}{
 		"should return health status up": {
-			expectedCode: 200,
-			expectedBody: service.Health{Status: service.HealthStatusUp},
-			prepareMock: func(mock *mock.MockHealthStore) {
-				mock.EXPECT().Health(gomock.Any()).Return(true)
-			},
+			expectedCode: http.StatusOK,
+			expectedBody: &service.HealthResponse{Status: service.HealthStatusUp},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			healthStore := store.NewHealthStore(mysql.DB)
-			healthService := service.NewHealthService(healthStore)
-			api := api.NewApi("0.0.0.0:8080", healthService, nil, nil)
+			healthRepository := &repository.HealthRepositoryImpl{DB: mysql}
+			healthService := &service.HealthServiceImpl{HealthRepository: healthRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", HealthService: healthService}
+			impl.Configure()
 
 			// when
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", "/api/health", nil)
-			api.Gin.ServeHTTP(rec, req)
+			impl.Gin.ServeHTTP(rec, req)
 
-			expectedBody, _ := json.Marshal(cs.expectedBody)
+			var body *service.HealthResponse
+			json.Unmarshal(rec.Body.Bytes(), &body)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("GET /api/health StatusCode= %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if rec.Body.String() != string(expectedBody) {
-				t.Errorf("GET /api/health Body= %v, expected %v", rec.Body.String(), string(expectedBody))
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedBody, body)
 		})
 	}
 }

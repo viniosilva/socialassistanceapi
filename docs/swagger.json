@@ -4,7 +4,194 @@
         "contact": {}
     },
     "paths": {
-        "/api/v1/people": {
+        "/api/v1/addresses": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "address"
+                ],
+                "summary": "find all addresses",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.AddressesResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "address"
+                ],
+                "summary": "create an address",
+                "parameters": [
+                    {
+                        "description": "Create address",
+                        "name": "address",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateAddressDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/service.AddressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/addresses/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "address"
+                ],
+                "summary": "find address by id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "address ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.AddressesResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "address"
+                ],
+                "summary": "delete an address",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "address ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "address"
+                ],
+                "summary": "update an address",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "address ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update address",
+                        "name": "address",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateAddressDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/persons": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -15,12 +202,12 @@
                 "tags": [
                     "person"
                 ],
-                "summary": "find all people",
+                "summary": "find all persons",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.PeopleResponse"
+                            "$ref": "#/definitions/service.PersonResponse"
                         }
                     }
                 }
@@ -43,7 +230,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.PersonDto"
+                            "$ref": "#/definitions/service.CreatePersonDto"
                         }
                     }
                 ],
@@ -69,7 +256,7 @@
                 }
             }
         },
-        "/api/v1/people/{id}": {
+        "/api/v1/persons/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -94,7 +281,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.PeopleResponse"
+                            "$ref": "#/definitions/service.PersonsResponse"
                         }
                     },
                     "404": {
@@ -126,11 +313,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/service.PersonResponse"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -171,16 +355,176 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.PersonDto"
+                            "$ref": "#/definitions/service.UpdatePersonDto"
                         }
                     }
                 ],
                 "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resources": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "find resource by id",
+                "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.PersonResponse"
+                            "$ref": "#/definitions/service.ResourceResponse"
                         }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "create a resource",
+                "parameters": [
+                    {
+                        "description": "Create resource",
+                        "name": "resource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateResourceDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/service.ResourceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resources/{id}": {
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "update a resource",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update resource",
+                        "name": "resource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateResourceDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resources/{id}/quantity": {
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "update a resource quantity",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update resource quantity",
+                        "name": "resource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateResourceQuantityDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -212,20 +556,178 @@
                 }
             }
         },
-        "service.PeopleResponse": {
+        "service.Address": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "São Paulo"
+                },
+                "complement": {
+                    "type": "string",
+                    "example": "1A"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "BR"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2000-01-01T12:03:00"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "example": "2000-01-01T12:03:00"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "neighborhood": {
+                    "type": "string",
+                    "example": "Centro Histórico"
+                },
+                "number": {
+                    "type": "string",
+                    "example": "1000"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "SP"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "R. Vinte e Cinco de Março"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2000-01-01T12:03:00"
+                },
+                "zipcode": {
+                    "type": "string",
+                    "example": "01021100"
+                }
+            }
+        },
+        "service.AddressResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/service.Address"
+                }
+            }
+        },
+        "service.AddressesResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/service.Person"
+                        "$ref": "#/definitions/service.Address"
                     }
+                }
+            }
+        },
+        "service.CreateAddressDto": {
+            "type": "object",
+            "required": [
+                "city",
+                "complement",
+                "country",
+                "neighborhood",
+                "number",
+                "state",
+                "street",
+                "zipcode"
+            ],
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "São Paulo"
+                },
+                "complement": {
+                    "type": "string",
+                    "example": "1A"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "BR"
+                },
+                "neighborhood": {
+                    "type": "string",
+                    "example": "Centro Histórico"
+                },
+                "number": {
+                    "type": "string",
+                    "example": "1000"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "SP"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "R. Vinte e Cinco de Março"
+                },
+                "zipcode": {
+                    "type": "string",
+                    "example": "01021100"
+                }
+            }
+        },
+        "service.CreatePersonDto": {
+            "type": "object",
+            "required": [
+                "address_id",
+                "name"
+            ],
+            "properties": {
+                "address_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Cláudio"
+                }
+            }
+        },
+        "service.CreateResourceDto": {
+            "type": "object",
+            "required": [
+                "amount",
+                "measurement",
+                "name",
+                "quantity"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 5
+                },
+                "measurement": {
+                    "type": "string",
+                    "example": "Kg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Arroz"
+                },
+                "quantity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
                 }
             }
         },
         "service.Person": {
             "type": "object",
             "properties": {
+                "address_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2000-01-01T12:03:00"
@@ -248,23 +750,159 @@
                 }
             }
         },
-        "service.PersonDto": {
+        "service.PersonResponse": {
             "type": "object",
-            "required": [
-                "name"
-            ],
             "properties": {
+                "data": {
+                    "$ref": "#/definitions/service.Person"
+                }
+            }
+        },
+        "service.PersonsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.Person"
+                    }
+                }
+            }
+        },
+        "service.Resource": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 5
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2000-01-01T12:03:00"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "example": ""
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "measurement": {
+                    "type": "string",
+                    "example": "Kg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Arroz"
+                },
+                "quantity": {
+                    "type": "number",
+                    "example": 10
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2000-01-01T12:03:00"
+                }
+            }
+        },
+        "service.ResourceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/service.Resource"
+                }
+            }
+        },
+        "service.ResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.Resource"
+                    }
+                }
+            }
+        },
+        "service.UpdateAddressDto": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "São Paulo"
+                },
+                "complement": {
+                    "type": "string",
+                    "example": "1A"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "BR"
+                },
+                "neighborhood": {
+                    "type": "string",
+                    "example": "Centro Histórico"
+                },
+                "number": {
+                    "type": "string",
+                    "example": "1000"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "SP"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "R. Vinte e Cinco de Março"
+                },
+                "zipcode": {
+                    "type": "string",
+                    "example": "01021100"
+                }
+            }
+        },
+        "service.UpdatePersonDto": {
+            "type": "object",
+            "properties": {
+                "address_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "name": {
                     "type": "string",
                     "example": "Cláudio"
                 }
             }
         },
-        "service.PersonResponse": {
+        "service.UpdateResourceDto": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/service.Person"
+                "amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 5
+                },
+                "measurement": {
+                    "type": "string",
+                    "example": "Kg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Arroz"
+                }
+            }
+        },
+        "service.UpdateResourceQuantityDto": {
+            "type": "object",
+            "required": [
+                "quantity"
+            ],
+            "properties": {
+                "quantity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
                 }
             }
         }

@@ -2,72 +2,170 @@ package component
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
-	"github.com/viniosilva/socialassistanceapi/internal/store"
 )
 
 func TestE2EApi(t *testing.T) {
 	t.Run("E2E API", func(t *testing.T) {
 		// given
-		mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+		cfg, err := configuration.LoadConfig("../..")
+		if err != nil {
+			log.Fatal("cannot load config: ", err)
+		}
+
+		mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 		defer mysql.DB.Close()
 
-		personStore := store.NewPersonStore(mysql.DB)
-		personService := service.NewPersonService(personStore)
-		api := api.NewApi("0.0.0.0:8080", nil, personService, nil)
+		personRepository := &repository.PersonRepositoryImpl{DB: mysql}
+		resourceRepository := &repository.ResourceRepositoryImpl{DB: mysql}
+		addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
 
-		// when find all people then returns empty list
+		personService := &service.PersonServiceImpl{PersonRepository: personRepository}
+		resourceService := &service.ResourceServiceImpl{ResourceRepository: resourceRepository}
+		addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+
+		impl := &api.ApiImpl{
+			Addr:            "0.0.0.0:8080",
+			PersonService:   personService,
+			AddressService:  addressService,
+			ResourceService: resourceService,
+		}
+		impl.Configure()
+
+		// when find all persons then return OK
 		rec := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/api/v1/people", nil)
-		api.Gin.ServeHTTP(rec, req)
+		req, _ := http.NewRequest("GET", "/api/v1/persons", nil)
 
-		if rec.Body.String() != `{"data":[]}` {
-			t.Errorf("GET /api/v1/people Body = %v, expected %v", rec.Body.String(), "[]")
-		}
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, rec.Code, http.StatusOK)
 
-		// when create person then create a person
-		b, _ := json.Marshal(service.PersonDto{Name: "Test"})
+		// when find all addresses then return OK
 		rec = httptest.NewRecorder()
-		req, _ = http.NewRequest("POST", "/api/v1/people", strings.NewReader(string(b)))
-		api.Gin.ServeHTTP(rec, req)
+		req, _ = http.NewRequest("GET", "/api/v1/addresses", nil)
 
-		// when update person
-		b, _ = json.Marshal(service.PersonDto{Name: "Test updated"})
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, rec.Code, http.StatusOK)
+
+		// when find all resources then return OK
 		rec = httptest.NewRecorder()
-		req, _ = http.NewRequest("PATCH", "/api/v1/people/1", strings.NewReader(string(b)))
-		api.Gin.ServeHTTP(rec, req)
+		req, _ = http.NewRequest("GET", "/api/v1/resources", nil)
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, rec.Code, http.StatusOK)
 
-		person := rec.Body.String()
-
-		// when find a person by ID then return the person
+		// when create address then return Created
+		b, _ := json.Marshal(service.CreateAddressDto{
+			Country:      "BR",
+			State:        "SP",
+			City:         "São Paulo",
+			Neighborhood: "Pq. Novo Mundo",
+			Street:       "R. Sd. Teodoro Francisco Ribeiro",
+			Number:       "1",
+			Complement:   "1",
+			Zipcode:      "02180110",
+		})
 		rec = httptest.NewRecorder()
-		req, _ = http.NewRequest("GET", "/api/v1/people/1", nil)
-		api.Gin.ServeHTTP(rec, req)
+		req, _ = http.NewRequest("POST", "/api/v1/addresses", strings.NewReader(string(b)))
 
-		if rec.Body.String() != person {
-			t.Errorf("GET /api/v1/people/:personID Body = %v, expected %v", rec.Body.String(), person)
-		}
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, http.StatusCreated, rec.Code)
 
-		// when delete a person by ID then return ok
+		// when create person then return Created
+		b, _ = json.Marshal(service.CreatePersonDto{AddressID: 1, Name: "Test"})
 		rec = httptest.NewRecorder()
-		req, _ = http.NewRequest("DELETE", "/api/v1/people/1", nil)
-		api.Gin.ServeHTTP(rec, req)
+		req, _ = http.NewRequest("POST", "/api/v1/persons", strings.NewReader(string(b)))
+		impl.Gin.ServeHTTP(rec, req)
 
-		if rec.Code != 200 {
-			t.Errorf("DELETE /api/v1/people Code = %v, expected %v", rec.Body, 200)
-		}
+		assert.Equal(t, http.StatusCreated, rec.Code)
+
+		// when create resource then return Created
+		b, _ = json.Marshal(service.CreateResourceDto{Name: "Test", Amount: 1, Measurement: "l", Quantity: 10})
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("POST", "/api/v1/resources", strings.NewReader(string(b)))
+		impl.Gin.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusCreated, rec.Code)
+
+		// when update person then return NoContent
+		b, _ = json.Marshal(service.CreatePersonDto{Name: "Test Update"})
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("PATCH", "/api/v1/persons/1", strings.NewReader(string(b)))
+		impl.Gin.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNoContent, rec.Code)
+
+		// when update address then return NoContent
+		b, _ = json.Marshal(service.CreateAddressDto{
+			State:        "RS",
+			City:         "Porto Alegre",
+			Neighborhood: "Hípica",
+			Street:       "R. J",
+			Number:       "1",
+			Zipcode:      "91755450",
+		})
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("PATCH", "/api/v1/addresses/1", strings.NewReader(string(b)))
+		impl.Gin.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNoContent, rec.Code)
+
+		// when update resource then return NoContent
+		b, _ = json.Marshal(service.UpdateResourceDto{Measurement: "Kg"})
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("PATCH", "/api/v1/resources/1", strings.NewReader(string(b)))
+		impl.Gin.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNoContent, rec.Code)
+
+		// when find a person by ID then return status OK
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("GET", "/api/v1/persons/1", nil)
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, rec.Code, http.StatusOK)
+
+		// when find an address by ID then return status OK
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("GET", "/api/v1/addresses/1", nil)
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, rec.Code, http.StatusOK)
+
+		// when find a resource by ID then return status OK
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("GET", "/api/v1/resources/1", nil)
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, rec.Code, http.StatusOK)
+
+		// when delete a person by ID then return NoContent
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("DELETE", "/api/v1/persons/1", nil)
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, http.StatusNoContent, rec.Code)
+
+		// when delete an address by ID then return NoContent
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("DELETE", "/api/v1/addresses/1", nil)
+		impl.Gin.ServeHTTP(rec, req)
+		assert.Equal(t, http.StatusNoContent, rec.Code)
 
 		// after
-		mysql.DB.Exec(`DELETE FROM people`)
-		mysql.DB.Exec(`ALTER TABLE people AUTO_INCREMENT=1`)
+		mysql.DB.Exec(`DELETE FROM persons`)
+		mysql.DB.Exec(`DELETE FROM addresses`)
+		mysql.DB.Exec(`DELETE FROM resources`)
+		mysql.DB.Exec(`DELETE FROM resources_to_addresses`)
+		mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+		mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+		mysql.DB.Exec(`ALTER TABLE resources AUTO_INCREMENT=1`)
+		mysql.DB.Exec(`ALTER TABLE resources_to_addresses AUTO_INCREMENT=1`)
 	})
-
 }

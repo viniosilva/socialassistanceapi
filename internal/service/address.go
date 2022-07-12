@@ -4,19 +4,24 @@ import (
 	"context"
 
 	"github.com/viniosilva/socialassistanceapi/internal/model"
-	"github.com/viniosilva/socialassistanceapi/internal/store"
+	"github.com/viniosilva/socialassistanceapi/internal/repository"
 )
 
-type AddressService struct {
-	store store.AddressStore
+//go:generate mockgen -destination ../../mock/address_service_mock.go -package mock . AddressService
+type AddressService interface {
+	FindAll(ctx context.Context) (AddressesResponse, error)
+	FindOneById(ctx context.Context, addressID int) (AddressResponse, error)
+	Create(ctx context.Context, dto CreateAddressDto) (AddressResponse, error)
+	Update(ctx context.Context, addressID int, dto UpdateAddressDto) error
+	Delete(ctx context.Context, addressID int) error
 }
 
-func NewAddressService(store store.AddressStore) *AddressService {
-	return &AddressService{store}
+type AddressServiceImpl struct {
+	AddressRepository repository.AddressRepository
 }
 
-func (impl *AddressService) FindAll(ctx context.Context) (AddressesResponse, error) {
-	addresses, err := impl.store.FindAll(ctx)
+func (impl *AddressServiceImpl) FindAll(ctx context.Context) (AddressesResponse, error) {
+	addresses, err := impl.AddressRepository.FindAll(ctx)
 	if err != nil {
 		return AddressesResponse{}, err
 	}
@@ -41,8 +46,8 @@ func (impl *AddressService) FindAll(ctx context.Context) (AddressesResponse, err
 	return AddressesResponse{Data: res}, nil
 }
 
-func (impl *AddressService) FindOneById(ctx context.Context, addressID int) (AddressResponse, error) {
-	address, err := impl.store.FindOneById(ctx, addressID)
+func (impl *AddressServiceImpl) FindOneById(ctx context.Context, addressID int) (AddressResponse, error) {
+	address, err := impl.AddressRepository.FindOneById(ctx, addressID)
 	if err != nil || address == nil {
 		return AddressResponse{}, err
 	}
@@ -64,8 +69,8 @@ func (impl *AddressService) FindOneById(ctx context.Context, addressID int) (Add
 	}, nil
 }
 
-func (impl *AddressService) Create(ctx context.Context, dto AddressDto) (AddressResponse, error) {
-	address, err := impl.store.Create(ctx, model.Address{
+func (impl *AddressServiceImpl) Create(ctx context.Context, dto CreateAddressDto) (AddressResponse, error) {
+	address, err := impl.AddressRepository.Create(ctx, model.Address{
 		Country:      dto.Country,
 		State:        dto.State,
 		City:         dto.City,
@@ -97,8 +102,8 @@ func (impl *AddressService) Create(ctx context.Context, dto AddressDto) (Address
 	}, nil
 }
 
-func (impl *AddressService) Update(ctx context.Context, addressID int, dto AddressDto) (AddressResponse, error) {
-	address, err := impl.store.Update(ctx, model.Address{
+func (impl *AddressServiceImpl) Update(ctx context.Context, addressID int, dto UpdateAddressDto) error {
+	return impl.AddressRepository.Update(ctx, model.Address{
 		ID:           addressID,
 		Country:      dto.Country,
 		State:        dto.State,
@@ -109,28 +114,8 @@ func (impl *AddressService) Update(ctx context.Context, addressID int, dto Addre
 		Complement:   dto.Complement,
 		Zipcode:      dto.Zipcode,
 	})
-	if err != nil || address == nil {
-		return AddressResponse{}, err
-	}
-
-	return AddressResponse{
-		Data: &Address{
-			ID:           address.ID,
-			CreatedAt:    address.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt:    address.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Country:      address.Country,
-			State:        address.State,
-			City:         address.City,
-			Neighborhood: address.Neighborhood,
-			Street:       address.Street,
-			Number:       address.Number,
-			Complement:   address.Complement,
-			Zipcode:      address.Zipcode,
-		},
-	}, nil
 }
 
-func (impl *AddressService) Delete(ctx context.Context, addressID int) (AddressResponse, error) {
-	err := impl.store.Delete(ctx, addressID)
-	return AddressResponse{}, err
+func (impl *AddressServiceImpl) Delete(ctx context.Context, addressID int) error {
+	return impl.AddressRepository.Delete(ctx, addressID)
 }

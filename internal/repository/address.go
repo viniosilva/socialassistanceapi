@@ -1,4 +1,4 @@
-package store
+package repository
 
 import (
 	"context"
@@ -7,31 +7,28 @@ import (
 	"strings"
 	"time"
 
+	"github.com/viniosilva/socialassistanceapi/internal/configuration"
 	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
 
-//go:generate mockgen -destination ../../mock/address_store_mock.go -package mock . AddressStore
-type AddressStore interface {
+//go:generate mockgen -destination ../../mock/address_repository_mock.go -package mock . AddressRepository
+type AddressRepository interface {
 	FindAll(ctx context.Context) ([]model.Address, error)
 	FindOneById(ctx context.Context, addressID int) (*model.Address, error)
 	Create(ctx context.Context, address model.Address) (*model.Address, error)
-	Update(ctx context.Context, address model.Address) (*model.Address, error)
+	Update(ctx context.Context, address model.Address) error
 	Delete(ctx context.Context, addressID int) error
 }
 
-type addressStore struct {
-	db *sql.DB
+type AddressRepositoryImpl struct {
+	DB configuration.MySQL
 }
 
-func NewAddressStore(db *sql.DB) AddressStore {
-	return &addressStore{db}
-}
-
-func (impl *addressStore) FindAll(ctx context.Context) ([]model.Address, error) {
+func (impl *AddressRepositoryImpl) FindAll(ctx context.Context) ([]model.Address, error) {
 	addresses := []model.Address{}
 
-	res, err := impl.db.Query(`
+	res, err := impl.DB.DB.Query(`
 		SELECT id,
 			created_at,
 			updated_at,
@@ -51,7 +48,7 @@ func (impl *addressStore) FindAll(ctx context.Context) ([]model.Address, error) 
 	}
 
 	for res.Next() {
-		address, err := scanAddress(res)
+		address, err := impl.ScanAddress(res)
 		if err != nil {
 			return nil, err
 		}
@@ -62,8 +59,8 @@ func (impl *addressStore) FindAll(ctx context.Context) ([]model.Address, error) 
 	return addresses, nil
 }
 
-func (impl *addressStore) FindOneById(ctx context.Context, addressID int) (*model.Address, error) {
-	res, err := impl.db.QueryContext(ctx, `
+func (impl *AddressRepositoryImpl) FindOneById(ctx context.Context, addressID int) (*model.Address, error) {
+	res, err := impl.DB.DB.QueryContext(ctx, `
 		SELECT id,
 			created_at,
 			updated_at,
@@ -85,19 +82,23 @@ func (impl *addressStore) FindOneById(ctx context.Context, addressID int) (*mode
 
 	var address *model.Address
 	for res.Next() {
-		address, err = scanAddress(res)
+		address, err = impl.ScanAddress(res)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	if address == nil {
+		return nil, &exception.NotFoundException{Err: fmt.Errorf("address %d not found", addressID)}
+	}
+
 	return address, nil
 }
 
-func (impl *addressStore) Create(ctx context.Context, address model.Address) (*model.Address, error) {
+func (impl *AddressRepositoryImpl) Create(ctx context.Context, address model.Address) (*model.Address, error) {
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
-	res, err := impl.db.ExecContext(ctx, `
+	res, err := impl.DB.DB.ExecContext(ctx, `
 		INSERT INTO addresses (created_at, updated_at, country,
 			state, city, neighborhood, street, number, complement, zipcode)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -118,10 +119,19 @@ func (impl *addressStore) Create(ctx context.Context, address model.Address) (*m
 	return &address, nil
 }
 
-func (impl *addressStore) Update(ctx context.Context, address model.Address) (*model.Address, error) {
-	fields, values := getNotEmptyData(address)
+func (impl *AddressRepositoryImpl) Update(ctx context.Context, address model.Address) error {
+	fields, values := impl.DB.BuildUpdateData(map[string]interface{}{
+		"country":      address.Country,
+		"state":        address.State,
+		"city":         address.City,
+		"neighborhood": address.Neighborhood,
+		"street":       address.Street,
+		"number":       address.Number,
+		"complement":   address.Complement,
+		"zipcode":      address.Zipcode,
+	})
 	if len(fields) == 0 {
-		return nil, exception.NewEmptyAddressModelException()
+		return &exception.EmptyModelException{Err: fmt.Errorf("empty address model")}
 	}
 
 	query := fmt.Sprintf(`
@@ -131,67 +141,28 @@ func (impl *addressStore) Update(ctx context.Context, address model.Address) (*m
 	`, strings.Join(fields, ", "))
 
 	now := time.Now()
-	t, err := impl.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
 
 	values = append([]interface{}{now.Format("2006-01-02T15:04:05")}, values...)
 	values = append(values, address.ID)
 
-	res, err := t.ExecContext(ctx, query, values...)
+	res, err := impl.DB.DB.ExecContext(ctx, query, values...)
 	if err != nil {
-		if err = t.Rollback(); err != nil {
-			return nil, err
-		}
-		return nil, err
+		return err
 	}
 
 	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
-		if err = t.Rollback(); err != nil {
-			return nil, err
-		}
-		return nil, err
-	}
-
-	resS, err := t.QueryContext(ctx, `
-		SELECT id,
-			created_at,
-			updated_at,
-			country,
-			state,
-			city,
-			neighborhood,
-			street,
-			number,
-			complement,
-			zipcode
-		FROM addresses
-		WHERE id = ?
-		LIMIT 1
-	`, address.ID)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	if rows == 0 {
+		return &exception.NotFoundException{Err: fmt.Errorf("address %d not found", address.ID)}
 	}
 
-	var a *model.Address
-	for resS.Next() {
-		a, err = scanAddress(resS)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if err := t.Commit(); err != nil {
-		return nil, err
-	}
-
-	return a, nil
+	return nil
 }
 
-func (impl *addressStore) Delete(ctx context.Context, addressID int) error {
-	_, err := impl.db.ExecContext(ctx, `
+func (impl *AddressRepositoryImpl) Delete(ctx context.Context, addressID int) error {
+	_, err := impl.DB.DB.ExecContext(ctx, `
 		UPDATE addresses
 		SET deleted_at = NOW()
 		WHERE id = ?
@@ -200,7 +171,7 @@ func (impl *addressStore) Delete(ctx context.Context, addressID int) error {
 	return err
 }
 
-func scanAddress(res *sql.Rows) (*model.Address, error) {
+func (impl *AddressRepositoryImpl) ScanAddress(res *sql.Rows) (*model.Address, error) {
 	var address = &model.Address{}
 	var createdAt, updatedAt string
 
@@ -223,29 +194,4 @@ func scanAddress(res *sql.Rows) (*model.Address, error) {
 	address.UpdatedAt = t
 
 	return address, nil
-}
-
-func getNotEmptyData(address model.Address) ([]string, []interface{}) {
-	fields := []string{}
-	values := []interface{}{}
-
-	all := map[string]string{
-		"country":      address.Country,
-		"state":        address.State,
-		"city":         address.City,
-		"neighborhood": address.Neighborhood,
-		"street":       address.Street,
-		"number":       address.Number,
-		"complement":   address.Complement,
-		"zipcode":      address.Zipcode,
-	}
-
-	for field, value := range all {
-		if value != "" {
-			fields = append(fields, field+" = ?")
-			values = append(values, value)
-		}
-	}
-
-	return fields, values
 }

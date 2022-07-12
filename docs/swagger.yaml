@@ -8,15 +8,132 @@ definitions:
         example: invalid parameter
         type: string
     type: object
-  service.PeopleResponse:
+  service.Address:
+    properties:
+      city:
+        example: São Paulo
+        type: string
+      complement:
+        example: 1A
+        type: string
+      country:
+        example: BR
+        type: string
+      created_at:
+        example: 2000-01-01T12:03:00
+        type: string
+      deleted_at:
+        example: 2000-01-01T12:03:00
+        type: string
+      id:
+        example: 1
+        type: integer
+      neighborhood:
+        example: Centro Histórico
+        type: string
+      number:
+        example: "1000"
+        type: string
+      state:
+        example: SP
+        type: string
+      street:
+        example: R. Vinte e Cinco de Março
+        type: string
+      updated_at:
+        example: 2000-01-01T12:03:00
+        type: string
+      zipcode:
+        example: "01021100"
+        type: string
+    type: object
+  service.AddressResponse:
+    properties:
+      data:
+        $ref: '#/definitions/service.Address'
+    type: object
+  service.AddressesResponse:
     properties:
       data:
         items:
-          $ref: '#/definitions/service.Person'
+          $ref: '#/definitions/service.Address'
         type: array
+    type: object
+  service.CreateAddressDto:
+    properties:
+      city:
+        example: São Paulo
+        type: string
+      complement:
+        example: 1A
+        type: string
+      country:
+        example: BR
+        type: string
+      neighborhood:
+        example: Centro Histórico
+        type: string
+      number:
+        example: "1000"
+        type: string
+      state:
+        example: SP
+        type: string
+      street:
+        example: R. Vinte e Cinco de Março
+        type: string
+      zipcode:
+        example: "01021100"
+        type: string
+    required:
+    - city
+    - complement
+    - country
+    - neighborhood
+    - number
+    - state
+    - street
+    - zipcode
+    type: object
+  service.CreatePersonDto:
+    properties:
+      address_id:
+        example: 1
+        type: integer
+      name:
+        example: Cláudio
+        type: string
+    required:
+    - address_id
+    - name
+    type: object
+  service.CreateResourceDto:
+    properties:
+      amount:
+        example: 5
+        minimum: 0
+        type: number
+      measurement:
+        example: Kg
+        type: string
+      name:
+        example: Arroz
+        type: string
+      quantity:
+        example: 10
+        minimum: 0
+        type: number
+    required:
+    - amount
+    - measurement
+    - name
+    - quantity
     type: object
   service.Person:
     properties:
+      address_id:
+        example: 1
+        type: integer
       created_at:
         example: 2000-01-01T12:03:00
         type: string
@@ -33,23 +150,119 @@ definitions:
         example: 2000-01-01T12:03:00
         type: string
     type: object
-  service.PersonDto:
-    properties:
-      name:
-        example: Cláudio
-        type: string
-    required:
-    - name
-    type: object
   service.PersonResponse:
     properties:
       data:
         $ref: '#/definitions/service.Person'
     type: object
+  service.PersonsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/service.Person'
+        type: array
+    type: object
+  service.Resource:
+    properties:
+      amount:
+        example: 5
+        type: number
+      created_at:
+        example: 2000-01-01T12:03:00
+        type: string
+      deleted_at:
+        example: ""
+        type: string
+      id:
+        example: 1
+        type: integer
+      measurement:
+        example: Kg
+        type: string
+      name:
+        example: Arroz
+        type: string
+      quantity:
+        example: 10
+        type: number
+      updated_at:
+        example: 2000-01-01T12:03:00
+        type: string
+    type: object
+  service.ResourceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/service.Resource'
+    type: object
+  service.ResourcesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/service.Resource'
+        type: array
+    type: object
+  service.UpdateAddressDto:
+    properties:
+      city:
+        example: São Paulo
+        type: string
+      complement:
+        example: 1A
+        type: string
+      country:
+        example: BR
+        type: string
+      neighborhood:
+        example: Centro Histórico
+        type: string
+      number:
+        example: "1000"
+        type: string
+      state:
+        example: SP
+        type: string
+      street:
+        example: R. Vinte e Cinco de Março
+        type: string
+      zipcode:
+        example: "01021100"
+        type: string
+    type: object
+  service.UpdatePersonDto:
+    properties:
+      address_id:
+        example: 1
+        type: integer
+      name:
+        example: Cláudio
+        type: string
+    type: object
+  service.UpdateResourceDto:
+    properties:
+      amount:
+        example: 5
+        minimum: 0
+        type: number
+      measurement:
+        example: Kg
+        type: string
+      name:
+        example: Arroz
+        type: string
+    type: object
+  service.UpdateResourceQuantityDto:
+    properties:
+      quantity:
+        example: 10
+        minimum: 0
+        type: number
+    required:
+    - quantity
+    type: object
 info:
   contact: {}
 paths:
-  /api/v1/people:
+  /api/v1/addresses:
     get:
       consumes:
       - application/json
@@ -59,8 +272,130 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.PeopleResponse'
-      summary: find all people
+            $ref: '#/definitions/service.AddressesResponse'
+      summary: find all addresses
+      tags:
+      - address
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create address
+        in: body
+        name: address
+        required: true
+        schema:
+          $ref: '#/definitions/service.CreateAddressDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.AddressResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: create an address
+      tags:
+      - address
+  /api/v1/addresses/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: delete an address
+      tags:
+      - address
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.AddressesResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: find address by id
+      tags:
+      - address
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update address
+        in: body
+        name: address
+        required: true
+        schema:
+          $ref: '#/definitions/service.UpdateAddressDto'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: update an address
+      tags:
+      - address
+  /api/v1/persons:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.PersonResponse'
+      summary: find all persons
       tags:
       - person
     post:
@@ -72,7 +407,7 @@ paths:
         name: person
         required: true
         schema:
-          $ref: '#/definitions/service.PersonDto'
+          $ref: '#/definitions/service.CreatePersonDto'
       produces:
       - application/json
       responses:
@@ -91,7 +426,7 @@ paths:
       summary: create a person
       tags:
       - person
-  /api/v1/people/{id}:
+  /api/v1/persons/{id}:
     delete:
       consumes:
       - application/json
@@ -104,10 +439,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/service.PersonResponse'
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -134,7 +467,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.PeopleResponse'
+            $ref: '#/definitions/service.PersonsResponse'
         "404":
           description: Not Found
           schema:
@@ -156,14 +489,12 @@ paths:
         name: person
         required: true
         schema:
-          $ref: '#/definitions/service.PersonDto'
+          $ref: '#/definitions/service.UpdatePersonDto'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/service.PersonResponse'
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -175,4 +506,110 @@ paths:
       summary: update a person
       tags:
       - person
+  /api/v1/resources:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.ResourceResponse'
+      summary: find resource by id
+      tags:
+      - resource
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create resource
+        in: body
+        name: resource
+        required: true
+        schema:
+          $ref: '#/definitions/service.CreateResourceDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.ResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: create a resource
+      tags:
+      - resource
+  /api/v1/resources/{id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update resource
+        in: body
+        name: resource
+        required: true
+        schema:
+          $ref: '#/definitions/service.UpdateResourceDto'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: update a resource
+      tags:
+      - resource
+  /api/v1/resources/{id}/quantity:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update resource quantity
+        in: body
+        name: resource
+        required: true
+        schema:
+          $ref: '#/definitions/service.UpdateResourceQuantityDto'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: update a resource quantity
+      tags:
+      - resource
 swagger: "2.0"

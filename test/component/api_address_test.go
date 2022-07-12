@@ -3,17 +3,18 @@ package component
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
-	"github.com/viniosilva/socialassistanceapi/internal/store"
 )
 
 func TestComponentAddressApiFindAll(t *testing.T) {
@@ -33,7 +34,7 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 			},
-			expectedCode: 200,
+			expectedCode: http.StatusOK,
 			expectedBody: &service.AddressesResponse{Data: []service.Address{{
 				ID:           1,
 				CreatedAt:    DATE,
@@ -50,19 +51,26 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 		},
 		"should return empty list when addresses not exists": {
 			before:       func(db *sql.DB) {},
-			expectedCode: 200,
+			expectedCode: http.StatusOK,
 			expectedBody: &service.AddressesResponse{Data: []service.Address{}},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
-			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
+			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			impl.Configure()
 
 			cs.before(mysql.DB)
 
@@ -74,13 +82,15 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 			var body *service.AddressesResponse
 			json.Unmarshal(rec.Body.Bytes(), &body)
 
+			// clean
+			for _, a := range body.Data {
+				a.CreatedAt = DATE
+				a.UpdatedAt = DATE
+			}
+
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("GET /api/v1/addresses StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("GET /api/v1/addresses Body = %v, expected %v", body, cs.expectedBody)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedBody, body)
 
 			// after
 			mysql.DB.Exec(`DELETE FROM addresses`)
@@ -108,7 +118,7 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 				`, DATE, DATE)
 			},
 			inputAddressID: "1",
-			expectedCode:   200,
+			expectedCode:   http.StatusOK,
 			expectedBody: &service.AddressResponse{Data: &service.Address{
 				ID:           1,
 				CreatedAt:    DATE,
@@ -122,29 +132,39 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			}},
+			expectedErr: &api.HttpError{},
 		},
 		"should throw bad request error when addressID is not a number": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "a",
-			expectedCode:   400,
+			expectedCode:   http.StatusBadRequest,
+			expectedBody:   &service.AddressResponse{},
 			expectedErr:    &api.HttpError{Code: 400, Message: "invalid addressID"},
 		},
 		"should throw not found error when addresses not exists": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
-			expectedCode:   404,
+			expectedCode:   http.StatusNotFound,
 			expectedBody:   &service.AddressResponse{},
+			expectedErr:    &api.HttpError{Code: http.StatusNotFound, Message: "address 1 not found"},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
-			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
+			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			impl.Configure()
 
 			cs.before(mysql.DB)
 
@@ -160,16 +180,16 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 			var httpError *api.HttpError
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
+			// clean
+			if body.Data != nil {
+				body.Data.CreatedAt = DATE
+				body.Data.UpdatedAt = DATE
+			}
+
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("GET /api/v1/addresses/:addressID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("GET /api/v1/addresses/:addressID Body = %v, expected %v", body, cs.expectedBody)
-			}
-			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-				t.Errorf("GET /api/v1/addresses/:addressID BodyErr = %v, expected %v", httpError, cs.expectedErr)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedBody, body)
+			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
 			mysql.DB.Exec(`DELETE FROM addresses`)
@@ -180,13 +200,13 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 
 func TestComponentAddressApiCreate(t *testing.T) {
 	cases := map[string]struct {
-		inputAddress service.AddressDto
+		inputDto     service.CreateAddressDto
 		expectedCode int
 		expectedBody *service.AddressResponse
 		expectedErr  *api.HttpError
 	}{
 		"should return created address": {
-			inputAddress: service.AddressDto{
+			inputDto: service.CreateAddressDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -196,7 +216,7 @@ func TestComponentAddressApiCreate(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			},
-			expectedCode: 201,
+			expectedCode: http.StatusCreated,
 			expectedBody: &service.AddressResponse{Data: &service.Address{
 				ID:           1,
 				Country:      "BR",
@@ -208,20 +228,22 @@ func TestComponentAddressApiCreate(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			}},
+			expectedErr: &api.HttpError{},
 		},
 		"should throw bad request error": {
-			expectedCode: 400,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: &service.AddressResponse{},
 			expectedErr: &api.HttpError{
-				Code: 400,
+				Code: http.StatusBadRequest,
 				Message: strings.Join([]string{
-					"Key: 'AddressDto.Country' Error:Field validation for 'Country' failed on the 'required' tag",
-					"Key: 'AddressDto.State' Error:Field validation for 'State' failed on the 'required' tag",
-					"Key: 'AddressDto.City' Error:Field validation for 'City' failed on the 'required' tag",
-					"Key: 'AddressDto.Neighborhood' Error:Field validation for 'Neighborhood' failed on the 'required' tag",
-					"Key: 'AddressDto.Street' Error:Field validation for 'Street' failed on the 'required' tag",
-					"Key: 'AddressDto.Number' Error:Field validation for 'Number' failed on the 'required' tag",
-					"Key: 'AddressDto.Complement' Error:Field validation for 'Complement' failed on the 'required' tag",
-					"Key: 'AddressDto.Zipcode' Error:Field validation for 'Zipcode' failed on the 'required' tag",
+					"Key: 'CreateAddressDto.Country' Error:Field validation for 'Country' failed on the 'required' tag",
+					"Key: 'CreateAddressDto.State' Error:Field validation for 'State' failed on the 'required' tag",
+					"Key: 'CreateAddressDto.City' Error:Field validation for 'City' failed on the 'required' tag",
+					"Key: 'CreateAddressDto.Neighborhood' Error:Field validation for 'Neighborhood' failed on the 'required' tag",
+					"Key: 'CreateAddressDto.Street' Error:Field validation for 'Street' failed on the 'required' tag",
+					"Key: 'CreateAddressDto.Number' Error:Field validation for 'Number' failed on the 'required' tag",
+					"Key: 'CreateAddressDto.Complement' Error:Field validation for 'Complement' failed on the 'required' tag",
+					"Key: 'CreateAddressDto.Zipcode' Error:Field validation for 'Zipcode' failed on the 'required' tag",
 				}, "\n"),
 			},
 		},
@@ -229,15 +251,22 @@ func TestComponentAddressApiCreate(t *testing.T) {
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
-			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
+			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			impl.Configure()
 
 			// when
-			b, _ := json.Marshal(cs.inputAddress)
+			b, _ := json.Marshal(cs.inputDto)
 			url := "/api/v1/addresses"
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", url, strings.NewReader(string(b)))
@@ -254,15 +283,9 @@ func TestComponentAddressApiCreate(t *testing.T) {
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("POST /api/v1/addresses StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("POST /api/v1/addresses Body = %v, expected %v", body, cs.expectedBody)
-			}
-			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-				t.Errorf("POST /api/v1/addresses BodyErr = %v, expected %v", httpError, cs.expectedErr)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedBody, body)
+			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
 			mysql.DB.Exec(`DELETE FROM addresses`)
@@ -277,12 +300,11 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 	cases := map[string]struct {
 		before         func(db *sql.DB)
 		inputAddressID string
-		inputAddress   service.AddressDto
+		inputDto       service.CreateAddressDto
 		expectedCode   int
-		expectedBody   *service.AddressResponse
 		expectedErr    *api.HttpError
 	}{
-		"should return updated address": {
+		"should update address": {
 			before: func(db *sql.DB) {
 				db.Exec(`
 					INSERT INTO addresses (id, created_at, updated_at, country,
@@ -291,7 +313,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 				`, DATE, DATE)
 			},
 			inputAddressID: "1",
-			inputAddress: service.AddressDto{
+			inputDto: service.CreateAddressDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -301,21 +323,9 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			},
-			expectedCode: 200,
-			expectedBody: &service.AddressResponse{Data: &service.Address{
-				ID:           1,
-				CreatedAt:    DATE,
-				Country:      "BR",
-				State:        "SP",
-				City:         "São Paulo",
-				Neighborhood: "Pq. Novo Mundo",
-				Street:       "R. Sd. Teodoro Francisco Ribeiro",
-				Number:       "1",
-				Complement:   "1",
-				Zipcode:      "02180110",
-			}},
+			expectedCode: http.StatusNoContent,
 		},
-		"should return updated address when is a partial update": {
+		"should update address when is a partial update": {
 			before: func(db *sql.DB) {
 				db.Exec(`
 					INSERT INTO addresses (id, created_at, updated_at, country,
@@ -324,37 +334,25 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 				`, DATE, DATE)
 			},
 			inputAddressID: "1",
-			inputAddress:   service.AddressDto{Number: "2"},
-			expectedCode:   200,
-			expectedBody: &service.AddressResponse{Data: &service.Address{
-				ID:           1,
-				CreatedAt:    DATE,
-				Country:      "BR",
-				State:        "SP",
-				City:         "São Paulo",
-				Neighborhood: "Pq. Novo Mundo",
-				Street:       "R. Sd. Teodoro Francisco Ribeiro",
-				Number:       "2",
-				Complement:   "1",
-				Zipcode:      "02180110",
-			}},
+			inputDto:       service.CreateAddressDto{Number: "2"},
+			expectedCode:   http.StatusNoContent,
 		},
 		"should throw bad request error when addressID is not a number": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "a",
-			expectedCode:   400,
-			expectedErr:    &api.HttpError{Code: 400, Message: "invalid addressID"},
+			expectedCode:   http.StatusBadRequest,
+			expectedErr:    &api.HttpError{Code: http.StatusBadRequest, Message: "invalid addressID"},
 		},
 		"should throw bad request error": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
-			expectedCode:   400,
-			expectedErr:    &api.HttpError{Code: 400, Message: "empty payload"},
+			expectedCode:   http.StatusBadRequest,
+			expectedErr:    &api.HttpError{Code: http.StatusBadRequest, Message: "empty address model"},
 		},
 		"should throw not found error when addresses not exists": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
-			inputAddress: service.AddressDto{
+			inputDto: service.CreateAddressDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -364,48 +362,42 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			},
-			expectedCode: 404,
-			expectedBody: &service.AddressResponse{},
+			expectedCode: http.StatusNotFound,
+			expectedErr:  &api.HttpError{Code: http.StatusNotFound, Message: "address 1 not found"},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
-			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
+			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
-			b, _ := json.Marshal(cs.inputAddress)
+			b, _ := json.Marshal(cs.inputDto)
 			url := "/api/v1/addresses/" + cs.inputAddressID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("PATCH", url, strings.NewReader(string(b)))
 			impl.Gin.ServeHTTP(rec, req)
 
-			var body *service.AddressResponse
-			json.Unmarshal(rec.Body.Bytes(), &body)
-			if body.Data != nil {
-				body.Data.UpdatedAt = ""
-			}
-
 			var httpError *api.HttpError
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("PATCH /api/v1/addresses/:addressID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedBody != nil && !reflect.DeepEqual(body, cs.expectedBody) {
-				t.Errorf("PATCH /api/v1/addresses/:addressID Body = %v, expected %v", body, cs.expectedBody)
-			}
-			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-				t.Errorf("PATCH /api/v1/addresses/:addressID BodyErr = %v, expected %v", httpError, cs.expectedErr)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
 			mysql.DB.Exec(`DELETE FROM addresses`)
@@ -433,31 +425,38 @@ func TestComponentAddressApiDelete(t *testing.T) {
 				`, DATE, DATE)
 			},
 			inputAddressID: "1",
-			expectedCode:   200,
+			expectedCode:   http.StatusNoContent,
 			expectedBody:   &service.AddressResponse{},
 		},
 		"should throw bad request error when addressID is not a number": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "a",
-			expectedCode:   400,
-			expectedErr:    &api.HttpError{Code: 400, Message: "invalid addressID"},
+			expectedCode:   http.StatusBadRequest,
+			expectedErr:    &api.HttpError{Code: http.StatusBadRequest, Message: "invalid addressID"},
 		},
 		"should be successfull when addresses not exists": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
-			expectedCode:   200,
+			expectedCode:   http.StatusNoContent,
 			expectedBody:   &service.AddressResponse{},
 		},
 	}
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
+			cfg, err := configuration.LoadConfig("../..")
+			if err != nil {
+				log.Fatal("cannot load config: ", err)
+			}
+
+			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
-			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
+			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			impl.Configure()
 
 			cs.before(mysql.DB)
 
@@ -471,12 +470,8 @@ func TestComponentAddressApiDelete(t *testing.T) {
 			json.Unmarshal(rec.Body.Bytes(), &httpError)
 
 			// then
-			if rec.Code != cs.expectedCode {
-				t.Errorf("PATCH /api/v1/addresses/:addressID StatusCode = %v, expected %v", rec.Code, cs.expectedCode)
-			}
-			if cs.expectedErr != nil && !reflect.DeepEqual(httpError, cs.expectedErr) {
-				t.Errorf("PATCH /api/v1/addresses/:addressID BodyErr = %v, expected %v", httpError, cs.expectedErr)
-			}
+			assert.Equal(t, cs.expectedCode, rec.Code)
+			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
 			mysql.DB.Exec(`DELETE FROM addresses`)

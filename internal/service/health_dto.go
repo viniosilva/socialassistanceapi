@@ -7,6 +7,6 @@ const (
 	HealthStatusDown HealthStatus = "down"
 )
 
-type Health struct {
+type HealthResponse struct {
 	Status HealthStatus `json:"status"`
 }

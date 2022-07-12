@@ -1,0 +1,12 @@
+http:
+  host: 'localhost'
+  port: '8080'
+
+mysql:
+  host: 'localhost'
+  port: 3306
+  database: 'socialassistance'
+  username: 'socialassistanceapi'
+  conn_max_lifetime_ms: 60000 # 1000 * 60
+  max_open_conns: 1
+  max_idle_conns: 1

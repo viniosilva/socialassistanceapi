@@ -3,11 +3,10 @@ package model
 import "time"
 
 type Address struct {
-	ID        int
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
-
+	ID           int
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    *time.Time
 	Country      string
 	State        string
 	City         string

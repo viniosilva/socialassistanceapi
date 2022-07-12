@@ -9,33 +9,45 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-type Api struct {
-	Gin  *gin.Engine
-	addr string
+//go:generate mockgen -destination ../../mock/api_mock.go -package mock . Api
+type Api interface {
+	Configure()
+	Start()
+}
+
+type ApiImpl struct {
+	Gin             *gin.Engine
+	Addr            string
+	HealthService   service.HealthService
+	PersonService   service.PersonService
+	AddressService  service.AddressService
+	ResourceService service.ResourceService
 }
 
 // @title Ipanema Box API
 // @version 1.0
 // @description person, budget and service management
 // @BasePath /api/v1
-func NewApi(addr string,
-	healthService *service.HealthService,
-	personService *service.PersonService,
-	addressService *service.AddressService,
-) *Api {
+func (impl *ApiImpl) Configure() {
 	api := gin.Default()
 	api.Use(cors.Default())
 
-	docs.SwaggerInfo.Host = addr
+	docs.SwaggerInfo.Host = impl.Addr
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	NewHealthApi(api.Group("/api/health"), healthService)
-	NewPersonApi(api.Group("/api/v1/people"), personService)
-	NewAddressApi(api.Group("/api/v1/addresses"), addressService)
+	healthApi := &HealthApiImpl{Router: api.Group("/api/health"), HealthService: impl.HealthService}
+	personApi := &PersonApiImpl{Router: api.Group("/api/v1/persons"), PersonService: impl.PersonService}
+	addressApi := &AddressApiImpl{Router: api.Group("/api/v1/addresses"), AddressService: impl.AddressService}
+	resourceApi := &ResourceApiImpl{Router: api.Group("/api/v1/resources"), ResourceService: impl.ResourceService}
 
-	return &Api{api, addr}
+	healthApi.Configure()
+	personApi.Configure()
+	addressApi.Configure()
+	resourceApi.Configure()
+
+	impl.Gin = api
 }
 
-func (impl *Api) Start() {
-	impl.Gin.Run(impl.addr)
+func (impl *ApiImpl) Start() {
+	impl.Gin.Run(impl.Addr)
 }

@@ -23,7 +23,7 @@ type AddressesResponse struct {
 	Data []Address `json:"data"`
 }
 
-type AddressDto struct {
+type CreateAddressDto struct {
 	Country      string `json:"country" example:"BR" binding:"required"`
 	State        string `json:"state" example:"SP" binding:"required"`
 	City         string `json:"city" example:"São Paulo" binding:"required"`
@@ -32,4 +32,15 @@ type AddressDto struct {
 	Number       string `json:"number" example:"1000" binding:"required"`
 	Complement   string `json:"complement" example:"1A" binding:"required"`
 	Zipcode      string `json:"zipcode" example:"01021100" binding:"required"`
+}
+
+type UpdateAddressDto struct {
+	Country      string `json:"country" example:"BR"`
+	State        string `json:"state" example:"SP"`
+	City         string `json:"city" example:"São Paulo"`
+	Neighborhood string `json:"neighborhood" example:"Centro Histórico"`
+	Street       string `json:"street" example:"R. Vinte e Cinco de Março"`
+	Number       string `json:"number" example:"1000"`
+	Complement   string `json:"complement" example:"1A"`
+	Zipcode      string `json:"zipcode" example:"01021100"`
 }
