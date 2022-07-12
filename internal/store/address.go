@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/viniosilva/socialassistanceapi/internal/configuration"
 	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
@@ -21,17 +22,19 @@ type AddressStore interface {
 }
 
 type addressStore struct {
-	db *sql.DB
+	db configuration.MySQL
 }
 
-func NewAddressStore(db *sql.DB) AddressStore {
-	return &addressStore{db}
+func NewAddressStore(db configuration.MySQL) AddressStore {
+	return &addressStore{
+		db: db,
+	}
 }
 
 func (impl *addressStore) FindAll(ctx context.Context) ([]model.Address, error) {
 	addresses := []model.Address{}
 
-	res, err := impl.db.Query(`
+	res, err := impl.db.DB.Query(`
 		SELECT id,
 			created_at,
 			updated_at,
@@ -63,7 +66,7 @@ func (impl *addressStore) FindAll(ctx context.Context) ([]model.Address, error) 
 }
 
 func (impl *addressStore) FindOneById(ctx context.Context, addressID int) (*model.Address, error) {
-	res, err := impl.db.QueryContext(ctx, `
+	res, err := impl.db.DB.QueryContext(ctx, `
 		SELECT id,
 			created_at,
 			updated_at,
@@ -97,7 +100,7 @@ func (impl *addressStore) FindOneById(ctx context.Context, addressID int) (*mode
 func (impl *addressStore) Create(ctx context.Context, address model.Address) (*model.Address, error) {
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
-	res, err := impl.db.ExecContext(ctx, `
+	res, err := impl.db.DB.ExecContext(ctx, `
 		INSERT INTO addresses (created_at, updated_at, country,
 			state, city, neighborhood, street, number, complement, zipcode)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -119,9 +122,18 @@ func (impl *addressStore) Create(ctx context.Context, address model.Address) (*m
 }
 
 func (impl *addressStore) Update(ctx context.Context, address model.Address) (*model.Address, error) {
-	fields, values := getNotEmptyData(address)
+	fields, values := impl.db.BuildUpdateData(map[string]interface{}{
+		"country":      address.Country,
+		"state":        address.State,
+		"city":         address.City,
+		"neighborhood": address.Neighborhood,
+		"street":       address.Street,
+		"number":       address.Number,
+		"complement":   address.Complement,
+		"zipcode":      address.Zipcode,
+	})
 	if len(fields) == 0 {
-		return nil, exception.NewEmptyAddressModelException()
+		return nil, exception.NewEmptyModelException("address")
 	}
 
 	query := fmt.Sprintf(`
@@ -131,7 +143,7 @@ func (impl *addressStore) Update(ctx context.Context, address model.Address) (*m
 	`, strings.Join(fields, ", "))
 
 	now := time.Now()
-	t, err := impl.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	t, err := impl.db.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return nil, err
 	}
@@ -141,18 +153,25 @@ func (impl *addressStore) Update(ctx context.Context, address model.Address) (*m
 
 	res, err := t.ExecContext(ctx, query, values...)
 	if err != nil {
-		if err = t.Rollback(); err != nil {
+		if err := t.Rollback(); err != nil {
 			return nil, err
 		}
 		return nil, err
 	}
 
 	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
-		if err = t.Rollback(); err != nil {
+	if err != nil {
+		if err := t.Rollback(); err != nil {
 			return nil, err
 		}
 		return nil, err
+	}
+
+	if rows == 0 {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, exception.NewNotFoundException("address")
 	}
 
 	resS, err := t.QueryContext(ctx, `
@@ -191,7 +210,7 @@ func (impl *addressStore) Update(ctx context.Context, address model.Address) (*m
 }
 
 func (impl *addressStore) Delete(ctx context.Context, addressID int) error {
-	_, err := impl.db.ExecContext(ctx, `
+	_, err := impl.db.DB.ExecContext(ctx, `
 		UPDATE addresses
 		SET deleted_at = NOW()
 		WHERE id = ?
@@ -223,29 +242,4 @@ func scanAddress(res *sql.Rows) (*model.Address, error) {
 	address.UpdatedAt = t
 
 	return address, nil
-}
-
-func getNotEmptyData(address model.Address) ([]string, []interface{}) {
-	fields := []string{}
-	values := []interface{}{}
-
-	all := map[string]string{
-		"country":      address.Country,
-		"state":        address.State,
-		"city":         address.City,
-		"neighborhood": address.Neighborhood,
-		"street":       address.Street,
-		"number":       address.Number,
-		"complement":   address.Complement,
-		"zipcode":      address.Zipcode,
-	}
-
-	for field, value := range all {
-		if value != "" {
-			fields = append(fields, field+" = ?")
-			values = append(values, value)
-		}
-	}
-
-	return fields, values
 }

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
 
@@ -19,22 +21,24 @@ type PersonStore interface {
 }
 
 type personStore struct {
-	db *sql.DB
+	db configuration.MySQL
 }
 
-func NewPersonStore(db *sql.DB) PersonStore {
-	return &personStore{db}
+func NewPersonStore(db configuration.MySQL) PersonStore {
+	return &personStore{
+		db: db,
+	}
 }
 
 func (impl *personStore) FindAll(ctx context.Context) ([]model.Person, error) {
-	people := []model.Person{}
+	persons := []model.Person{}
 
-	res, err := impl.db.Query(`
+	res, err := impl.db.DB.Query(`
 		SELECT id,
 			created_at,
 			updated_at,
 			name
-		FROM people
+		FROM persons
 		WHERE deleted_at IS NULL
 	`)
 	if err != nil {
@@ -47,19 +51,19 @@ func (impl *personStore) FindAll(ctx context.Context) ([]model.Person, error) {
 			return nil, err
 		}
 
-		people = append(people, *person)
+		persons = append(persons, *person)
 	}
 
-	return people, nil
+	return persons, nil
 }
 
 func (impl *personStore) FindOneById(ctx context.Context, personID int) (*model.Person, error) {
-	res, err := impl.db.QueryContext(ctx, `
+	res, err := impl.db.DB.QueryContext(ctx, `
 		SELECT id,
 			created_at,
 			updated_at,
 			name
-		FROM people
+		FROM persons
 		WHERE id = ?
 		LIMIT 1
 	`, personID)
@@ -81,8 +85,8 @@ func (impl *personStore) FindOneById(ctx context.Context, personID int) (*model.
 func (impl *personStore) Create(ctx context.Context, person model.Person) (*model.Person, error) {
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
-	res, err := impl.db.ExecContext(ctx, `
-		INSERT INTO people (created_at, updated_at, name)
+	res, err := impl.db.DB.ExecContext(ctx, `
+		INSERT INTO persons (created_at, updated_at, name)
 		VALUES (?, ?, ?)
 	`, nowMysql, nowMysql, person.Name)
 	if err != nil {
@@ -102,13 +106,13 @@ func (impl *personStore) Create(ctx context.Context, person model.Person) (*mode
 
 func (impl *personStore) Update(ctx context.Context, person model.Person) (*model.Person, error) {
 	now := time.Now()
-	t, err := impl.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	t, err := impl.db.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := t.ExecContext(ctx, `
-		UPDATE people
+		UPDATE persons
 		SET name = ?,
 			updated_at = ?
 		WHERE id = ?
@@ -120,15 +124,22 @@ func (impl *personStore) Update(ctx context.Context, person model.Person) (*mode
 	}
 
 	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
+	if err != nil {
 		t.Rollback()
 		return nil, err
 	}
 
+	if rows == 0 {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, exception.NewNotFoundException("person")
+	}
+
 	var createdAt string
-	impl.db.QueryRowContext(ctx, `
+	impl.db.DB.QueryRowContext(ctx, `
 		SELECT created_at
-		FROM people
+		FROM persons
 		WHERE id = ?
 		LIMIT 1
 	`, person.ID).Scan(&createdAt)
@@ -148,8 +159,8 @@ func (impl *personStore) Update(ctx context.Context, person model.Person) (*mode
 }
 
 func (impl *personStore) Delete(ctx context.Context, personID int) error {
-	_, err := impl.db.ExecContext(ctx, `
-		UPDATE people
+	_, err := impl.db.DB.ExecContext(ctx, `
+		UPDATE persons
 		SET deleted_at = NOW()
 		WHERE id = ?
 	`, personID)

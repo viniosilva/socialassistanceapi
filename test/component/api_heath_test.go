@@ -35,9 +35,9 @@ func TestComponentHealthApiHealth(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			healthStore := store.NewHealthStore(mysql.DB)
+			healthStore := store.NewHealthStore(mysql)
 			healthService := service.NewHealthService(healthStore)
-			api := api.NewApi("0.0.0.0:8080", healthService, nil, nil)
+			api := api.NewApi("0.0.0.0:8080", healthService, nil, nil, nil)
 
 			// when
 			rec := httptest.NewRecorder()

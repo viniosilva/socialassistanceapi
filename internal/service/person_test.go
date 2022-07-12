@@ -1,4 +1,4 @@
-package unit
+package service_test
 
 import (
 	"context"
@@ -8,28 +8,29 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
 func TestPersonServiceFindAll(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
-
+	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
+
 	cases := map[string]struct {
-		expectedPeople service.PeopleResponse
-		expectedErr    error
-		prepareMock    func(mock *mock.MockPersonStore)
+		expectedRes service.PersonsResponse
+		expectedErr error
+		prepareMock func(mock *mock.MockPersonStore)
 	}{
-		"should return people list": {
-			expectedPeople: service.PeopleResponse{Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
+		"should return persons list": {
+			expectedRes: service.PersonsResponse{Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Person{{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}}, nil)
 			},
 		},
-		"should return empty people list": {
-			expectedPeople: service.PeopleResponse{Data: []service.Person{}},
+		"should return empty persons list": {
+			expectedRes: service.PersonsResponse{Data: []service.Person{}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().FindAll(gomock.Any()).Return([]model.Person{}, nil)
 			},
@@ -52,11 +53,11 @@ func TestPersonServiceFindAll(t *testing.T) {
 			impl := service.NewPersonService(storeMock)
 
 			// when
-			people, err := impl.FindAll(ctx)
+			res, err := impl.FindAll(ctx)
 
 			// then
-			if !reflect.DeepEqual(people, cs.expectedPeople) {
-				t.Errorf("PersonService.FindAll() = %v, expected %v", people, cs.expectedPeople)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("PersonService.FindAll() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("PersonService.FindAll() error = %v, expected %v", err, cs.expectedErr)
@@ -66,27 +67,28 @@ func TestPersonServiceFindAll(t *testing.T) {
 }
 
 func TestPersonServiceFindOneByID(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
+	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputPersonID  int
-		expectedPerson service.PersonResponse
-		expectedErr    error
-		prepareMock    func(mock *mock.MockPersonStore)
+		inputPersonID int
+		expectedRes   service.PersonResponse
+		expectedErr   error
+		prepareMock   func(mock *mock.MockPersonStore)
 	}{
 		"should return person when exists": {
-			inputPersonID:  1,
-			expectedPerson: service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
+			inputPersonID: 1,
+			expectedRes:   service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(&model.Person{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}, nil)
 			},
 		},
 		"should return empty when person not exists": {
-			inputPersonID:  1,
-			expectedPerson: service.PersonResponse{},
+			inputPersonID: 1,
+			expectedErr:   exception.NewNotFoundException("resource"),
 			prepareMock: func(mock *mock.MockPersonStore) {
-				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).
+					Return(nil, exception.NewNotFoundException("resource"))
 			},
 		},
 		"should throw error": {
@@ -108,11 +110,11 @@ func TestPersonServiceFindOneByID(t *testing.T) {
 			impl := service.NewPersonService(storeMock)
 
 			// when
-			person, err := impl.FindOneById(ctx, cs.inputPersonID)
+			res, err := impl.FindOneById(ctx, cs.inputPersonID)
 
 			// then
-			if !reflect.DeepEqual(person, cs.expectedPerson) {
-				t.Errorf("PersonService.FindOneById() = %v, expected %v", person, cs.expectedPerson)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("PersonService.FindOneById() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("PersonService.FindOneById() error = %v, expected %v", err, cs.expectedErr)
@@ -122,18 +124,18 @@ func TestPersonServiceFindOneByID(t *testing.T) {
 }
 
 func TestPersonServiceCreate(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
+	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputPerson    service.PersonDto
-		expectedPerson service.PersonResponse
-		expectedErr    error
-		prepareMock    func(mock *mock.MockPersonStore)
+		inputPerson service.PersonDto
+		expectedRes service.PersonResponse
+		expectedErr error
+		prepareMock func(mock *mock.MockPersonStore)
 	}{
 		"should create person": {
-			inputPerson:    service.PersonDto{Name: "Test"},
-			expectedPerson: service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
+			inputPerson: service.PersonDto{Name: "Test"},
+			expectedRes: service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&model.Person{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test"}, nil)
 			},
@@ -157,11 +159,11 @@ func TestPersonServiceCreate(t *testing.T) {
 			impl := service.NewPersonService(storeMock)
 
 			// when
-			person, err := impl.Create(ctx, cs.inputPerson)
+			res, err := impl.Create(ctx, cs.inputPerson)
 
 			// then
-			if !reflect.DeepEqual(person, cs.expectedPerson) {
-				t.Errorf("PersonService.FindOneById() = %v, expected %v", person, cs.expectedPerson)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("PersonService.FindOneById() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("PersonService.FindOneById() error = %v, expected %v", err, cs.expectedErr)
@@ -175,25 +177,26 @@ func TestPersonServiceUpdate(t *testing.T) {
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputPersonID  int
-		inputPerson    service.PersonDto
-		expectedPerson service.PersonResponse
-		expectedErr    error
-		prepareMock    func(mock *mock.MockPersonStore)
+		inputPersonID int
+		inputPerson   service.PersonDto
+		expectedRes   service.PersonResponse
+		expectedErr   error
+		prepareMock   func(mock *mock.MockPersonStore)
 	}{
 		"should update person": {
-			inputPersonID:  1,
-			inputPerson:    service.PersonDto{Name: "Test update"},
-			expectedPerson: service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test update"}},
+			inputPersonID: 1,
+			inputPerson:   service.PersonDto{Name: "Test update"},
+			expectedRes:   service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test update"}},
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&model.Person{ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME, Name: "Test update"}, nil)
 			},
 		},
 		"should return empty when person not exists": {
-			inputPersonID:  1,
-			expectedPerson: service.PersonResponse{},
+			inputPersonID: 1,
+			expectedErr:   exception.NewNotFoundException("resource"),
 			prepareMock: func(mock *mock.MockPersonStore) {
-				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mock.EXPECT().Update(gomock.Any(), gomock.Any()).
+					Return(nil, exception.NewNotFoundException("resource"))
 			},
 		},
 		"should throw error": {
@@ -215,11 +218,11 @@ func TestPersonServiceUpdate(t *testing.T) {
 			impl := service.NewPersonService(storeMock)
 
 			// when
-			person, err := impl.Update(ctx, cs.inputPersonID, cs.inputPerson)
+			res, err := impl.Update(ctx, cs.inputPersonID, cs.inputPerson)
 
 			// then
-			if !reflect.DeepEqual(person, cs.expectedPerson) {
-				t.Errorf("PersonService.Update() = %v, expected %v", person, cs.expectedPerson)
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("PersonService.Update() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("PersonService.Update() error = %v, expected %v", err, cs.expectedErr)
@@ -230,14 +233,12 @@ func TestPersonServiceUpdate(t *testing.T) {
 
 func TestPersonServiceDelete(t *testing.T) {
 	cases := map[string]struct {
-		inputPersonID  int
-		expectedPerson service.PersonResponse
-		expectedErr    error
-		prepareMock    func(mock *mock.MockPersonStore)
+		inputPersonID int
+		expectedErr   error
+		prepareMock   func(mock *mock.MockPersonStore)
 	}{
 		"should delete person": {
-			inputPersonID:  1,
-			expectedPerson: service.PersonResponse{},
+			inputPersonID: 1,
 			prepareMock: func(mock *mock.MockPersonStore) {
 				mock.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
 			},
@@ -261,12 +262,9 @@ func TestPersonServiceDelete(t *testing.T) {
 			impl := service.NewPersonService(storeMock)
 
 			// when
-			person, err := impl.Delete(ctx, cs.inputPersonID)
+			err := impl.Delete(ctx, cs.inputPersonID)
 
 			// then
-			if !reflect.DeepEqual(person, cs.expectedPerson) {
-				t.Errorf("PersonService.Delete() = %v, expected %v", person, cs.expectedPerson)
-			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
 				t.Errorf("PersonService.Delete() error = %v, expected %v", err, cs.expectedErr)
 			}

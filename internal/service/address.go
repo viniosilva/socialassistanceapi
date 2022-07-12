@@ -130,7 +130,6 @@ func (impl *AddressService) Update(ctx context.Context, addressID int, dto Addre
 	}, nil
 }
 
-func (impl *AddressService) Delete(ctx context.Context, addressID int) (AddressResponse, error) {
-	err := impl.store.Delete(ctx, addressID)
-	return AddressResponse{}, err
+func (impl *AddressService) Delete(ctx context.Context, addressID int) error {
+	return impl.store.Delete(ctx, addressID)
 }

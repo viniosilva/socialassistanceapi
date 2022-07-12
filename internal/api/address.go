@@ -82,14 +82,21 @@ func (impl *AddressApi) FindOneByID(c *gin.Context) {
 // @Router	/api/v1/addresses [post]
 func (impl *AddressApi) Create(c *gin.Context) {
 	var address service.AddressDto
-	err := c.ShouldBindJSON(&address)
-	if e, ok := err.(validator.ValidationErrors); ok {
-		msg := e.Error()
-		NewHttpError(c, http.StatusBadRequest, msg)
+	if err := c.ShouldBindJSON(&address); err != nil {
+		if e, ok := err.(validator.ValidationErrors); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+			return
+		}
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
 		return
 	}
 
 	res, err := impl.service.Create(c, address)
+	if err != nil {
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
 	if err != nil {
 		NewHttpInternalServerError(c)
 		return
@@ -117,22 +124,23 @@ func (impl *AddressApi) Update(c *gin.Context) {
 
 	var address service.AddressDto
 	err = c.ShouldBindJSON(&address)
-	if e, ok := err.(validator.ValidationErrors); e != nil && !ok {
-		NewHttpError(c, http.StatusBadRequest, "invalid payload")
-		return
+	if err != nil {
+		if _, ok := err.(validator.ValidationErrors); !ok {
+			NewHttpError(c, http.StatusBadRequest, "invalid payload")
+			return
+		}
 	}
 
 	res, err := impl.service.Update(c, addressID, address)
 	if err != nil {
-		if _, ok := err.(*exception.EmptyAddressModelException); ok {
-			NewHttpError(c, http.StatusBadRequest, "empty payload")
-			return
+		if e, ok := err.(*exception.EmptyModelException); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+		} else if _, ok := err.(*exception.NotFoundException); ok {
+			c.JSON(http.StatusNotFound, res)
+		} else {
+			NewHttpInternalServerError(c)
 		}
-		NewHttpInternalServerError(c)
-		return
-	}
-	if res.Data == nil {
-		c.JSON(http.StatusNotFound, res)
+
 		return
 	}
 
@@ -144,7 +152,7 @@ func (impl *AddressApi) Update(c *gin.Context) {
 // @Accept	json
 // @Produce	json
 // @Param	id	path		int	true	"address ID"
-// @Success	200	{object}	service.AddressResponse
+// @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
 // @Router	/api/v1/addresses/{id} [delete]
@@ -155,11 +163,11 @@ func (impl *AddressApi) Delete(c *gin.Context) {
 		return
 	}
 
-	res, err := impl.service.Delete(c, addressID)
+	err = impl.service.Delete(c, addressID)
 	if err != nil {
 		NewHttpInternalServerError(c)
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Status(http.StatusNoContent)
 }

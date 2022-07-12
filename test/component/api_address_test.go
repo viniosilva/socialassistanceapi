@@ -60,9 +60,9 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			cs.before(mysql.DB)
 
@@ -142,9 +142,9 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			cs.before(mysql.DB)
 
@@ -232,9 +232,9 @@ func TestComponentAddressApiCreate(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			// when
 			b, _ := json.Marshal(cs.inputAddress)
@@ -349,7 +349,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
 			expectedCode:   400,
-			expectedErr:    &api.HttpError{Code: 400, Message: "empty payload"},
+			expectedErr:    &api.HttpError{Code: 400, Message: "empty model: address"},
 		},
 		"should throw not found error when addresses not exists": {
 			before:         func(db *sql.DB) {},
@@ -374,9 +374,9 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			cs.before(mysql.DB)
 
@@ -433,7 +433,7 @@ func TestComponentAddressApiDelete(t *testing.T) {
 				`, DATE, DATE)
 			},
 			inputAddressID: "1",
-			expectedCode:   200,
+			expectedCode:   204,
 			expectedBody:   &service.AddressResponse{},
 		},
 		"should throw bad request error when addressID is not a number": {
@@ -445,7 +445,7 @@ func TestComponentAddressApiDelete(t *testing.T) {
 		"should be successfull when addresses not exists": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
-			expectedCode:   200,
+			expectedCode:   204,
 			expectedBody:   &service.AddressResponse{},
 		},
 	}
@@ -455,9 +455,9 @@ func TestComponentAddressApiDelete(t *testing.T) {
 			mysql := configuration.NewMySQL("socialassistanceapi:c8c59046fca24022@tcp(localhost:3306)/socialassistance", time.Minute*1, 3, 3)
 			defer mysql.DB.Close()
 
-			addressStore := store.NewAddressStore(mysql.DB)
+			addressStore := store.NewAddressStore(mysql)
 			addressService := service.NewAddressService(addressStore)
-			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService)
+			impl := api.NewApi("0.0.0.0:8080", nil, nil, addressService, nil)
 
 			cs.before(mysql.DB)
 

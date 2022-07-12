@@ -15,14 +15,14 @@ func NewPersonService(store store.PersonStore) *PersonService {
 	return &PersonService{store}
 }
 
-func (impl *PersonService) FindAll(ctx context.Context) (PeopleResponse, error) {
-	people, err := impl.store.FindAll(ctx)
+func (impl *PersonService) FindAll(ctx context.Context) (PersonsResponse, error) {
+	persons, err := impl.store.FindAll(ctx)
 	if err != nil {
-		return PeopleResponse{}, err
+		return PersonsResponse{}, err
 	}
 
 	res := []Person{}
-	for _, c := range people {
+	for _, c := range persons {
 		res = append(res, Person{
 			ID:        c.ID,
 			CreatedAt: c.CreatedAt.Format("2006-01-02T15:04:05"),
@@ -31,7 +31,7 @@ func (impl *PersonService) FindAll(ctx context.Context) (PeopleResponse, error) 
 		})
 	}
 
-	return PeopleResponse{Data: res}, nil
+	return PersonsResponse{Data: res}, nil
 }
 
 func (impl *PersonService) FindOneById(ctx context.Context, personID int) (PersonResponse, error) {
@@ -85,7 +85,6 @@ func (impl *PersonService) Update(ctx context.Context, personID int, dto PersonD
 	}, nil
 }
 
-func (impl *PersonService) Delete(ctx context.Context, personID int) (PersonResponse, error) {
-	err := impl.store.Delete(ctx, personID)
-	return PersonResponse{}, err
+func (impl *PersonService) Delete(ctx context.Context, personID int) error {
+	return impl.store.Delete(ctx, personID)
 }
