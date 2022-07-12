@@ -103,7 +103,7 @@ func (impl *ResourceService) TransferAmount(ctx context.Context, ResourceID int,
 		ID:     ResourceID,
 		Amount: amount,
 	})
-	if err != nil || resource == nil {
+	if err != nil {
 		return ResourceResponse{}, err
 	}
 

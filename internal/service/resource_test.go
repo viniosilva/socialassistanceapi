@@ -248,42 +248,44 @@ func TestResourceServiceTransferAmount(t *testing.T) {
 
 	cases := map[string]struct {
 		inputResourceID int
-		inputResource   service.ResourceUpdateDto
+		inputAmount     float32
 		expectedRes     service.ResourceResponse
 		expectedErr     error
 		prepareMock     func(mock *mock.MockResourceStore)
 	}{
 		"should update resource": {
 			inputResourceID: 1,
-			inputResource:   service.ResourceUpdateDto{Name: "Test"},
+			inputAmount:     2,
 			expectedRes: service.ResourceResponse{Data: &service.Resource{
 				ID: 1, CreatedAt: DATE, UpdatedAt: DATE,
 				Name:        "Test",
-				Amount:      1,
+				Amount:      3,
 				Measurement: "Kg",
 			}},
 			prepareMock: func(mock *mock.MockResourceStore) {
-				mock.EXPECT().Update(gomock.All(), gomock.All()).Return(&model.Resource{
+				mock.EXPECT().TransferAmount(gomock.All(), gomock.All()).Return(&model.Resource{
 					ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME,
 					Name:        "Test",
-					Amount:      1,
+					Amount:      3,
 					Measurement: "Kg",
 				}, nil)
 			},
 		},
 		"should return empty when resource not exists": {
 			inputResourceID: 1,
+			inputAmount:     2,
 			expectedErr:     exception.NewNotFoundException("resource"),
 			prepareMock: func(mock *mock.MockResourceStore) {
-				mock.EXPECT().Update(gomock.All(), gomock.All()).
+				mock.EXPECT().TransferAmount(gomock.All(), gomock.All()).
 					Return(nil, exception.NewNotFoundException("resource"))
 			},
 		},
 		"should throw error": {
-			inputResource: service.ResourceUpdateDto{Name: "Test"},
-			expectedErr:   fmt.Errorf("error"),
+			inputResourceID: 1,
+			inputAmount:     2,
+			expectedErr:     fmt.Errorf("error"),
 			prepareMock: func(mock *mock.MockResourceStore) {
-				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+				mock.EXPECT().TransferAmount(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 			},
 		},
 	}
@@ -298,14 +300,14 @@ func TestResourceServiceTransferAmount(t *testing.T) {
 			impl := service.NewResourceService(storeMock)
 
 			// when
-			res, err := impl.Update(ctx, cs.inputResourceID, cs.inputResource)
+			res, err := impl.TransferAmount(ctx, cs.inputResourceID, cs.inputAmount)
 
 			// then
 			if !reflect.DeepEqual(res, cs.expectedRes) {
-				t.Errorf("ResourceService.Update() = %v, expected %v", res, cs.expectedRes)
+				t.Errorf("ResourceService.TransferAmount() = %v, expected %v", res, cs.expectedRes)
 			}
 			if err != nil && err.Error() != cs.expectedErr.Error() {
-				t.Errorf("ResourceService.Update() error = %v, expected %v", err, cs.expectedErr)
+				t.Errorf("ResourceService.TransferAmount() error = %v, expected %v", err, cs.expectedErr)
 			}
 		})
 	}
