@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 	"github.com/viniosilva/socialassistanceapi/mock"
@@ -84,9 +85,10 @@ func TestPersonServiceFindOneByID(t *testing.T) {
 		},
 		"should return empty when person not exists": {
 			inputPersonID: 1,
-			expectedRes:   service.PersonResponse{},
+			expectedErr:   exception.NewNotFoundException("resource"),
 			prepareMock: func(mock *mock.MockPersonStore) {
-				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).
+					Return(nil, exception.NewNotFoundException("resource"))
 			},
 		},
 		"should throw error": {
@@ -191,9 +193,10 @@ func TestPersonServiceUpdate(t *testing.T) {
 		},
 		"should return empty when person not exists": {
 			inputPersonID: 1,
-			expectedRes:   service.PersonResponse{},
+			expectedErr:   exception.NewNotFoundException("resource"),
 			prepareMock: func(mock *mock.MockPersonStore) {
-				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mock.EXPECT().Update(gomock.Any(), gomock.Any()).
+					Return(nil, exception.NewNotFoundException("resource"))
 			},
 		},
 		"should throw error": {

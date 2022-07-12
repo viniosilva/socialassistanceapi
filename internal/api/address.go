@@ -82,13 +82,21 @@ func (impl *AddressApi) FindOneByID(c *gin.Context) {
 // @Router	/api/v1/addresses [post]
 func (impl *AddressApi) Create(c *gin.Context) {
 	var address service.AddressDto
-	err := c.ShouldBindJSON(&address)
-	if e, ok := err.(validator.ValidationErrors); ok {
-		NewHttpError(c, http.StatusBadRequest, e.Error())
+	if err := c.ShouldBindJSON(&address); err != nil {
+		if e, ok := err.(validator.ValidationErrors); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+			return
+		}
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
 		return
 	}
 
 	res, err := impl.service.Create(c, address)
+	if err != nil {
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
 	if err != nil {
 		NewHttpInternalServerError(c)
 		return
@@ -116,9 +124,11 @@ func (impl *AddressApi) Update(c *gin.Context) {
 
 	var address service.AddressDto
 	err = c.ShouldBindJSON(&address)
-	if e, ok := err.(validator.ValidationErrors); e != nil && !ok {
-		NewHttpError(c, http.StatusBadRequest, "invalid payload")
-		return
+	if err != nil {
+		if _, ok := err.(validator.ValidationErrors); !ok {
+			NewHttpError(c, http.StatusBadRequest, "invalid payload")
+			return
+		}
 	}
 
 	res, err := impl.service.Update(c, addressID, address)

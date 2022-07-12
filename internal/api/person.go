@@ -82,9 +82,12 @@ func (impl *PersonApi) FindOneByID(c *gin.Context) {
 // @Router	/api/v1/persons [post]
 func (impl *PersonApi) Create(c *gin.Context) {
 	var person service.PersonDto
-	err := c.ShouldBindJSON(&person)
-	if e, ok := err.(validator.ValidationErrors); ok {
-		NewHttpError(c, http.StatusBadRequest, e.Error())
+	if err := c.ShouldBindJSON(&person); err != nil {
+		if e, ok := err.(validator.ValidationErrors); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+			return
+		}
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
 		return
 	}
 
@@ -116,8 +119,8 @@ func (impl *PersonApi) Update(c *gin.Context) {
 
 	var person service.PersonDto
 	err = c.ShouldBindJSON(&person)
-	if e, ok := err.(validator.ValidationErrors); ok {
-		NewHttpError(c, http.StatusBadRequest, e.Error())
+	if err != nil {
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
 		return
 	}
 

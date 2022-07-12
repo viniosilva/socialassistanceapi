@@ -82,9 +82,12 @@ func (impl *ResourceApi) FindOneByID(c *gin.Context) {
 // @Router	/api/v1/resources [post]
 func (impl *ResourceApi) Create(c *gin.Context) {
 	var resource service.ResourceDto
-	err := c.ShouldBindJSON(&resource)
-	if e, ok := err.(validator.ValidationErrors); ok {
-		NewHttpError(c, http.StatusBadRequest, e.Error())
+	if err := c.ShouldBindJSON(&resource); err != nil {
+		if e, ok := err.(validator.ValidationErrors); ok {
+			NewHttpError(c, http.StatusBadRequest, e.Error())
+			return
+		}
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
 		return
 	}
 
@@ -116,7 +119,7 @@ func (impl *ResourceApi) Update(c *gin.Context) {
 
 	var resource service.ResourceUpdateDto
 	err = c.ShouldBindJSON(&resource)
-	if e, ok := err.(validator.ValidationErrors); e != nil && !ok {
+	if err != nil {
 		NewHttpError(c, http.StatusBadRequest, "invalid payload")
 		return
 	}
@@ -156,7 +159,12 @@ func (impl *ResourceApi) TransferAmount(c *gin.Context) {
 
 	var resource service.ResourceTransferAmountDto
 	err = c.ShouldBindJSON(&resource)
-	if e, ok := err.(validator.ValidationErrors); ok {
+	if err != nil {
+		NewHttpError(c, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	if e, ok := err.(validator.ValidationErrors); err != nil || ok {
 		NewHttpError(c, http.StatusBadRequest, e.Error())
 		return
 	}
@@ -173,10 +181,6 @@ func (impl *ResourceApi) TransferAmount(c *gin.Context) {
 			NewHttpInternalServerError(c)
 		}
 
-		return
-	}
-	if res.Data == nil {
-		c.JSON(http.StatusNotFound, res)
 		return
 	}
 

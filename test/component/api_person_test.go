@@ -247,7 +247,7 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "1",
 			expectedCode:  400,
-			expectedErr:   &api.HttpError{Code: 400, Message: "Key: 'PersonDto.Name' Error:Field validation for 'Name' failed on the 'required' tag"},
+			expectedErr:   &api.HttpError{Code: 400, Message: "invalid payload"},
 		},
 		"should throw not found error when persons not exists": {
 			before:        func(db *sql.DB) {},

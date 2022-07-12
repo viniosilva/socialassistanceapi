@@ -396,7 +396,7 @@ func TestComponentResourceApiTransferAmount(t *testing.T) {
 			before:          func(db *sql.DB) {},
 			inputResourceID: "1",
 			expectedCode:    400,
-			expectedErr:     &api.HttpError{Code: 400, Message: "Key: 'ResourceTransferAmountDto.Amount' Error:Field validation for 'Amount' failed on the 'required' tag"},
+			expectedErr:     &api.HttpError{Code: 400, Message: "invalid payload"},
 		},
 		"should throw not found error when resources not exists": {
 			before:          func(db *sql.DB) {},

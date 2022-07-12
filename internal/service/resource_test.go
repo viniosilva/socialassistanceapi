@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/viniosilva/socialassistanceapi/internal/exception"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 	"github.com/viniosilva/socialassistanceapi/mock"
@@ -84,9 +85,10 @@ func TestResourceServiceFindOneByID(t *testing.T) {
 		},
 		"should return when resource not exists": {
 			inputResourceID: 1,
-			expectedRes:     service.ResourceResponse{},
+			expectedErr:     exception.NewNotFoundException("resource"),
 			prepareMock: func(mock *mock.MockResourceStore) {
-				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mock.EXPECT().FindOneById(gomock.Any(), gomock.Any()).
+					Return(nil, exception.NewNotFoundException("resource"))
 			},
 		},
 		"should throw error": {
@@ -202,9 +204,79 @@ func TestResourceServiceUpdate(t *testing.T) {
 		},
 		"should return empty when resource not exists": {
 			inputResourceID: 1,
-			expectedRes:     service.ResourceResponse{},
+			expectedErr:     exception.NewNotFoundException("resource"),
 			prepareMock: func(mock *mock.MockResourceStore) {
-				mock.EXPECT().Update(gomock.All(), gomock.All()).Return(nil, nil)
+				mock.EXPECT().Update(gomock.All(), gomock.All()).
+					Return(nil, exception.NewNotFoundException("resource"))
+			},
+		},
+		"should throw error": {
+			inputResource: service.ResourceUpdateDto{Name: "Test"},
+			expectedErr:   fmt.Errorf("error"),
+			prepareMock: func(mock *mock.MockResourceStore) {
+				mock.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+			},
+		},
+	}
+	for name, cs := range cases {
+		t.Run(name, func(t *testing.T) {
+			// given
+			ctrl, ctx := gomock.WithContext(context.Background(), t)
+			defer ctrl.Finish()
+			storeMock := mock.NewMockResourceStore(ctrl)
+			cs.prepareMock(storeMock)
+
+			impl := service.NewResourceService(storeMock)
+
+			// when
+			res, err := impl.Update(ctx, cs.inputResourceID, cs.inputResource)
+
+			// then
+			if !reflect.DeepEqual(res, cs.expectedRes) {
+				t.Errorf("ResourceService.Update() = %v, expected %v", res, cs.expectedRes)
+			}
+			if err != nil && err.Error() != cs.expectedErr.Error() {
+				t.Errorf("ResourceService.Update() error = %v, expected %v", err, cs.expectedErr)
+			}
+		})
+	}
+}
+
+func TestResourceServiceTransferAmount(t *testing.T) {
+	DATE := "2000-01-01T12:03:00"
+	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
+
+	cases := map[string]struct {
+		inputResourceID int
+		inputResource   service.ResourceUpdateDto
+		expectedRes     service.ResourceResponse
+		expectedErr     error
+		prepareMock     func(mock *mock.MockResourceStore)
+	}{
+		"should update resource": {
+			inputResourceID: 1,
+			inputResource:   service.ResourceUpdateDto{Name: "Test"},
+			expectedRes: service.ResourceResponse{Data: &service.Resource{
+				ID: 1, CreatedAt: DATE, UpdatedAt: DATE,
+				Name:        "Test",
+				Amount:      1,
+				Measurement: "Kg",
+			}},
+			prepareMock: func(mock *mock.MockResourceStore) {
+				mock.EXPECT().Update(gomock.All(), gomock.All()).Return(&model.Resource{
+					ID: 1, CreatedAt: DATETIME, UpdatedAt: DATETIME,
+					Name:        "Test",
+					Amount:      1,
+					Measurement: "Kg",
+				}, nil)
+			},
+		},
+		"should return empty when resource not exists": {
+			inputResourceID: 1,
+			expectedErr:     exception.NewNotFoundException("resource"),
+			prepareMock: func(mock *mock.MockResourceStore) {
+				mock.EXPECT().Update(gomock.All(), gomock.All()).
+					Return(nil, exception.NewNotFoundException("resource"))
 			},
 		},
 		"should throw error": {
