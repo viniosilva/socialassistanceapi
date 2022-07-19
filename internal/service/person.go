@@ -22,12 +22,13 @@ func (impl *PersonService) FindAll(ctx context.Context) (PersonsResponse, error)
 	}
 
 	res := []Person{}
-	for _, c := range persons {
+	for _, p := range persons {
 		res = append(res, Person{
-			ID:        c.ID,
-			CreatedAt: c.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: c.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:      c.Name,
+			ID:        p.ID,
+			CreatedAt: p.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt: p.UpdatedAt.Format("2006-01-02T15:04:05"),
+			AddressID: p.AddressID,
+			Name:      p.Name,
 		})
 	}
 
@@ -45,13 +46,17 @@ func (impl *PersonService) FindOneById(ctx context.Context, personID int) (Perso
 			ID:        person.ID,
 			CreatedAt: person.CreatedAt.Format("2006-01-02T15:04:05"),
 			UpdatedAt: person.UpdatedAt.Format("2006-01-02T15:04:05"),
+			AddressID: person.AddressID,
 			Name:      person.Name,
 		},
 	}, nil
 }
 
 func (impl *PersonService) Create(ctx context.Context, dto PersonDto) (PersonResponse, error) {
-	person, err := impl.store.Create(ctx, model.Person{Name: dto.Name})
+	person, err := impl.store.Create(ctx, model.Person{
+		AddressID: dto.AddressID,
+		Name:      dto.Name,
+	})
 	if err != nil {
 		return PersonResponse{}, err
 	}
@@ -61,6 +66,7 @@ func (impl *PersonService) Create(ctx context.Context, dto PersonDto) (PersonRes
 			ID:        person.ID,
 			CreatedAt: person.CreatedAt.Format("2006-01-02T15:04:05"),
 			UpdatedAt: person.UpdatedAt.Format("2006-01-02T15:04:05"),
+			AddressID: person.AddressID,
 			Name:      person.Name,
 		},
 	}, nil
@@ -68,8 +74,9 @@ func (impl *PersonService) Create(ctx context.Context, dto PersonDto) (PersonRes
 
 func (impl *PersonService) Update(ctx context.Context, personID int, dto PersonDto) (PersonResponse, error) {
 	person, err := impl.store.Update(ctx, model.Person{
-		ID:   personID,
-		Name: dto.Name,
+		ID:        personID,
+		AddressID: dto.AddressID,
+		Name:      dto.Name,
 	})
 	if err != nil || person == nil {
 		return PersonResponse{}, err
@@ -80,6 +87,7 @@ func (impl *PersonService) Update(ctx context.Context, personID int, dto PersonD
 			ID:        person.ID,
 			CreatedAt: person.CreatedAt.Format("2006-01-02T15:04:05"),
 			UpdatedAt: person.UpdatedAt.Format("2006-01-02T15:04:05"),
+			AddressID: person.AddressID,
 			Name:      person.Name,
 		},
 	}, nil

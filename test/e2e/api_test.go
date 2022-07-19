@@ -56,18 +56,8 @@ func TestE2EApi(t *testing.T) {
 			t.Errorf("GET /api/v1/resources Body = %v, expected %v", rec.Body.String(), "[]")
 		}
 
-		// when create person then create a person
-		b, _ := json.Marshal(service.PersonDto{Name: "Test"})
-		rec = httptest.NewRecorder()
-		req, _ = http.NewRequest("POST", "/api/v1/persons", strings.NewReader(string(b)))
-		api.Gin.ServeHTTP(rec, req)
-
-		if rec.Code != 201 {
-			t.Errorf("POST /api/v1/persons Code = %v, expected %v", rec.Body, 201)
-		}
-
 		// when create address then create an address
-		b, _ = json.Marshal(service.AddressDto{
+		b, _ := json.Marshal(service.AddressDto{
 			Country:      "BR",
 			State:        "SP",
 			City:         "São Paulo",
@@ -83,6 +73,16 @@ func TestE2EApi(t *testing.T) {
 
 		if rec.Code != 201 {
 			t.Errorf("POST /api/v1/addresses Code = %v, expected %v", rec.Body, 201)
+		}
+
+		// when create person then create a person
+		b, _ = json.Marshal(service.PersonDto{AddressID: 1, Name: "Test"})
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("POST", "/api/v1/persons", strings.NewReader(string(b)))
+		api.Gin.ServeHTTP(rec, req)
+
+		if rec.Code != 201 {
+			t.Errorf("POST /api/v1/persons Code = %v, expected %v", rec.Body, 201)
 		}
 
 		// when create resource then create a resource

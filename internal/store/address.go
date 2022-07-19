@@ -94,6 +94,10 @@ func (impl *addressStore) FindOneById(ctx context.Context, addressID int) (*mode
 		}
 	}
 
+	if address == nil {
+		return nil, exception.NewNotFoundException("address")
+	}
+
 	return address, nil
 }
 
@@ -191,18 +195,26 @@ func (impl *addressStore) Update(ctx context.Context, address model.Address) (*m
 		LIMIT 1
 	`, address.ID)
 	if err != nil {
-		return nil, err
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
 	}
 
 	var a *model.Address
 	for resS.Next() {
 		a, err = scanAddress(resS)
 		if err != nil {
+			if err := t.Rollback(); err != nil {
+				return nil, err
+			}
 			return nil, err
 		}
 	}
 
 	if err := t.Commit(); err != nil {
+		if err := t.Rollback(); err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 

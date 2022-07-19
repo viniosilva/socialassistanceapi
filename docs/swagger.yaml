@@ -97,6 +97,9 @@ definitions:
     type: object
   service.Person:
     properties:
+      address_id:
+        example: 1
+        type: integer
       created_at:
         example: 2000-01-01T12:03:00
         type: string
@@ -115,10 +118,14 @@ definitions:
     type: object
   service.PersonDto:
     properties:
+      address_id:
+        example: 1
+        type: integer
       name:
         example: Cláudio
         type: string
     required:
+    - address_id
     - name
     type: object
   service.PersonResponse:

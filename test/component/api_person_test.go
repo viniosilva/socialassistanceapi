@@ -28,12 +28,20 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO persons (id, created_at, updated_at, name)
-					VALUES (1, ?, ?, 'Test')
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+
+				db.Exec(`
+					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					VALUES (1, ?, ?, 1, 'Test')
 				`, date, date)
 			},
 			expectedCode: 200,
-			expectedBody: &service.PersonsResponse{Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}}},
+			expectedBody: &service.PersonsResponse{
+				Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, AddressID: 1, Name: "Test"}},
+			},
 		},
 		"should return empty list when persons not exists": {
 			before:       func(db *sql.DB) {},
@@ -71,7 +79,9 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }
@@ -88,14 +98,23 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 	}{
 		"should return person when persons exists": {
 			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO persons (id, created_at, updated_at, name)
-					VALUES (1, ?, ?, 'Test')
-				`, DATE, DATE)
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+
+				db.Exec(`
+					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					VALUES (1, ?, ?, 1, 'Test')
+				`, date, date)
 			},
 			inputPersonID: "1",
 			expectedCode:  200,
-			expectedBody:  &service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
+			expectedBody: &service.PersonResponse{
+				Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, AddressID: 1, Name: "Test"},
+			},
 		},
 		"should throw bad request error when personID is not a number": {
 			before:        func(db *sql.DB) {},
@@ -147,26 +166,44 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }
 
 func TestComponentPersonApiCreate(t *testing.T) {
 	cases := map[string]struct {
+		before       func(db *sql.DB)
 		inputPerson  service.PersonDto
 		expectedCode int
 		expectedBody *service.PersonResponse
 		expectedErr  *api.HttpError
 	}{
 		"should return created person": {
-			inputPerson:  service.PersonDto{Name: "Test"},
+			before: func(db *sql.DB) {
+				date := "2000-01-01 12:03:00"
+				db.Exec(`
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+			},
+			inputPerson:  service.PersonDto{AddressID: 1, Name: "Test"},
 			expectedCode: 201,
-			expectedBody: &service.PersonResponse{Data: &service.Person{ID: 1, Name: "Test"}},
+			expectedBody: &service.PersonResponse{Data: &service.Person{ID: 1, AddressID: 1, Name: "Test"}},
 		},
 		"should throw bad request error": {
+			before:       func(db *sql.DB) {},
 			expectedCode: 400,
-			expectedErr:  &api.HttpError{Code: 400, Message: "Key: 'PersonDto.Name' Error:Field validation for 'Name' failed on the 'required' tag"},
+			expectedErr: &api.HttpError{
+				Code: 400,
+				Message: strings.Join([]string{
+					"Key: 'PersonDto.AddressID' Error:Field validation for 'AddressID' failed on the 'required' tag",
+					"Key: 'PersonDto.Name' Error:Field validation for 'Name' failed on the 'required' tag",
+				}, "\n"),
+			},
 		},
 	}
 	for name, cs := range cases {
@@ -178,6 +215,8 @@ func TestComponentPersonApiCreate(t *testing.T) {
 			personStore := store.NewPersonStore(mysql)
 			personService := service.NewPersonService(personStore)
 			impl := api.NewApi("0.0.0.0:8080", nil, personService, nil, nil)
+
+			cs.before(mysql.DB)
 
 			// when
 			b, _ := json.Marshal(cs.inputPerson)
@@ -209,7 +248,9 @@ func TestComponentPersonApiCreate(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }
@@ -227,15 +268,24 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 	}{
 		"should return updated person": {
 			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO persons (id, created_at, updated_at, name)
-					VALUES (1, ?, ?, 'Test')
-				`, DATE, DATE)
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+
+				db.Exec(`
+					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					VALUES (1, ?, ?, 1, 'Test')
+				`, date, date)
 			},
 			inputPersonID: "1",
 			inputPerson:   service.PersonDto{Name: "Test update"},
 			expectedCode:  200,
-			expectedBody:  &service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, Name: "Test update"}},
+			expectedBody: &service.PersonResponse{
+				Data: &service.Person{ID: 1, CreatedAt: DATE, AddressID: 1, Name: "Test update"},
+			},
 		},
 		"should throw bad request error when personID is not a number": {
 			before:        func(db *sql.DB) {},
@@ -247,14 +297,14 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "1",
 			expectedCode:  400,
-			expectedErr:   &api.HttpError{Code: 400, Message: "invalid payload"},
+			expectedErr:   &api.HttpError{Code: 400, Message: "empty model: person"},
 		},
 		"should throw not found error when persons not exists": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "1",
 			inputPerson:   service.PersonDto{Name: "Test update"},
 			expectedCode:  404,
-			expectedBody:  &service.PersonResponse{},
+			expectedErr:   &api.HttpError{Code: 404, Message: "not found: person"},
 		},
 	}
 	for name, cs := range cases {
@@ -298,7 +348,9 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }
@@ -315,10 +367,17 @@ func TestComponentPersonApiDelete(t *testing.T) {
 	}{
 		"should be successfull": {
 			before: func(db *sql.DB) {
+				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO persons (id, created_at, updated_at, name)
-					VALUES (1, ?, ?, 'Test')
-				`, DATE, DATE)
+					INSERT INTO addresses (id, created_at, updated_at, country,
+						state, city, neighborhood, street, number, complement, zipcode)
+					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, date, date)
+
+				db.Exec(`
+					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					VALUES (1, ?, ?, 1, 'Test')
+				`, date, date)
 			},
 			inputPersonID: "1",
 			expectedCode:  204,
@@ -368,7 +427,9 @@ func TestComponentPersonApiDelete(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
+			mysql.DB.Exec(`DELETE FROM addresses`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
 		})
 	}
 }

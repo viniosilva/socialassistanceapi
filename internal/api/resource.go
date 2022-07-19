@@ -59,12 +59,12 @@ func (impl *ResourceApi) FindOneByID(c *gin.Context) {
 
 	res, err := impl.service.FindOneById(c, resourceID)
 	if err != nil {
-		NewHttpInternalServerError(c)
-		return
-	}
+		if e, ok := err.(*exception.NotFoundException); ok {
+			NewHttpError(c, http.StatusNotFound, e.Error())
+		} else {
+			NewHttpInternalServerError(c)
+		}
 
-	if res.Data == nil {
-		c.JSON(http.StatusNotFound, res)
 		return
 	}
 
@@ -128,8 +128,8 @@ func (impl *ResourceApi) Update(c *gin.Context) {
 	if err != nil {
 		if e, ok := err.(*exception.EmptyModelException); ok {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
-		} else if _, ok := err.(*exception.NotFoundException); ok {
-			c.JSON(http.StatusNotFound, res)
+		} else if e, ok := err.(*exception.NotFoundException); ok {
+			NewHttpError(c, http.StatusNotFound, e.Error())
 		} else {
 			NewHttpInternalServerError(c)
 		}
@@ -175,8 +175,8 @@ func (impl *ResourceApi) TransferAmount(c *gin.Context) {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
 		} else if e, ok := err.(*exception.NegativeException); ok {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
-		} else if _, ok := err.(*exception.NotFoundException); ok {
-			c.JSON(http.StatusNotFound, res)
+		} else if e, ok := err.(*exception.NotFoundException); ok {
+			NewHttpError(c, http.StatusNotFound, e.Error())
 		} else {
 			NewHttpInternalServerError(c)
 		}
