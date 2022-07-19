@@ -7,6 +7,7 @@ type Person struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+	AddressID int
 
 	Name string
 }

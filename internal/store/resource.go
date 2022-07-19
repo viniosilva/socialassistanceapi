@@ -79,6 +79,10 @@ func (impl *resourceStore) FindOneById(ctx context.Context, resourceID int) (*mo
 		}
 	}
 
+	if resource == nil {
+		return nil, exception.NewNotFoundException("resource")
+	}
+
 	return resource, nil
 }
 

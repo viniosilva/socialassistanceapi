@@ -702,6 +702,10 @@ const docTemplate = `{
         "service.Person": {
             "type": "object",
             "properties": {
+                "address_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2000-01-01T12:03:00"
@@ -727,9 +731,14 @@ const docTemplate = `{
         "service.PersonDto": {
             "type": "object",
             "required": [
+                "address_id",
                 "name"
             ],
             "properties": {
+                "address_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "name": {
                     "type": "string",
                     "example": "Cláudio"

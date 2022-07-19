@@ -59,12 +59,12 @@ func (impl *AddressApi) FindOneByID(c *gin.Context) {
 
 	res, err := impl.service.FindOneById(c, addressID)
 	if err != nil {
-		NewHttpInternalServerError(c)
-		return
-	}
+		if e, ok := err.(*exception.NotFoundException); ok {
+			NewHttpError(c, http.StatusNotFound, e.Error())
+		} else {
+			NewHttpInternalServerError(c)
+		}
 
-	if res.Data == nil {
-		c.JSON(http.StatusNotFound, res)
 		return
 	}
 
@@ -135,8 +135,8 @@ func (impl *AddressApi) Update(c *gin.Context) {
 	if err != nil {
 		if e, ok := err.(*exception.EmptyModelException); ok {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
-		} else if _, ok := err.(*exception.NotFoundException); ok {
-			c.JSON(http.StatusNotFound, res)
+		} else if e, ok := err.(*exception.NotFoundException); ok {
+			NewHttpError(c, http.StatusNotFound, e.Error())
 		} else {
 			NewHttpInternalServerError(c)
 		}
