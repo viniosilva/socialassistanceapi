@@ -36,7 +36,7 @@ func (m *MockPersonService) EXPECT() *MockPersonServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockPersonService) Create(arg0 context.Context, arg1 service.CreatePersonDto) (service.PersonResponse, error) {
+func (m *MockPersonService) Create(arg0 context.Context, arg1 service.PersonCreateDto) (service.PersonResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(service.PersonResponse)
@@ -95,15 +95,15 @@ func (mr *MockPersonServiceMockRecorder) FindOneById(arg0, arg1 interface{}) *go
 }
 
 // Update mocks base method.
-func (m *MockPersonService) Update(arg0 context.Context, arg1 int, arg2 service.UpdatePersonDto) error {
+func (m *MockPersonService) Update(arg0 context.Context, arg1 service.PersonUpdateDto) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Update", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockPersonServiceMockRecorder) Update(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockPersonServiceMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPersonService)(nil).Update), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPersonService)(nil).Update), arg0, arg1)
 }

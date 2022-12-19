@@ -11,8 +11,8 @@ import (
 type PersonService interface {
 	FindAll(ctx context.Context) (PersonsResponse, error)
 	FindOneById(ctx context.Context, personID int) (PersonResponse, error)
-	Create(ctx context.Context, dto CreatePersonDto) (PersonResponse, error)
-	Update(ctx context.Context, personID int, dto UpdatePersonDto) error
+	Create(ctx context.Context, dto PersonCreateDto) (PersonResponse, error)
+	Update(ctx context.Context, dto PersonUpdateDto) error
 	Delete(ctx context.Context, personID int) error
 }
 
@@ -57,7 +57,7 @@ func (impl *PersonServiceImpl) FindOneById(ctx context.Context, personID int) (P
 	}, nil
 }
 
-func (impl *PersonServiceImpl) Create(ctx context.Context, dto CreatePersonDto) (PersonResponse, error) {
+func (impl *PersonServiceImpl) Create(ctx context.Context, dto PersonCreateDto) (PersonResponse, error) {
 	person, err := impl.PersonRepository.Create(ctx, model.Person{
 		AddressID: dto.AddressID,
 		Name:      dto.Name,
@@ -77,9 +77,9 @@ func (impl *PersonServiceImpl) Create(ctx context.Context, dto CreatePersonDto) 
 	}, nil
 }
 
-func (impl *PersonServiceImpl) Update(ctx context.Context, personID int, dto UpdatePersonDto) error {
+func (impl *PersonServiceImpl) Update(ctx context.Context, dto PersonUpdateDto) error {
 	return impl.PersonRepository.Update(ctx, model.Person{
-		ID:        personID,
+		ID:        dto.ID,
 		AddressID: dto.AddressID,
 		Name:      dto.Name,
 	})

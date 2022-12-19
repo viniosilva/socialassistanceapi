@@ -170,13 +170,13 @@ func TestAddressServiceCreate(t *testing.T) {
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputDto    service.CreateAddressDto
+		inputDto    service.AddressCreateDto
 		expectedRes service.AddressResponse
 		expectedErr error
 		prepareMock func(mockAddressRepository *mock.MockAddressRepository)
 	}{
 		"should create address": {
-			inputDto: service.CreateAddressDto{
+			inputDto: service.AddressCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -225,7 +225,7 @@ func TestAddressServiceCreate(t *testing.T) {
 			},
 		},
 		"should throw error": {
-			inputDto: service.CreateAddressDto{
+			inputDto: service.AddressCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -273,14 +273,13 @@ func TestAddressServiceCreate(t *testing.T) {
 
 func TestAddressServiceUpdate(t *testing.T) {
 	cases := map[string]struct {
-		inputAddressID int
-		inputDto       service.UpdateAddressDto
-		expectedErr    error
-		prepareMock    func(mockAddressRepository *mock.MockAddressRepository)
+		inputDto    service.AddressUpdateDto
+		expectedErr error
+		prepareMock func(mockAddressRepository *mock.MockAddressRepository)
 	}{
 		"should update address": {
-			inputAddressID: 1,
-			inputDto: service.UpdateAddressDto{
+			inputDto: service.AddressUpdateDto{
+				ID:           1,
 				Country:      "BR",
 				State:        "RS",
 				City:         "Porto Alegre",
@@ -303,16 +302,16 @@ func TestAddressServiceUpdate(t *testing.T) {
 			},
 		},
 		"should return empty when address not exists": {
-			inputAddressID: 1,
-			expectedErr:    &exception.NotFoundException{Err: fmt.Errorf("address 1 not found")},
+			inputDto:    service.AddressUpdateDto{ID: 1},
+			expectedErr: &exception.NotFoundException{Err: fmt.Errorf("address 1 not found")},
 			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
 				mockAddressRepository.EXPECT().Update(gomock.Any(), model.Address{ID: 1}).
 					Return(&exception.NotFoundException{Err: fmt.Errorf("address 1 not found")})
 			},
 		},
 		"should throw error": {
-			inputAddressID: 1,
-			inputDto: service.UpdateAddressDto{
+			inputDto: service.AddressUpdateDto{
+				ID:           1,
 				Country:      "BR",
 				State:        "RS",
 				City:         "Porto Alegre",
@@ -348,7 +347,7 @@ func TestAddressServiceUpdate(t *testing.T) {
 			impl := &service.AddressServiceImpl{AddressRepository: mockAddressRepository}
 
 			// when
-			err := impl.Update(ctx, cs.inputAddressID, cs.inputDto)
+			err := impl.Update(ctx, cs.inputDto)
 
 			// then
 			assert.Equal(t, cs.expectedErr, err)

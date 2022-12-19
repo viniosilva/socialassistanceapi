@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS resources_history;
+DROP TABLE IF EXISTS resources_to_addresses;

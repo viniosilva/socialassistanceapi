@@ -184,7 +184,7 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 func TestComponentPersonApiCreate(t *testing.T) {
 	cases := map[string]struct {
 		before       func(db *sql.DB)
-		inputDto     service.CreatePersonDto
+		inputDto     service.PersonCreateDto
 		expectedCode int
 		expectedBody *service.PersonResponse
 		expectedErr  *api.HttpError
@@ -198,7 +198,7 @@ func TestComponentPersonApiCreate(t *testing.T) {
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 			},
-			inputDto:     service.CreatePersonDto{AddressID: 1, Name: "Test"},
+			inputDto:     service.PersonCreateDto{AddressID: 1, Name: "Test"},
 			expectedCode: http.StatusCreated,
 			expectedBody: &service.PersonResponse{Data: &service.Person{ID: 1, AddressID: 1, Name: "Test"}},
 			expectedErr:  &api.HttpError{},
@@ -210,8 +210,8 @@ func TestComponentPersonApiCreate(t *testing.T) {
 			expectedErr: &api.HttpError{
 				Code: http.StatusBadRequest,
 				Message: strings.Join([]string{
-					"Key: 'CreatePersonDto.AddressID' Error:Field validation for 'AddressID' failed on the 'required' tag",
-					"Key: 'CreatePersonDto.Name' Error:Field validation for 'Name' failed on the 'required' tag",
+					"Key: 'PersonCreateDto.AddressID' Error:Field validation for 'AddressID' failed on the 'required' tag",
+					"Key: 'PersonCreateDto.Name' Error:Field validation for 'Name' failed on the 'required' tag",
 				}, "\n"),
 			},
 		},
@@ -272,7 +272,7 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 	cases := map[string]struct {
 		before        func(db *sql.DB)
 		inputPersonID string
-		inputDto      service.CreatePersonDto
+		inputDto      service.PersonCreateDto
 		expectedCode  int
 		expectedErr   *api.HttpError
 	}{
@@ -291,7 +291,7 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 				`, date, date)
 			},
 			inputPersonID: "1",
-			inputDto:      service.CreatePersonDto{Name: "Test update"},
+			inputDto:      service.PersonCreateDto{Name: "Test update"},
 			expectedCode:  http.StatusNoContent,
 		},
 		"should throw bad request error when personID is not a number": {
@@ -309,7 +309,7 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 		"should throw not found error when persons not exists": {
 			before:        func(db *sql.DB) {},
 			inputPersonID: "1",
-			inputDto:      service.CreatePersonDto{Name: "Test update"},
+			inputDto:      service.PersonCreateDto{Name: "Test update"},
 			expectedCode:  http.StatusNotFound,
 			expectedErr:   &api.HttpError{Code: http.StatusNotFound, Message: "person 1 not found"},
 		},

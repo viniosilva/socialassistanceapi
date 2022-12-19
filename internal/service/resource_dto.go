@@ -27,6 +27,7 @@ type CreateResourceDto struct {
 }
 
 type UpdateResourceDto struct {
+	ID          int     `json:"-"`
 	Name        string  `json:"name" example:"Arroz"`
 	Amount      float64 `json:"amount" example:"5" binding:"gte=0"`
 	Measurement string  `json:"measurement" example:"Kg"`

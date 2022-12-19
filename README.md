@@ -5,6 +5,7 @@ Management of social assistance resources
 ## Requiriments
 
 - [Go](https://go.dev/doc/)
+- [Gomock](https://github.com/golang/mock)
 - [GNU Make](https://www.gnu.org/software/make/manual/make.html)
 - [Docker](https://docs.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)

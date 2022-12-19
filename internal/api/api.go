@@ -16,12 +16,13 @@ type Api interface {
 }
 
 type ApiImpl struct {
-	Gin             *gin.Engine
-	Addr            string
-	HealthService   service.HealthService
-	PersonService   service.PersonService
-	AddressService  service.AddressService
-	ResourceService service.ResourceService
+	Gin                   *gin.Engine
+	Addr                  string
+	HealthService         service.HealthService
+	PersonService         service.PersonService
+	AddressService        service.AddressService
+	ResourceService       service.ResourceService
+	DonateResourceService service.DonateResourceService
 }
 
 // @title Ipanema Box API
@@ -39,11 +40,13 @@ func (impl *ApiImpl) Configure() {
 	personApi := &PersonApiImpl{Router: api.Group("/api/v1/persons"), PersonService: impl.PersonService}
 	addressApi := &AddressApiImpl{Router: api.Group("/api/v1/addresses"), AddressService: impl.AddressService}
 	resourceApi := &ResourceApiImpl{Router: api.Group("/api/v1/resources"), ResourceService: impl.ResourceService}
+	donateResourceApi := &DonateResourceApiImpl{Router: api.Group("/api/v1/resources"), DonateResourceService: impl.DonateResourceService}
 
 	healthApi.Configure()
 	personApi.Configure()
 	addressApi.Configure()
 	resourceApi.Configure()
+	donateResourceApi.Configure()
 
 	impl.Gin = api
 }

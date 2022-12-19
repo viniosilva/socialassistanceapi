@@ -200,13 +200,13 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 
 func TestComponentAddressApiCreate(t *testing.T) {
 	cases := map[string]struct {
-		inputDto     service.CreateAddressDto
+		inputDto     service.AddressCreateDto
 		expectedCode int
 		expectedBody *service.AddressResponse
 		expectedErr  *api.HttpError
 	}{
 		"should return created address": {
-			inputDto: service.CreateAddressDto{
+			inputDto: service.AddressCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -236,14 +236,14 @@ func TestComponentAddressApiCreate(t *testing.T) {
 			expectedErr: &api.HttpError{
 				Code: http.StatusBadRequest,
 				Message: strings.Join([]string{
-					"Key: 'CreateAddressDto.Country' Error:Field validation for 'Country' failed on the 'required' tag",
-					"Key: 'CreateAddressDto.State' Error:Field validation for 'State' failed on the 'required' tag",
-					"Key: 'CreateAddressDto.City' Error:Field validation for 'City' failed on the 'required' tag",
-					"Key: 'CreateAddressDto.Neighborhood' Error:Field validation for 'Neighborhood' failed on the 'required' tag",
-					"Key: 'CreateAddressDto.Street' Error:Field validation for 'Street' failed on the 'required' tag",
-					"Key: 'CreateAddressDto.Number' Error:Field validation for 'Number' failed on the 'required' tag",
-					"Key: 'CreateAddressDto.Complement' Error:Field validation for 'Complement' failed on the 'required' tag",
-					"Key: 'CreateAddressDto.Zipcode' Error:Field validation for 'Zipcode' failed on the 'required' tag",
+					"Key: 'AddressCreateDto.Country' Error:Field validation for 'Country' failed on the 'required' tag",
+					"Key: 'AddressCreateDto.State' Error:Field validation for 'State' failed on the 'required' tag",
+					"Key: 'AddressCreateDto.City' Error:Field validation for 'City' failed on the 'required' tag",
+					"Key: 'AddressCreateDto.Neighborhood' Error:Field validation for 'Neighborhood' failed on the 'required' tag",
+					"Key: 'AddressCreateDto.Street' Error:Field validation for 'Street' failed on the 'required' tag",
+					"Key: 'AddressCreateDto.Number' Error:Field validation for 'Number' failed on the 'required' tag",
+					"Key: 'AddressCreateDto.Complement' Error:Field validation for 'Complement' failed on the 'required' tag",
+					"Key: 'AddressCreateDto.Zipcode' Error:Field validation for 'Zipcode' failed on the 'required' tag",
 				}, "\n"),
 			},
 		},
@@ -300,7 +300,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 	cases := map[string]struct {
 		before         func(db *sql.DB)
 		inputAddressID string
-		inputDto       service.CreateAddressDto
+		inputDto       service.AddressCreateDto
 		expectedCode   int
 		expectedErr    *api.HttpError
 	}{
@@ -313,7 +313,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 				`, DATE, DATE)
 			},
 			inputAddressID: "1",
-			inputDto: service.CreateAddressDto{
+			inputDto: service.AddressCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -334,7 +334,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 				`, DATE, DATE)
 			},
 			inputAddressID: "1",
-			inputDto:       service.CreateAddressDto{Number: "2"},
+			inputDto:       service.AddressCreateDto{Number: "2"},
 			expectedCode:   http.StatusNoContent,
 		},
 		"should throw bad request error when addressID is not a number": {
@@ -352,7 +352,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 		"should throw not found error when addresses not exists": {
 			before:         func(db *sql.DB) {},
 			inputAddressID: "1",
-			inputDto: service.CreateAddressDto{
+			inputDto: service.AddressCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",

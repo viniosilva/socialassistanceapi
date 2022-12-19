@@ -119,8 +119,9 @@ func (impl *ResourceApiImpl) Update(c *gin.Context) {
 		NewHttpError(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	dto.ID = resourceID
 
-	if err := impl.ResourceService.Update(c, resourceID, dto); err != nil {
+	if err := impl.ResourceService.Update(c, dto); err != nil {
 		if e, ok := err.(*exception.EmptyModelException); ok {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
 		} else if e, ok := err.(*exception.NotFoundException); ok {

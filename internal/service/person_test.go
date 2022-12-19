@@ -122,13 +122,13 @@ func TestPersonServiceCreate(t *testing.T) {
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputDto    service.CreatePersonDto
+		inputDto    service.PersonCreateDto
 		expectedRes service.PersonResponse
 		expectedErr error
 		prepareMock func(mockPersonRepository *mock.MockPersonRepository)
 	}{
 		"should create person": {
-			inputDto:    service.CreatePersonDto{Name: "Test"},
+			inputDto:    service.PersonCreateDto{Name: "Test"},
 			expectedRes: service.PersonResponse{Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, Name: "Test"}},
 			prepareMock: func(mockPersonRepository *mock.MockPersonRepository) {
 				mockPersonRepository.EXPECT().Create(gomock.Any(), model.Person{Name: "Test"}).
@@ -136,7 +136,7 @@ func TestPersonServiceCreate(t *testing.T) {
 			},
 		},
 		"should throw error": {
-			inputDto:    service.CreatePersonDto{Name: "Test"},
+			inputDto:    service.PersonCreateDto{Name: "Test"},
 			expectedErr: fmt.Errorf("error"),
 			prepareMock: func(mockPersonRepository *mock.MockPersonRepository) {
 				mockPersonRepository.EXPECT().Create(gomock.Any(), model.Person{Name: "Test"}).
@@ -167,30 +167,27 @@ func TestPersonServiceCreate(t *testing.T) {
 
 func TestPersonServiceUpdate(t *testing.T) {
 	cases := map[string]struct {
-		inputPersonID int
-		inputDto      service.UpdatePersonDto
-		expectedErr   error
-		prepareMock   func(mockPersonRepository *mock.MockPersonRepository)
+		inputDto    service.PersonUpdateDto
+		expectedErr error
+		prepareMock func(mockPersonRepository *mock.MockPersonRepository)
 	}{
 		"should update person": {
-			inputPersonID: 1,
-			inputDto:      service.UpdatePersonDto{Name: "Test update"},
+			inputDto: service.PersonUpdateDto{ID: 1, Name: "Test update"},
 			prepareMock: func(mockPersonRepository *mock.MockPersonRepository) {
 				mockPersonRepository.EXPECT().Update(gomock.Any(), model.Person{ID: 1, Name: "Test update"}).Return(nil)
 			},
 		},
 		"should return empty when person not exists": {
-			inputPersonID: 1,
-			expectedErr:   &exception.NotFoundException{Err: fmt.Errorf("person 1 not found")},
+			inputDto:    service.PersonUpdateDto{ID: 1},
+			expectedErr: &exception.NotFoundException{Err: fmt.Errorf("person 1 not found")},
 			prepareMock: func(mockPersonRepository *mock.MockPersonRepository) {
 				mockPersonRepository.EXPECT().Update(gomock.Any(), model.Person{ID: 1}).
 					Return(&exception.NotFoundException{Err: fmt.Errorf("person 1 not found")})
 			},
 		},
 		"should throw error": {
-			inputPersonID: 1,
-			inputDto:      service.UpdatePersonDto{Name: "Test update"},
-			expectedErr:   fmt.Errorf("error"),
+			inputDto:    service.PersonUpdateDto{ID: 1, Name: "Test update"},
+			expectedErr: fmt.Errorf("error"),
 			prepareMock: func(mockPersonRepository *mock.MockPersonRepository) {
 				mockPersonRepository.EXPECT().Update(gomock.Any(), model.Person{ID: 1, Name: "Test update"}).Return(fmt.Errorf("error"))
 			},
@@ -208,7 +205,7 @@ func TestPersonServiceUpdate(t *testing.T) {
 			impl := &service.PersonServiceImpl{PersonRepository: mockPersonRepository}
 
 			// when
-			err := impl.Update(ctx, cs.inputPersonID, cs.inputDto)
+			err := impl.Update(ctx, cs.inputDto)
 
 			// then
 			assert.Equal(t, cs.expectedErr, err)

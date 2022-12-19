@@ -36,7 +36,7 @@ func (m *MockAddressService) EXPECT() *MockAddressServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockAddressService) Create(arg0 context.Context, arg1 service.CreateAddressDto) (service.AddressResponse, error) {
+func (m *MockAddressService) Create(arg0 context.Context, arg1 service.AddressCreateDto) (service.AddressResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(service.AddressResponse)
@@ -95,15 +95,15 @@ func (mr *MockAddressServiceMockRecorder) FindOneById(arg0, arg1 interface{}) *g
 }
 
 // Update mocks base method.
-func (m *MockAddressService) Update(arg0 context.Context, arg1 int, arg2 service.UpdateAddressDto) error {
+func (m *MockAddressService) Update(arg0 context.Context, arg1 service.AddressUpdateDto) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Update", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockAddressServiceMockRecorder) Update(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAddressServiceMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockAddressService)(nil).Update), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockAddressService)(nil).Update), arg0, arg1)
 }

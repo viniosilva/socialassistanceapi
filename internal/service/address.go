@@ -11,8 +11,8 @@ import (
 type AddressService interface {
 	FindAll(ctx context.Context) (AddressesResponse, error)
 	FindOneById(ctx context.Context, addressID int) (AddressResponse, error)
-	Create(ctx context.Context, dto CreateAddressDto) (AddressResponse, error)
-	Update(ctx context.Context, addressID int, dto UpdateAddressDto) error
+	Create(ctx context.Context, dto AddressCreateDto) (AddressResponse, error)
+	Update(ctx context.Context, dto AddressUpdateDto) error
 	Delete(ctx context.Context, addressID int) error
 }
 
@@ -69,7 +69,7 @@ func (impl *AddressServiceImpl) FindOneById(ctx context.Context, addressID int) 
 	}, nil
 }
 
-func (impl *AddressServiceImpl) Create(ctx context.Context, dto CreateAddressDto) (AddressResponse, error) {
+func (impl *AddressServiceImpl) Create(ctx context.Context, dto AddressCreateDto) (AddressResponse, error) {
 	address, err := impl.AddressRepository.Create(ctx, model.Address{
 		Country:      dto.Country,
 		State:        dto.State,
@@ -102,9 +102,9 @@ func (impl *AddressServiceImpl) Create(ctx context.Context, dto CreateAddressDto
 	}, nil
 }
 
-func (impl *AddressServiceImpl) Update(ctx context.Context, addressID int, dto UpdateAddressDto) error {
+func (impl *AddressServiceImpl) Update(ctx context.Context, dto AddressUpdateDto) error {
 	return impl.AddressRepository.Update(ctx, model.Address{
-		ID:           addressID,
+		ID:           dto.ID,
 		Country:      dto.Country,
 		State:        dto.State,
 		City:         dto.City,

@@ -504,6 +504,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/resources/{id}/donate": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "donate a resource",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Donate a resource",
+                        "name": "resource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.DonateResourceDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/resources/{id}/quantity": {
             "patch": {
                 "consumes": [
@@ -725,6 +774,24 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "Arroz"
+                },
+                "quantity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                }
+            }
+        },
+        "service.DonateResourceDto": {
+            "type": "object",
+            "required": [
+                "address_id",
+                "quantity"
+            ],
+            "properties": {
+                "address_id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "quantity": {
                     "type": "number",

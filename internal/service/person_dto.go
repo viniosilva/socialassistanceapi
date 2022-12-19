@@ -17,12 +17,13 @@ type PersonsResponse struct {
 	Data []Person `json:"data"`
 }
 
-type CreatePersonDto struct {
+type PersonCreateDto struct {
 	AddressID int    `json:"address_id" example:"1" binding:"required"`
 	Name      string `json:"name" example:"Cláudio" binding:"required"`
 }
 
-type UpdatePersonDto struct {
+type PersonUpdateDto struct {
+	ID        int    `json:"-"`
 	AddressID int    `json:"address_id" example:"1"`
 	Name      string `json:"name" example:"Cláudio"`
 }

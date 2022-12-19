@@ -31,16 +31,19 @@ func TestE2EApi(t *testing.T) {
 		personRepository := &repository.PersonRepositoryImpl{DB: mysql}
 		resourceRepository := &repository.ResourceRepositoryImpl{DB: mysql}
 		addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
+		donateResourceRepository := &repository.DonateResourceRepositoryImpl{DB: mysql}
 
 		personService := &service.PersonServiceImpl{PersonRepository: personRepository}
 		resourceService := &service.ResourceServiceImpl{ResourceRepository: resourceRepository}
 		addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+		donateResourceService := &service.DonateResourceServiceImpl{DonateResourceRepository: donateResourceRepository}
 
 		impl := &api.ApiImpl{
-			Addr:            "0.0.0.0:8080",
-			PersonService:   personService,
-			AddressService:  addressService,
-			ResourceService: resourceService,
+			Addr:                  "0.0.0.0:8080",
+			PersonService:         personService,
+			AddressService:        addressService,
+			ResourceService:       resourceService,
+			DonateResourceService: donateResourceService,
 		}
 		impl.Configure()
 
@@ -65,7 +68,7 @@ func TestE2EApi(t *testing.T) {
 		assert.Equal(t, rec.Code, http.StatusOK)
 
 		// when create address then return Created
-		b, _ := json.Marshal(service.CreateAddressDto{
+		b, _ := json.Marshal(service.AddressCreateDto{
 			Country:      "BR",
 			State:        "SP",
 			City:         "São Paulo",
@@ -82,7 +85,7 @@ func TestE2EApi(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 
 		// when create person then return Created
-		b, _ = json.Marshal(service.CreatePersonDto{AddressID: 1, Name: "Test"})
+		b, _ = json.Marshal(service.PersonCreateDto{AddressID: 1, Name: "Test"})
 		rec = httptest.NewRecorder()
 		req, _ = http.NewRequest("POST", "/api/v1/persons", strings.NewReader(string(b)))
 		impl.Gin.ServeHTTP(rec, req)
@@ -98,7 +101,7 @@ func TestE2EApi(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 
 		// when update person then return NoContent
-		b, _ = json.Marshal(service.CreatePersonDto{Name: "Test Update"})
+		b, _ = json.Marshal(service.PersonCreateDto{Name: "Test Update"})
 		rec = httptest.NewRecorder()
 		req, _ = http.NewRequest("PATCH", "/api/v1/persons/1", strings.NewReader(string(b)))
 		impl.Gin.ServeHTTP(rec, req)
@@ -106,7 +109,7 @@ func TestE2EApi(t *testing.T) {
 		assert.Equal(t, http.StatusNoContent, rec.Code)
 
 		// when update address then return NoContent
-		b, _ = json.Marshal(service.CreateAddressDto{
+		b, _ = json.Marshal(service.AddressCreateDto{
 			State:        "RS",
 			City:         "Porto Alegre",
 			Neighborhood: "Hípica",
@@ -124,6 +127,22 @@ func TestE2EApi(t *testing.T) {
 		b, _ = json.Marshal(service.UpdateResourceDto{Measurement: "Kg"})
 		rec = httptest.NewRecorder()
 		req, _ = http.NewRequest("PATCH", "/api/v1/resources/1", strings.NewReader(string(b)))
+		impl.Gin.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNoContent, rec.Code)
+
+		// when update resource quantity then return NoContent
+		b, _ = json.Marshal(service.UpdateResourceQuantityDto{Quantity: 1})
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("PATCH", "/api/v1/resources/1/quantity", strings.NewReader(string(b)))
+		impl.Gin.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNoContent, rec.Code)
+
+		// when donate resource then return NoContent
+		b, _ = json.Marshal(service.DonateResourceDonateDto{AddressID: 1, Quantity: 1})
+		rec = httptest.NewRecorder()
+		req, _ = http.NewRequest("POST", "/api/v1/resources/1/donate", strings.NewReader(string(b)))
 		impl.Gin.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNoContent, rec.Code)

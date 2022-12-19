@@ -363,7 +363,7 @@ func TestComponentResourceApiUpdateQuantity(t *testing.T) {
 			expectedCode:    http.StatusBadRequest,
 			expectedErr: &api.HttpError{
 				Code:    http.StatusBadRequest,
-				Message: "Key: 'ResourceUpdateQuantityDto.Quantity' Error:Field validation for 'Quantity' failed on the 'gte' tag"},
+				Message: "Key: 'UpdateResourceQuantityDto.Quantity' Error:Field validation for 'Quantity' failed on the 'gte' tag"},
 		},
 		"should throw bad request error": {
 			before:          func(db *sql.DB) {},
@@ -371,7 +371,7 @@ func TestComponentResourceApiUpdateQuantity(t *testing.T) {
 			expectedCode:    http.StatusBadRequest,
 			expectedErr: &api.HttpError{
 				Code:    http.StatusBadRequest,
-				Message: "Key: 'ResourceUpdateQuantityDto.Quantity' Error:Field validation for 'Quantity' failed on the 'required' tag",
+				Message: "Key: 'UpdateResourceQuantityDto.Quantity' Error:Field validation for 'Quantity' failed on the 'required' tag",
 			},
 		},
 		"should throw not found error when resources not exists": {

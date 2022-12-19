@@ -23,7 +23,7 @@ type AddressesResponse struct {
 	Data []Address `json:"data"`
 }
 
-type CreateAddressDto struct {
+type AddressCreateDto struct {
 	Country      string `json:"country" example:"BR" binding:"required"`
 	State        string `json:"state" example:"SP" binding:"required"`
 	City         string `json:"city" example:"São Paulo" binding:"required"`
@@ -34,7 +34,8 @@ type CreateAddressDto struct {
 	Zipcode      string `json:"zipcode" example:"01021100" binding:"required"`
 }
 
-type UpdateAddressDto struct {
+type AddressUpdateDto struct {
+	ID           int    `json:"-"`
 	Country      string `json:"country" example:"BR"`
 	State        string `json:"state" example:"SP"`
 	City         string `json:"city" example:"São Paulo"`

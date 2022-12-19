@@ -129,6 +129,19 @@ definitions:
     - name
     - quantity
     type: object
+  service.DonateResourceDto:
+    properties:
+      address_id:
+        example: 1
+        type: integer
+      quantity:
+        example: 10
+        minimum: 0
+        type: number
+    required:
+    - address_id
+    - quantity
+    type: object
   service.Person:
     properties:
       address_id:
@@ -578,6 +591,38 @@ paths:
           schema:
             $ref: '#/definitions/api.HttpError'
       summary: update a resource
+      tags:
+      - resource
+  /api/v1/resources/{id}/donate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Donate a resource
+        in: body
+        name: resource
+        required: true
+        schema:
+          $ref: '#/definitions/service.DonateResourceDto'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.HttpError'
+      summary: donate a resource
       tags:
       - resource
   /api/v1/resources/{id}/quantity:

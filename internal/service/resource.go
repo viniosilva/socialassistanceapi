@@ -11,7 +11,7 @@ type ResourceService interface {
 	FindAll(ctx context.Context) (ResourcesResponse, error)
 	FindOneById(ctx context.Context, resourceID int) (ResourceResponse, error)
 	Create(ctx context.Context, dto CreateResourceDto) (ResourceResponse, error)
-	Update(ctx context.Context, resourceID int, dto UpdateResourceDto) error
+	Update(ctx context.Context, dto UpdateResourceDto) error
 	UpdateQuantity(ctx context.Context, resourceID int, dto UpdateResourceQuantityDto) error
 }
 
@@ -84,9 +84,9 @@ func (impl *ResourceServiceImpl) Create(ctx context.Context, dto CreateResourceD
 	}, nil
 }
 
-func (impl *ResourceServiceImpl) Update(ctx context.Context, resourceID int, dto UpdateResourceDto) error {
+func (impl *ResourceServiceImpl) Update(ctx context.Context, dto UpdateResourceDto) error {
 	return impl.ResourceRepository.Update(ctx, model.Resource{
-		ID:          resourceID,
+		ID:          dto.ID,
 		Name:        dto.Name,
 		Amount:      dto.Amount,
 		Measurement: dto.Measurement,

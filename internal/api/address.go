@@ -82,7 +82,7 @@ func (impl *AddressApiImpl) FindOneByID(c *gin.Context) {
 // @Failure	500	{object}	HttpError
 // @Router	/api/v1/addresses [post]
 func (impl *AddressApiImpl) Create(c *gin.Context) {
-	var dto service.CreateAddressDto
+	var dto service.AddressCreateDto
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		NewHttpError(c, http.StatusBadRequest, err.Error())
 		return
@@ -114,13 +114,14 @@ func (impl *AddressApiImpl) Update(c *gin.Context) {
 		return
 	}
 
-	var dto service.UpdateAddressDto
+	var dto service.AddressUpdateDto
 	if err = c.ShouldBindJSON(&dto); err != nil {
 		NewHttpError(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	dto.ID = addressID
 
-	if err = impl.AddressService.Update(c, addressID, dto); err != nil {
+	if err = impl.AddressService.Update(c, dto); err != nil {
 		if e, ok := err.(*exception.EmptyModelException); ok {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
 		} else if e, ok := err.(*exception.NotFoundException); ok {

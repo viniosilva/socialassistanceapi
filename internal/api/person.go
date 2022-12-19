@@ -82,7 +82,7 @@ func (impl *PersonApiImpl) FindOneByID(c *gin.Context) {
 // @Failure	500	{object}	HttpError
 // @Router	/api/v1/persons [post]
 func (impl *PersonApiImpl) Create(c *gin.Context) {
-	var dto service.CreatePersonDto
+	var dto service.PersonCreateDto
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		NewHttpError(c, http.StatusBadRequest, err.Error())
 		return
@@ -114,13 +114,14 @@ func (impl *PersonApiImpl) Update(c *gin.Context) {
 		return
 	}
 
-	var dto service.UpdatePersonDto
+	var dto service.PersonUpdateDto
 	if err = c.ShouldBindJSON(&dto); err != nil {
 		NewHttpError(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	dto.ID = personID
 
-	if err = impl.PersonService.Update(c, personID, dto); err != nil {
+	if err = impl.PersonService.Update(c, dto); err != nil {
 		if e, ok := err.(*exception.EmptyModelException); ok {
 			NewHttpError(c, http.StatusBadRequest, e.Error())
 		} else if e, ok := err.(*exception.NotFoundException); ok {

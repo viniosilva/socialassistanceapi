@@ -196,29 +196,27 @@ func TestResourceServiceCreate(t *testing.T) {
 
 func TestResourceServiceUpdate(t *testing.T) {
 	cases := map[string]struct {
-		inputResourceID int
-		inputDto        service.UpdateResourceDto
-		expectedErr     error
-		prepareMock     func(mockResourceRepository *mock.MockResourceRepository)
+		inputDto    service.UpdateResourceDto
+		expectedErr error
+		prepareMock func(mockResourceRepository *mock.MockResourceRepository)
 	}{
 		"should update resource": {
-			inputResourceID: 1,
-			inputDto:        service.UpdateResourceDto{Name: "Test"},
+			inputDto: service.UpdateResourceDto{ID: 1, Name: "Test"},
 			prepareMock: func(mockResourceRepository *mock.MockResourceRepository) {
 				mockResourceRepository.EXPECT().Update(gomock.Any(), model.Resource{ID: 1, Name: "Test"}).Return(nil)
 			},
 		},
 		"should return empty when resource not exists": {
-			inputResourceID: 1,
-			expectedErr:     &exception.NotFoundException{Err: fmt.Errorf("resource 1 not found")},
+			inputDto:    service.UpdateResourceDto{ID: 1},
+			expectedErr: &exception.NotFoundException{Err: fmt.Errorf("resource 1 not found")},
 			prepareMock: func(mockResourceRepository *mock.MockResourceRepository) {
 				mockResourceRepository.EXPECT().Update(gomock.Any(), model.Resource{ID: 1}).
 					Return(&exception.NotFoundException{Err: fmt.Errorf("resource 1 not found")})
 			},
 		},
 		"should throw error": {
-			inputResourceID: 1,
-			expectedErr:     fmt.Errorf("error"),
+			inputDto:    service.UpdateResourceDto{ID: 1},
+			expectedErr: fmt.Errorf("error"),
 			prepareMock: func(mockResourceRepository *mock.MockResourceRepository) {
 				mockResourceRepository.EXPECT().Update(gomock.Any(), model.Resource{ID: 1}).Return(fmt.Errorf("error"))
 			},
@@ -236,7 +234,7 @@ func TestResourceServiceUpdate(t *testing.T) {
 			impl := &service.ResourceServiceImpl{ResourceRepository: mockResourceRepository}
 
 			// when
-			err := impl.Update(ctx, cs.inputResourceID, cs.inputDto)
+			err := impl.Update(ctx, cs.inputDto)
 
 			// then
 			assert.Equal(t, cs.expectedErr, err)
