@@ -8,7 +8,7 @@ import (
 
 type DonateResourceService interface {
 	Donate(ctx context.Context, dto DonateResourceDonateDto) error
-	Return(ctx context.Context, dto DonateResourceReturnDto) error
+	Return(ctx context.Context, resourceID int) error
 }
 
 type DonateResourceServiceImpl struct {
@@ -23,8 +23,8 @@ func (impl *DonateResourceServiceImpl) Donate(ctx context.Context, dto DonateRes
 	return nil
 }
 
-func (impl *DonateResourceServiceImpl) Return(ctx context.Context, dto DonateResourceReturnDto) error {
-	if err := impl.DonateResourceRepository.Return(ctx, dto.ResourceID); err != nil {
+func (impl *DonateResourceServiceImpl) Return(ctx context.Context, resourceID int) error {
+	if err := impl.DonateResourceRepository.Return(ctx, resourceID); err != nil {
 		return err
 	}
 

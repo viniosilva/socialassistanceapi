@@ -61,19 +61,19 @@ func TestDonateResourceServiceDonate(t *testing.T) {
 
 func TestDonateResourceServiceReturn(t *testing.T) {
 	cases := map[string]struct {
-		inputDto    service.DonateResourceReturnDto
-		expectedErr error
-		prepareMock func(mockDonateResourceRepository *mock.MockDonateResourceRepository)
+		inputResourceID int
+		expectedErr     error
+		prepareMock     func(mockDonateResourceRepository *mock.MockDonateResourceRepository)
 	}{
 		"should return resource": {
-			inputDto: service.DonateResourceReturnDto{ResourceID: 1},
+			inputResourceID: 1,
 			prepareMock: func(mockDonateResourceRepository *mock.MockDonateResourceRepository) {
 				mockDonateResourceRepository.EXPECT().Return(gomock.Any(), 1).Return(nil)
 			},
 		},
-		"should thro error": {
-			inputDto:    service.DonateResourceReturnDto{ResourceID: 1},
-			expectedErr: fmt.Errorf("error"),
+		"should throw error": {
+			inputResourceID: 1,
+			expectedErr:     fmt.Errorf("error"),
 			prepareMock: func(mockDonateResourceRepository *mock.MockDonateResourceRepository) {
 				mockDonateResourceRepository.EXPECT().Return(gomock.Any(), 1).Return(fmt.Errorf("error"))
 			},
@@ -91,7 +91,7 @@ func TestDonateResourceServiceReturn(t *testing.T) {
 			impl := &service.DonateResourceServiceImpl{DonateResourceRepository: mockDonateResourceRepository}
 
 			// when
-			err := impl.Return(ctx, cs.inputDto)
+			err := impl.Return(ctx, cs.inputResourceID)
 
 			// then
 			assert.Equal(t, cs.expectedErr, err)
