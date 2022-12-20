@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
 	"github.com/viniosilva/socialassistanceapi/internal/repository"
@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	log.SetFormatter(&log.JSONFormatter{})
+
 	cfg, err := configuration.LoadConfig(".")
 	if err != nil {
 		log.Fatal("cannot load config: ", err)

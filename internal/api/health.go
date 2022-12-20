@@ -13,12 +13,13 @@ type HealthApi interface {
 }
 
 type HealthApiImpl struct {
-	Router        *gin.RouterGroup
-	HealthService service.HealthService
+	Router          *gin.RouterGroup
+	HealthService   service.HealthService
+	TraceMiddleware func(c *gin.Context)
 }
 
 func (impl *HealthApiImpl) Configure() {
-	impl.Router.GET("", impl.HealthCheck)
+	impl.Router.GET("", impl.TraceMiddleware, impl.HealthCheck)
 }
 
 func (impl *HealthApiImpl) HealthCheck(c *gin.Context) {

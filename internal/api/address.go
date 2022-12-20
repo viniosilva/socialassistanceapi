@@ -15,17 +15,20 @@ type AddressApi interface {
 }
 
 type AddressApiImpl struct {
-	Router         *gin.RouterGroup
-	AddressService service.AddressService
+	Router          *gin.RouterGroup
+	AddressService  service.AddressService
+	TraceMiddleware func(c *gin.Context)
 }
 
 func (impl *AddressApiImpl) Configure() {
-	impl.Router.GET("", impl.FindAll)
-	impl.Router.GET("/:addressID", impl.FindOneByID)
-	impl.Router.POST("", impl.Create)
-	impl.Router.PATCH("/:addressID", impl.Update)
-	impl.Router.DELETE("/:addressID", impl.Delete)
+	impl.Router.GET("", impl.TraceMiddleware, impl.FindAll)
+	impl.Router.GET("/:addressID", impl.TraceMiddleware, impl.FindOneByID)
+	impl.Router.POST("", impl.TraceMiddleware, impl.Create)
+	impl.Router.PATCH("/:addressID", impl.TraceMiddleware, impl.Update)
+	impl.Router.DELETE("/:addressID", impl.TraceMiddleware, impl.Delete)
 }
+
+// c.Set("span_id", c.Request.Header.Get("Request-Id"))
 
 // @Summary find all addresses
 // @Tags address

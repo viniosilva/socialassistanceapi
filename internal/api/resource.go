@@ -17,14 +17,15 @@ type ResourceApi interface {
 type ResourceApiImpl struct {
 	Router          *gin.RouterGroup
 	ResourceService service.ResourceService
+	TraceMiddleware func(c *gin.Context)
 }
 
 func (impl *ResourceApiImpl) Configure() {
-	impl.Router.GET("", impl.FindAll)
-	impl.Router.GET("/:resourceID", impl.FindOneByID)
-	impl.Router.POST("", impl.Create)
-	impl.Router.PATCH("/:resourceID", impl.Update)
-	impl.Router.PATCH("/:resourceID/quantity", impl.UpdateQuantity)
+	impl.Router.GET("", impl.TraceMiddleware, impl.FindAll)
+	impl.Router.GET("/:resourceID", impl.TraceMiddleware, impl.FindOneByID)
+	impl.Router.POST("", impl.TraceMiddleware, impl.Create)
+	impl.Router.PATCH("/:resourceID", impl.TraceMiddleware, impl.Update)
+	impl.Router.PATCH("/:resourceID/quantity", impl.TraceMiddleware, impl.UpdateQuantity)
 }
 
 // @Summary find all resources

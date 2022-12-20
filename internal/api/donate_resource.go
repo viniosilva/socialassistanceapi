@@ -17,11 +17,12 @@ type DonateResourceApi interface {
 type DonateResourceApiImpl struct {
 	Router                *gin.RouterGroup
 	DonateResourceService service.DonateResourceService
+	TraceMiddleware       func(c *gin.Context)
 }
 
 func (impl *DonateResourceApiImpl) Configure() {
-	impl.Router.POST("/:resourceID/donate", impl.Donate)
-	impl.Router.DELETE("/:resourceID/return", impl.Return)
+	impl.Router.POST("/:resourceID/donate", impl.TraceMiddleware, impl.Donate)
+	impl.Router.DELETE("/:resourceID/return", impl.TraceMiddleware, impl.Return)
 }
 
 // @Summary	donate a resource

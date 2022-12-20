@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 	"github.com/viniosilva/socialassistanceapi/internal/repository"
 )
@@ -21,8 +22,11 @@ type PersonServiceImpl struct {
 }
 
 func (impl *PersonServiceImpl) FindAll(ctx context.Context) (PersonsResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.find_all"})
+
 	persons, err := impl.PersonRepository.FindAll(ctx)
 	if err != nil {
+		log.Error(err.Error())
 		return PersonsResponse{}, err
 	}
 
@@ -41,8 +45,11 @@ func (impl *PersonServiceImpl) FindAll(ctx context.Context) (PersonsResponse, er
 }
 
 func (impl *PersonServiceImpl) FindOneById(ctx context.Context, personID int) (PersonResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.find_one_by_id"})
+
 	person, err := impl.PersonRepository.FindOneById(ctx, personID)
 	if err != nil || person == nil {
+		log.Error(err.Error())
 		return PersonResponse{}, err
 	}
 
@@ -58,11 +65,14 @@ func (impl *PersonServiceImpl) FindOneById(ctx context.Context, personID int) (P
 }
 
 func (impl *PersonServiceImpl) Create(ctx context.Context, dto PersonCreateDto) (PersonResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.create"})
+
 	person, err := impl.PersonRepository.Create(ctx, model.Person{
 		AddressID: dto.AddressID,
 		Name:      dto.Name,
 	})
 	if err != nil {
+		log.Error(err.Error())
 		return PersonResponse{}, err
 	}
 
@@ -78,13 +88,27 @@ func (impl *PersonServiceImpl) Create(ctx context.Context, dto PersonCreateDto) 
 }
 
 func (impl *PersonServiceImpl) Update(ctx context.Context, dto PersonUpdateDto) error {
-	return impl.PersonRepository.Update(ctx, model.Person{
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.update"})
+
+	if err := impl.PersonRepository.Update(ctx, model.Person{
 		ID:        dto.ID,
 		AddressID: dto.AddressID,
 		Name:      dto.Name,
-	})
+	}); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (impl *PersonServiceImpl) Delete(ctx context.Context, personID int) error {
-	return impl.PersonRepository.Delete(ctx, personID)
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.delete"})
+
+	if err := impl.PersonRepository.Delete(ctx, personID); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	return nil
 }

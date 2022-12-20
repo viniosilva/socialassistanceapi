@@ -15,16 +15,17 @@ type PersonApi interface {
 }
 
 type PersonApiImpl struct {
-	Router        *gin.RouterGroup
-	PersonService service.PersonService
+	Router          *gin.RouterGroup
+	PersonService   service.PersonService
+	TraceMiddleware func(c *gin.Context)
 }
 
 func (impl *PersonApiImpl) Configure() {
-	impl.Router.GET("", impl.FindAll)
-	impl.Router.GET("/:personID", impl.FindOneByID)
-	impl.Router.POST("", impl.Create)
-	impl.Router.PATCH("/:personID", impl.Update)
-	impl.Router.DELETE("/:personID", impl.Delete)
+	impl.Router.GET("", impl.TraceMiddleware, impl.FindAll)
+	impl.Router.GET("/:personID", impl.TraceMiddleware, impl.FindOneByID)
+	impl.Router.POST("", impl.TraceMiddleware, impl.Create)
+	impl.Router.PATCH("/:personID", impl.TraceMiddleware, impl.Update)
+	impl.Router.DELETE("/:personID", impl.TraceMiddleware, impl.Delete)
 }
 
 // @Summary find all persons

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 	"github.com/viniosilva/socialassistanceapi/internal/repository"
 )
@@ -21,8 +22,11 @@ type AddressServiceImpl struct {
 }
 
 func (impl *AddressServiceImpl) FindAll(ctx context.Context) (AddressesResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.address.find_all"})
+
 	addresses, err := impl.AddressRepository.FindAll(ctx)
 	if err != nil {
+		log.Error(err.Error())
 		return AddressesResponse{}, err
 	}
 
@@ -47,8 +51,11 @@ func (impl *AddressServiceImpl) FindAll(ctx context.Context) (AddressesResponse,
 }
 
 func (impl *AddressServiceImpl) FindOneById(ctx context.Context, addressID int) (AddressResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.address.find_one_by_id"})
+
 	address, err := impl.AddressRepository.FindOneById(ctx, addressID)
 	if err != nil || address == nil {
+		log.Error(err.Error())
 		return AddressResponse{}, err
 	}
 
@@ -70,6 +77,8 @@ func (impl *AddressServiceImpl) FindOneById(ctx context.Context, addressID int) 
 }
 
 func (impl *AddressServiceImpl) Create(ctx context.Context, dto AddressCreateDto) (AddressResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.address.create"})
+
 	address, err := impl.AddressRepository.Create(ctx, model.Address{
 		Country:      dto.Country,
 		State:        dto.State,
@@ -82,6 +91,7 @@ func (impl *AddressServiceImpl) Create(ctx context.Context, dto AddressCreateDto
 	})
 
 	if err != nil {
+		log.Error(err.Error())
 		return AddressResponse{}, err
 	}
 
@@ -103,7 +113,9 @@ func (impl *AddressServiceImpl) Create(ctx context.Context, dto AddressCreateDto
 }
 
 func (impl *AddressServiceImpl) Update(ctx context.Context, dto AddressUpdateDto) error {
-	return impl.AddressRepository.Update(ctx, model.Address{
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.address.update"})
+
+	if err := impl.AddressRepository.Update(ctx, model.Address{
 		ID:           dto.ID,
 		Country:      dto.Country,
 		State:        dto.State,
@@ -113,9 +125,21 @@ func (impl *AddressServiceImpl) Update(ctx context.Context, dto AddressUpdateDto
 		Number:       dto.Number,
 		Complement:   dto.Complement,
 		Zipcode:      dto.Zipcode,
-	})
+	}); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (impl *AddressServiceImpl) Delete(ctx context.Context, addressID int) error {
-	return impl.AddressRepository.Delete(ctx, addressID)
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.address.delete"})
+
+	if err := impl.AddressRepository.Delete(ctx, addressID); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	return nil
 }

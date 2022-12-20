@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 	"github.com/viniosilva/socialassistanceapi/internal/repository"
 )
@@ -20,8 +21,11 @@ type ResourceServiceImpl struct {
 }
 
 func (impl *ResourceServiceImpl) FindAll(ctx context.Context) (ResourcesResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.resource.find_all"})
+
 	resources, err := impl.ResourceRepository.FindAll(ctx)
 	if err != nil {
+		log.Error(err.Error())
 		return ResourcesResponse{}, err
 	}
 
@@ -42,8 +46,11 @@ func (impl *ResourceServiceImpl) FindAll(ctx context.Context) (ResourcesResponse
 }
 
 func (impl *ResourceServiceImpl) FindOneById(ctx context.Context, resourceID int) (ResourceResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.resource.find_one_by_id"})
+
 	resource, err := impl.ResourceRepository.FindOneById(ctx, resourceID)
 	if err != nil || resource == nil {
+		log.Error(err.Error())
 		return ResourceResponse{}, err
 	}
 
@@ -61,6 +68,8 @@ func (impl *ResourceServiceImpl) FindOneById(ctx context.Context, resourceID int
 }
 
 func (impl *ResourceServiceImpl) Create(ctx context.Context, dto CreateResourceDto) (ResourceResponse, error) {
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.resource.create"})
+
 	resource, err := impl.ResourceRepository.Create(ctx, model.Resource{
 		Name:        dto.Name,
 		Amount:      dto.Amount,
@@ -68,6 +77,7 @@ func (impl *ResourceServiceImpl) Create(ctx context.Context, dto CreateResourceD
 		Quantity:    dto.Quantity,
 	})
 	if err != nil {
+		log.Error(err.Error())
 		return ResourceResponse{}, err
 	}
 
@@ -85,14 +95,28 @@ func (impl *ResourceServiceImpl) Create(ctx context.Context, dto CreateResourceD
 }
 
 func (impl *ResourceServiceImpl) Update(ctx context.Context, dto UpdateResourceDto) error {
-	return impl.ResourceRepository.Update(ctx, model.Resource{
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.resource.update"})
+
+	if err := impl.ResourceRepository.Update(ctx, model.Resource{
 		ID:          dto.ID,
 		Name:        dto.Name,
 		Amount:      dto.Amount,
 		Measurement: dto.Measurement,
-	})
+	}); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (impl *ResourceServiceImpl) UpdateQuantity(ctx context.Context, resourceID int, dto UpdateResourceQuantityDto) error {
-	return impl.ResourceRepository.UpdateQuantity(ctx, resourceID, dto.Quantity)
+	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.resource.find_all"})
+
+	if err := impl.ResourceRepository.UpdateQuantity(ctx, resourceID, dto.Quantity); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	return nil
 }
