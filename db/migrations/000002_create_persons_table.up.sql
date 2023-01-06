@@ -3,7 +3,7 @@ CREATE TABLE persons (
    created_at  DATETIME       NOT NULL,
    updated_at  DATETIME       NOT NULL,
    deleted_at  DATETIME,
-   address_id  INT            NOT NULL,
+   family_id  INT             NOT NULL,
    name        VARCHAR(255)   NOT NULL,
-   CONSTRAINT persons_addresses_fk  FOREIGN KEY (address_id)   REFERENCES addresses (id)
+   CONSTRAINT persons_families_fk  FOREIGN KEY (family_id)   REFERENCES families (id)
 );

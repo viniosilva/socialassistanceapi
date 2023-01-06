@@ -1,6 +1,6 @@
 package service
 
-type Address struct {
+type Family struct {
 	ID           int    `json:"id" example:"1"`
 	CreatedAt    string `json:"created_at" example:"2000-01-01T12:03:00"`
 	UpdatedAt    string `json:"updated_at" example:"2000-01-01T12:03:00"`
@@ -15,15 +15,15 @@ type Address struct {
 	Zipcode      string `json:"zipcode" example:"01021100"`
 }
 
-type AddressResponse struct {
-	Data *Address `json:"data"`
+type FamilyResponse struct {
+	Data *Family `json:"data"`
 }
 
-type AddressesResponse struct {
-	Data []Address `json:"data"`
+type FamiliesResponse struct {
+	Data []Family `json:"data"`
 }
 
-type AddressCreateDto struct {
+type FamilyCreateDto struct {
 	Country      string `json:"country" example:"BR" binding:"required"`
 	State        string `json:"state" example:"SP" binding:"required"`
 	City         string `json:"city" example:"São Paulo" binding:"required"`
@@ -34,7 +34,7 @@ type AddressCreateDto struct {
 	Zipcode      string `json:"zipcode" example:"01021100" binding:"required"`
 }
 
-type AddressUpdateDto struct {
+type FamilyUpdateDto struct {
 	ID           int    `json:"-"`
 	Country      string `json:"country" example:"BR"`
 	State        string `json:"state" example:"SP"`

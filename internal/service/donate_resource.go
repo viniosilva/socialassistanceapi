@@ -19,7 +19,7 @@ type DonateResourceServiceImpl struct {
 func (impl *DonateResourceServiceImpl) Donate(ctx context.Context, dto DonateResourceDonateDto) error {
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.donate_resource.donate"})
 
-	if err := impl.DonateResourceRepository.Donate(ctx, dto.ResourceID, dto.AddressID, dto.Quantity); err != nil {
+	if err := impl.DonateResourceRepository.Donate(ctx, dto.ResourceID, dto.FamilyID, dto.Quantity); err != nil {
 		log.Error(err.Error())
 		return err
 	}

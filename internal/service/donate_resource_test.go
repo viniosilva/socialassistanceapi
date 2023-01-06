@@ -20,7 +20,7 @@ func TestDonateResourceServiceDonate(t *testing.T) {
 		"should donate resource": {
 			inputDto: service.DonateResourceDonateDto{
 				ResourceID: 1,
-				AddressID:  1,
+				FamilyID:   1,
 				Quantity:   1,
 			},
 			prepareMock: func(mockDonateResourceRepository *mock.MockDonateResourceRepository) {
@@ -30,7 +30,7 @@ func TestDonateResourceServiceDonate(t *testing.T) {
 		"should throw error": {
 			inputDto: service.DonateResourceDonateDto{
 				ResourceID: 1,
-				AddressID:  1,
+				FamilyID:   1,
 				Quantity:   1,
 			},
 			expectedErr: fmt.Errorf("error"),

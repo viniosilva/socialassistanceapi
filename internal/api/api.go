@@ -24,7 +24,7 @@ type ApiImpl struct {
 	Addr                  string
 	HealthService         service.HealthService
 	PersonService         service.PersonService
-	AddressService        service.AddressService
+	FamilyService         service.FamilyService
 	ResourceService       service.ResourceService
 	DonateResourceService service.DonateResourceService
 }
@@ -52,9 +52,9 @@ func (impl *ApiImpl) Configure() {
 		PersonService:   impl.PersonService,
 		TraceMiddleware: impl.TraceMiddleware,
 	}
-	addressApi := &AddressApiImpl{
-		Router:          api.Group("/api/v1/addresses"),
-		AddressService:  impl.AddressService,
+	familyApi := &FamilyApiImpl{
+		Router:          api.Group("/api/v1/families"),
+		FamilyService:   impl.FamilyService,
 		TraceMiddleware: impl.TraceMiddleware,
 	}
 	resourceApi := &ResourceApiImpl{
@@ -70,7 +70,7 @@ func (impl *ApiImpl) Configure() {
 
 	healthApi.Configure()
 	personApi.Configure()
-	addressApi.Configure()
+	familyApi.Configure()
 	resourceApi.Configure()
 	donateResourceApi.Configure()
 

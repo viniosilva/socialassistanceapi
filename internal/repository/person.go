@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/viniosilva/socialassistanceapi/internal/configuration"
 	"github.com/viniosilva/socialassistanceapi/internal/exception"
+	"github.com/viniosilva/socialassistanceapi/internal/infra"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
 
@@ -16,23 +16,23 @@ import (
 type PersonRepository interface {
 	FindAll(ctx context.Context) ([]model.Person, error)
 	FindOneById(ctx context.Context, personID int) (*model.Person, error)
-	Create(ctx context.Context, person model.Person) (*model.Person, error)
-	Update(ctx context.Context, person model.Person) error
+	Create(ctx context.Context, data model.Person) (*model.Person, error)
+	Update(ctx context.Context, data model.Person) error
 	Delete(ctx context.Context, personID int) error
 }
 
 type PersonRepositoryImpl struct {
-	DB configuration.MySQL
+	DB infra.MySQL
 }
 
 func (impl *PersonRepositoryImpl) FindAll(ctx context.Context) ([]model.Person, error) {
-	persons := []model.Person{}
+	data := []model.Person{}
 
 	res, err := impl.DB.DB.Query(`
 		SELECT id,
 			created_at,
 			updated_at,
-			address_id,
+			family_id,
 			name
 		FROM persons
 		WHERE deleted_at IS NULL
@@ -42,15 +42,15 @@ func (impl *PersonRepositoryImpl) FindAll(ctx context.Context) ([]model.Person, 
 	}
 
 	for res.Next() {
-		person, err := impl.ScanPerson(res)
+		person, err := impl.Scan(res)
 		if err != nil {
 			return nil, err
 		}
 
-		persons = append(persons, *person)
+		data = append(data, *person)
 	}
 
-	return persons, nil
+	return data, nil
 }
 
 func (impl *PersonRepositoryImpl) FindOneById(ctx context.Context, personID int) (*model.Person, error) {
@@ -58,7 +58,7 @@ func (impl *PersonRepositoryImpl) FindOneById(ctx context.Context, personID int)
 		SELECT id,
 			created_at,
 			updated_at,
-			address_id,
+			family_id,
 			name
 		FROM persons
 		WHERE id = ?
@@ -70,7 +70,7 @@ func (impl *PersonRepositoryImpl) FindOneById(ctx context.Context, personID int)
 
 	var person *model.Person
 	for res.Next() {
-		person, err = impl.ScanPerson(res)
+		person, err = impl.Scan(res)
 		if err != nil {
 			return nil, err
 		}
@@ -83,13 +83,13 @@ func (impl *PersonRepositoryImpl) FindOneById(ctx context.Context, personID int)
 	return person, nil
 }
 
-func (impl *PersonRepositoryImpl) Create(ctx context.Context, person model.Person) (*model.Person, error) {
+func (impl *PersonRepositoryImpl) Create(ctx context.Context, data model.Person) (*model.Person, error) {
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
 	res, err := impl.DB.DB.ExecContext(ctx, `
-		INSERT INTO persons (created_at, updated_at, address_id, name)
+		INSERT INTO persons (created_at, updated_at, family_id, name)
 		VALUES (?, ?, ?, ?)
-	`, nowMysql, nowMysql, person.AddressID, person.Name)
+	`, nowMysql, nowMysql, data.FamilyID, data.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -98,24 +98,24 @@ func (impl *PersonRepositoryImpl) Create(ctx context.Context, person model.Perso
 	if err != nil {
 		return nil, err
 	}
-	person.ID = int(id)
-	person.CreatedAt = now
-	person.UpdatedAt = now
+	data.ID = int(id)
+	data.CreatedAt = now
+	data.UpdatedAt = now
 
-	return &person, nil
+	return &data, nil
 }
 
-func (impl *PersonRepositoryImpl) Update(ctx context.Context, person model.Person) error {
+func (impl *PersonRepositoryImpl) Update(ctx context.Context, data model.Person) error {
 	fields, values := impl.DB.BuildUpdateData(map[string]interface{}{
-		"name": person.Name,
+		"name": data.Name,
 	})
 	if len(fields) == 0 {
 		return &exception.EmptyModelException{Err: fmt.Errorf("empty person model")}
 	}
 
-	if person.AddressID > 0 {
-		fields = append(fields, "address_id")
-		values = append(values, person.AddressID)
+	if data.FamilyID > 0 {
+		fields = append(fields, "family_id")
+		values = append(values, data.FamilyID)
 	}
 
 	query := fmt.Sprintf(`
@@ -126,7 +126,7 @@ func (impl *PersonRepositoryImpl) Update(ctx context.Context, person model.Perso
 
 	now := time.Now()
 	values = append([]interface{}{now.Format("2006-01-02T15:04:05")}, values...)
-	values = append(values, person.ID)
+	values = append(values, data.ID)
 
 	res, err := impl.DB.DB.ExecContext(ctx, query, values...)
 	if err != nil {
@@ -139,7 +139,7 @@ func (impl *PersonRepositoryImpl) Update(ctx context.Context, person model.Perso
 	}
 
 	if rows == 0 {
-		return &exception.NotFoundException{Err: fmt.Errorf("person %d not found", person.ID)}
+		return &exception.NotFoundException{Err: fmt.Errorf("person %d not found", data.ID)}
 	}
 
 	return nil
@@ -155,11 +155,11 @@ func (impl *PersonRepositoryImpl) Delete(ctx context.Context, personID int) erro
 	return err
 }
 
-func (impl *PersonRepositoryImpl) ScanPerson(res *sql.Rows) (*model.Person, error) {
+func (impl *PersonRepositoryImpl) Scan(res *sql.Rows) (*model.Person, error) {
 	var person = &model.Person{}
 	var createdAt, updatedAt string
 
-	if err := res.Scan(&person.ID, &createdAt, &updatedAt, &person.AddressID, &person.Name); err != nil {
+	if err := res.Scan(&person.ID, &createdAt, &updatedAt, &person.FamilyID, &person.Name); err != nil {
 		return nil, err
 	}
 

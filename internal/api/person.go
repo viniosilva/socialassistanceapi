@@ -77,7 +77,7 @@ func (impl *PersonApiImpl) FindOneByID(c *gin.Context) {
 // @Tags	person
 // @Accept	json
 // @Produce	json
-// @Param	person		body	service.CreatePersonDto	true	"Create person"
+// @Param	person		body	service.PersonCreateDto	true	"Create person"
 // @Success	201	{object}	service.PersonResponse
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
@@ -102,8 +102,8 @@ func (impl *PersonApiImpl) Create(c *gin.Context) {
 // @Tags	person
 // @Accept	json
 // @Produce	json
-// @Param	id			path	int					true	"person ID"
-// @Param	person		body	service.UpdatePersonDto	true	"Update person"
+// @Param	id			path	int						true	"person ID"
+// @Param	person		body	service.PersonUpdateDto	true	"Update person"
 // @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError

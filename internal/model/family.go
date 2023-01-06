@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type Address struct {
+type Family struct {
 	ID           int
 	CreatedAt    time.Time
 	UpdatedAt    time.Time

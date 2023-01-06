@@ -1,4 +1,4 @@
-CREATE TABLE addresses (
+CREATE TABLE families (
    id             INT         AUTO_INCREMENT PRIMARY KEY,
    created_at     DATETIME    NOT NULL,
    updated_at     DATETIME    NOT NULL,

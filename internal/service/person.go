@@ -24,19 +24,19 @@ type PersonServiceImpl struct {
 func (impl *PersonServiceImpl) FindAll(ctx context.Context) (PersonsResponse, error) {
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.find_all"})
 
-	persons, err := impl.PersonRepository.FindAll(ctx)
+	data, err := impl.PersonRepository.FindAll(ctx)
 	if err != nil {
 		log.Error(err.Error())
 		return PersonsResponse{}, err
 	}
 
 	res := []Person{}
-	for _, p := range persons {
+	for _, p := range data {
 		res = append(res, Person{
 			ID:        p.ID,
 			CreatedAt: p.CreatedAt.Format("2006-01-02T15:04:05"),
 			UpdatedAt: p.UpdatedAt.Format("2006-01-02T15:04:05"),
-			AddressID: p.AddressID,
+			FamilyID:  p.FamilyID,
 			Name:      p.Name,
 		})
 	}
@@ -47,19 +47,19 @@ func (impl *PersonServiceImpl) FindAll(ctx context.Context) (PersonsResponse, er
 func (impl *PersonServiceImpl) FindOneById(ctx context.Context, personID int) (PersonResponse, error) {
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.find_one_by_id"})
 
-	person, err := impl.PersonRepository.FindOneById(ctx, personID)
-	if err != nil || person == nil {
+	data, err := impl.PersonRepository.FindOneById(ctx, personID)
+	if err != nil || data == nil {
 		log.Error(err.Error())
 		return PersonResponse{}, err
 	}
 
 	return PersonResponse{
 		Data: &Person{
-			ID:        person.ID,
-			CreatedAt: person.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: person.UpdatedAt.Format("2006-01-02T15:04:05"),
-			AddressID: person.AddressID,
-			Name:      person.Name,
+			ID:        data.ID,
+			CreatedAt: data.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt: data.UpdatedAt.Format("2006-01-02T15:04:05"),
+			FamilyID:  data.FamilyID,
+			Name:      data.Name,
 		},
 	}, nil
 }
@@ -67,9 +67,9 @@ func (impl *PersonServiceImpl) FindOneById(ctx context.Context, personID int) (P
 func (impl *PersonServiceImpl) Create(ctx context.Context, dto PersonCreateDto) (PersonResponse, error) {
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.create"})
 
-	person, err := impl.PersonRepository.Create(ctx, model.Person{
-		AddressID: dto.AddressID,
-		Name:      dto.Name,
+	data, err := impl.PersonRepository.Create(ctx, model.Person{
+		FamilyID: dto.FamilyID,
+		Name:     dto.Name,
 	})
 	if err != nil {
 		log.Error(err.Error())
@@ -78,11 +78,11 @@ func (impl *PersonServiceImpl) Create(ctx context.Context, dto PersonCreateDto) 
 
 	return PersonResponse{
 		Data: &Person{
-			ID:        person.ID,
-			CreatedAt: person.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: person.UpdatedAt.Format("2006-01-02T15:04:05"),
-			AddressID: person.AddressID,
-			Name:      person.Name,
+			ID:        data.ID,
+			CreatedAt: data.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt: data.UpdatedAt.Format("2006-01-02T15:04:05"),
+			FamilyID:  data.FamilyID,
+			Name:      data.Name,
 		},
 	}, nil
 }
@@ -91,9 +91,9 @@ func (impl *PersonServiceImpl) Update(ctx context.Context, dto PersonUpdateDto) 
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.person.update"})
 
 	if err := impl.PersonRepository.Update(ctx, model.Person{
-		ID:        dto.ID,
-		AddressID: dto.AddressID,
-		Name:      dto.Name,
+		ID:       dto.ID,
+		FamilyID: dto.FamilyID,
+		Name:     dto.Name,
 	}); err != nil {
 		log.Error(err.Error())
 		return err

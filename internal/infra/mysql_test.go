@@ -1,4 +1,4 @@
-package configuration_test
+package infra_test
 
 import (
 	"reflect"
@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/infra"
 )
 
-func TestConfigurationMySQLBuildUpdateData(t *testing.T) {
+func TestInfraMySQLBuildUpdateData(t *testing.T) {
 	cases := map[string]struct {
 		inputData      map[string]interface{}
 		expectedFields []string
@@ -36,7 +36,7 @@ func TestConfigurationMySQLBuildUpdateData(t *testing.T) {
 	for name, cs := range cases {
 		t.Run(name, func(t *testing.T) {
 			// given
-			impl := configuration.MySQLConfigure("", 0, "", "", "", time.Duration(0), 0, 0)
+			impl := infra.MySQLConfigure("", 0, "", "", "", time.Duration(0), 0, 0)
 
 			// when
 			fields, values := impl.BuildUpdateData(cs.inputData)

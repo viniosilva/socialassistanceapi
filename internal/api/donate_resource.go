@@ -29,8 +29,8 @@ func (impl *DonateResourceApiImpl) Configure() {
 // @Tags	resource
 // @Accept	json
 // @Produce	json
-// @Param	id				path	int							true	"resource ID"
-// @Param	resource		body	service.DonateResourceDto	true	"Donate a resource"
+// @Param	id				path	int								true	"resource ID"
+// @Param	resource		body	service.DonateResourceDonateDto	true	"Donate a resource"
 // @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError
@@ -68,8 +68,8 @@ func (impl *DonateResourceApiImpl) Donate(c *gin.Context) {
 // @Tags	resource
 // @Accept	json
 // @Produce	json
-// @Param	id				path	int							true	"resource ID"
-// @Param	resource		body	service.DonateResourceDto	true	"Return a doneted resource"
+// @Param	id				path	int								true	"resource ID"
+// @Param	resource		body	service.DonateResourceDonateDto	true	"Return a doneted resource"
 // @Success	204
 // @Failure	400	{object}	HttpError
 // @Failure	500	{object}	HttpError

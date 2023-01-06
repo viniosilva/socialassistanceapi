@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/infra"
 	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
@@ -57,7 +58,7 @@ func TestComponentResourceApiFindAll(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -139,7 +140,7 @@ func TestComponentResourceApiFindOneByID(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -208,7 +209,7 @@ func TestComponentResourceApiCreate(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -296,7 +297,7 @@ func TestComponentResourceApiUpdate(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -390,7 +391,7 @@ func TestComponentResourceApiUpdateQuantity(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 

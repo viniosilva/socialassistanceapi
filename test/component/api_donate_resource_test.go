@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/infra"
 	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
@@ -36,23 +37,23 @@ func TestComponentDonateResourceApiDonate(t *testing.T) {
 					VALUES (1, ?, ?, 'Test', '1', 'Kg', 1)
 				`, date, date)
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 			},
 			inputResourceID: "1",
-			inputDto:        service.DonateResourceDonateDto{AddressID: 1, Quantity: 1},
+			inputDto:        service.DonateResourceDonateDto{FamilyID: 1, Quantity: 1},
 			expectedCode:    http.StatusNoContent,
 		},
 		"should throw not found error when resource is not found": {
 			before:          func(db *sql.DB) {},
 			inputResourceID: "1",
-			inputDto:        service.DonateResourceDonateDto{AddressID: 1, Quantity: 1},
+			inputDto:        service.DonateResourceDonateDto{FamilyID: 1, Quantity: 1},
 			expectedCode:    http.StatusNotFound,
 			expectedErr:     &api.HttpError{Code: http.StatusNotFound, Message: "resource 1 not found"},
 		},
-		"should throw not found error when address is not found": {
+		"should throw not found error when family is not found": {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
@@ -61,9 +62,9 @@ func TestComponentDonateResourceApiDonate(t *testing.T) {
 				`, date, date)
 			},
 			inputResourceID: "1",
-			inputDto:        service.DonateResourceDonateDto{AddressID: 1, Quantity: 1},
+			inputDto:        service.DonateResourceDonateDto{FamilyID: 1, Quantity: 1},
 			expectedCode:    http.StatusNotFound,
-			expectedErr:     &api.HttpError{Code: http.StatusNotFound, Message: "address 1 not found"},
+			expectedErr:     &api.HttpError{Code: http.StatusNotFound, Message: "family 1 not found"},
 		},
 		"should throw bad request error when quantity is negative": {
 			before: func(db *sql.DB) {
@@ -74,7 +75,7 @@ func TestComponentDonateResourceApiDonate(t *testing.T) {
 				`, date, date)
 			},
 			inputResourceID: "1",
-			inputDto:        service.DonateResourceDonateDto{AddressID: 1, Quantity: 1.5},
+			inputDto:        service.DonateResourceDonateDto{FamilyID: 1, Quantity: 1.5},
 			expectedCode:    http.StatusBadRequest,
 			expectedErr:     &api.HttpError{Code: http.StatusBadRequest, Message: "resource 1 quantity is 1.0"},
 		},
@@ -91,7 +92,7 @@ func TestComponentDonateResourceApiDonate(t *testing.T) {
 			expectedErr: &api.HttpError{
 				Code: http.StatusBadRequest,
 				Message: strings.Join([]string{
-					"Key: 'DonateResourceDonateDto.AddressID' Error:Field validation for 'AddressID' failed on the 'required' tag",
+					"Key: 'DonateResourceDonateDto.FamilyID' Error:Field validation for 'FamilyID' failed on the 'required' tag",
 					"Key: 'DonateResourceDonateDto.Quantity' Error:Field validation for 'Quantity' failed on the 'required' tag",
 				}, "\n"),
 			},
@@ -105,7 +106,7 @@ func TestComponentDonateResourceApiDonate(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -131,12 +132,12 @@ func TestComponentDonateResourceApiDonate(t *testing.T) {
 			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM resources_to_addresses`)
+			mysql.DB.Exec(`DELETE FROM resources_to_families`)
 			mysql.DB.Exec(`DELETE FROM resources`)
-			mysql.DB.Exec(`DELETE FROM addresses`)
-			mysql.DB.Exec(`ALTER TABLE resources_to_addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM families`)
+			mysql.DB.Exec(`ALTER TABLE resources_to_families AUTO_INCREMENT=1`)
 			mysql.DB.Exec(`ALTER TABLE resources AUTO_INCREMENT=1`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
@@ -158,12 +159,12 @@ func TestComponentDonateResourceApiReturn(t *testing.T) {
 					VALUES (1, ?, ?, 'Test', '1', 'Kg', 1)
 				`, date, date)
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 				db.Exec(`
-					INSERT INTO resources_to_addresses (id, created_at, resource_id, address_id, quantity)
+					INSERT INTO resources_to_families (id, created_at, resource_id, family_id, quantity)
 					VALUES (1, ?, 1, 1, 1)
 				`, date)
 			},
@@ -191,7 +192,7 @@ func TestComponentDonateResourceApiReturn(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -216,12 +217,12 @@ func TestComponentDonateResourceApiReturn(t *testing.T) {
 			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM resources_to_addresses`)
+			mysql.DB.Exec(`DELETE FROM resources_to_families`)
 			mysql.DB.Exec(`DELETE FROM resources`)
-			mysql.DB.Exec(`DELETE FROM addresses`)
-			mysql.DB.Exec(`ALTER TABLE resources_to_addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM families`)
+			mysql.DB.Exec(`ALTER TABLE resources_to_families AUTO_INCREMENT=1`)
 			mysql.DB.Exec(`ALTER TABLE resources AUTO_INCREMENT=1`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }

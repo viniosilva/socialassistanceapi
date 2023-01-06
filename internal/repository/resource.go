@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/viniosilva/socialassistanceapi/internal/configuration"
 	"github.com/viniosilva/socialassistanceapi/internal/exception"
+	"github.com/viniosilva/socialassistanceapi/internal/infra"
 	"github.com/viniosilva/socialassistanceapi/internal/model"
 )
 
@@ -16,17 +16,17 @@ import (
 type ResourceRepository interface {
 	FindAll(ctx context.Context) ([]model.Resource, error)
 	FindOneById(ctx context.Context, resourceID int) (*model.Resource, error)
-	Create(ctx context.Context, resource model.Resource) (*model.Resource, error)
-	Update(ctx context.Context, resource model.Resource) error
+	Create(ctx context.Context, data model.Resource) (*model.Resource, error)
+	Update(ctx context.Context, data model.Resource) error
 	UpdateQuantity(ctx context.Context, resourceID int, quantity float64) error
 }
 
 type ResourceRepositoryImpl struct {
-	DB configuration.MySQL
+	DB infra.MySQL
 }
 
 func (impl *ResourceRepositoryImpl) FindAll(ctx context.Context) ([]model.Resource, error) {
-	resources := []model.Resource{}
+	data := []model.Resource{}
 
 	res, err := impl.DB.DB.Query(`
 		SELECT id,
@@ -42,13 +42,13 @@ func (impl *ResourceRepositoryImpl) FindAll(ctx context.Context) ([]model.Resour
 	}
 
 	for res.Next() {
-		resource, err := impl.ScanResource(res)
+		resource, err := impl.Scan(res)
 		if err != nil {
 			return nil, err
 		}
-		resources = append(resources, *resource)
+		data = append(data, *resource)
 	}
-	return resources, nil
+	return data, nil
 }
 
 func (impl *ResourceRepositoryImpl) FindOneById(ctx context.Context, resourceID int) (*model.Resource, error) {
@@ -67,28 +67,28 @@ func (impl *ResourceRepositoryImpl) FindOneById(ctx context.Context, resourceID 
 		return nil, err
 	}
 
-	var resource *model.Resource
+	var data *model.Resource
 	for res.Next() {
-		resource, err = impl.ScanResource(res)
+		data, err = impl.Scan(res)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if resource == nil {
+	if data == nil {
 		return nil, &exception.NotFoundException{Err: fmt.Errorf("resource %d not found", resourceID)}
 	}
 
-	return resource, nil
+	return data, nil
 }
 
-func (impl *ResourceRepositoryImpl) Create(ctx context.Context, resource model.Resource) (*model.Resource, error) {
+func (impl *ResourceRepositoryImpl) Create(ctx context.Context, data model.Resource) (*model.Resource, error) {
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
 	res, err := impl.DB.DB.ExecContext(ctx, `
 		INSERT INTO resources (created_at, updated_at, name, amount, measurement, quantity)
 		VALUES (?, ?, ?, ?, ?, ?)
-	`, nowMysql, nowMysql, resource.Name, resource.Amount, resource.Measurement, resource.Quantity)
+	`, nowMysql, nowMysql, data.Name, data.Amount, data.Measurement, data.Quantity)
 	if err != nil {
 		return nil, err
 	}
@@ -98,18 +98,18 @@ func (impl *ResourceRepositoryImpl) Create(ctx context.Context, resource model.R
 		return nil, err
 	}
 
-	resource.ID = int(id)
-	resource.CreatedAt = now
-	resource.UpdatedAt = now
+	data.ID = int(id)
+	data.CreatedAt = now
+	data.UpdatedAt = now
 
-	return &resource, nil
+	return &data, nil
 }
 
-func (impl *ResourceRepositoryImpl) Update(ctx context.Context, resource model.Resource) error {
+func (impl *ResourceRepositoryImpl) Update(ctx context.Context, data model.Resource) error {
 	fields, values := impl.DB.BuildUpdateData(map[string]interface{}{
-		"name":        resource.Name,
-		"amount":      resource.Amount,
-		"measurement": resource.Measurement,
+		"name":        data.Name,
+		"amount":      data.Amount,
+		"measurement": data.Measurement,
 	})
 	if len(fields) == 0 {
 		return &exception.EmptyModelException{Err: fmt.Errorf("empty resource model")}
@@ -124,7 +124,7 @@ func (impl *ResourceRepositoryImpl) Update(ctx context.Context, resource model.R
 	now := time.Now()
 
 	values = append([]interface{}{now.Format("2006-01-02T15:04:05")}, values...)
-	values = append(values, resource.ID)
+	values = append(values, data.ID)
 
 	res, err := impl.DB.DB.ExecContext(ctx, query, values...)
 	if err != nil {
@@ -136,7 +136,7 @@ func (impl *ResourceRepositoryImpl) Update(ctx context.Context, resource model.R
 		return err
 	}
 	if rows == 0 {
-		return &exception.NotFoundException{Err: fmt.Errorf("resource %d not found", resource.ID)}
+		return &exception.NotFoundException{Err: fmt.Errorf("resource %d not found", data.ID)}
 	}
 
 	return nil
@@ -166,7 +166,7 @@ func (impl *ResourceRepositoryImpl) UpdateQuantity(ctx context.Context, resource
 	return nil
 }
 
-func (impl *ResourceRepositoryImpl) ScanResource(res *sql.Rows) (*model.Resource, error) {
+func (impl *ResourceRepositoryImpl) Scan(res *sql.Rows) (*model.Resource, error) {
 	var resource = &model.Resource{}
 	var createdAt, updatedAt string
 

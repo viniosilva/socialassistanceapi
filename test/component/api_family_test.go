@@ -13,29 +13,30 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/infra"
 	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-func TestComponentAddressApiFindAll(t *testing.T) {
+func TestComponentFamilyApiFindAll(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
 		before       func(db *sql.DB)
 		expectedCode int
-		expectedBody *service.AddressesResponse
+		expectedBody *service.FamiliesResponse
 	}{
-		"should return address list when addresses exists": {
+		"should return family list when families exists": {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 			},
 			expectedCode: http.StatusOK,
-			expectedBody: &service.AddressesResponse{Data: []service.Address{{
+			expectedBody: &service.FamiliesResponse{Data: []service.Family{{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -49,10 +50,10 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 				Zipcode:      "02180110",
 			}}},
 		},
-		"should return empty list when addresses not exists": {
+		"should return empty list when families not exists": {
 			before:       func(db *sql.DB) {},
 			expectedCode: http.StatusOK,
-			expectedBody: &service.AddressesResponse{Data: []service.Address{}},
+			expectedBody: &service.FamiliesResponse{Data: []service.Family{}},
 		},
 	}
 	for name, cs := range cases {
@@ -63,23 +64,23 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
-			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
-			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			familyRepository := &repository.FamilyRepositoryImpl{DB: mysql}
+			familyService := &service.FamilyServiceImpl{FamilyRepository: familyRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", FamilyService: familyService}
 			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/api/v1/addresses", nil)
+			req, _ := http.NewRequest("GET", "/api/v1/families", nil)
 			impl.Gin.ServeHTTP(rec, req)
 
-			var body *service.AddressesResponse
+			var body *service.FamiliesResponse
 			json.Unmarshal(rec.Body.Bytes(), &body)
 
 			// clean
@@ -93,33 +94,33 @@ func TestComponentAddressApiFindAll(t *testing.T) {
 			assert.Equal(t, cs.expectedBody, body)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM addresses`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM families`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
 
-func TestComponentAddressApiFindOneByID(t *testing.T) {
+func TestComponentFamilyApiFindOneByID(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
-		before         func(db *sql.DB)
-		inputAddressID string
-		expectedCode   int
-		expectedBody   *service.AddressResponse
-		expectedErr    *api.HttpError
+		before        func(db *sql.DB)
+		inputFamilyID string
+		expectedCode  int
+		expectedBody  *service.FamilyResponse
+		expectedErr   *api.HttpError
 	}{
-		"should return address when addresses exists": {
+		"should return family when families exists": {
 			before: func(db *sql.DB) {
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, DATE, DATE)
 			},
-			inputAddressID: "1",
-			expectedCode:   http.StatusOK,
-			expectedBody: &service.AddressResponse{Data: &service.Address{
+			inputFamilyID: "1",
+			expectedCode:  http.StatusOK,
+			expectedBody: &service.FamilyResponse{Data: &service.Family{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -134,19 +135,19 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 			}},
 			expectedErr: &api.HttpError{},
 		},
-		"should throw bad request error when addressID is not a number": {
-			before:         func(db *sql.DB) {},
-			inputAddressID: "a",
-			expectedCode:   http.StatusBadRequest,
-			expectedBody:   &service.AddressResponse{},
-			expectedErr:    &api.HttpError{Code: 400, Message: "invalid addressID"},
+		"should throw bad request error when familyID is not a number": {
+			before:        func(db *sql.DB) {},
+			inputFamilyID: "a",
+			expectedCode:  http.StatusBadRequest,
+			expectedBody:  &service.FamilyResponse{},
+			expectedErr:   &api.HttpError{Code: 400, Message: "invalid familyID"},
 		},
-		"should throw not found error when addresses not exists": {
-			before:         func(db *sql.DB) {},
-			inputAddressID: "1",
-			expectedCode:   http.StatusNotFound,
-			expectedBody:   &service.AddressResponse{},
-			expectedErr:    &api.HttpError{Code: http.StatusNotFound, Message: "address 1 not found"},
+		"should throw not found error when families not exists": {
+			before:        func(db *sql.DB) {},
+			inputFamilyID: "1",
+			expectedCode:  http.StatusNotFound,
+			expectedBody:  &service.FamilyResponse{},
+			expectedErr:   &api.HttpError{Code: http.StatusNotFound, Message: "family 1 not found"},
 		},
 	}
 	for name, cs := range cases {
@@ -157,24 +158,24 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
-			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
-			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			familyRepository := &repository.FamilyRepositoryImpl{DB: mysql}
+			familyService := &service.FamilyServiceImpl{FamilyRepository: familyRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", FamilyService: familyService}
 			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
-			url := "/api/v1/addresses/" + cs.inputAddressID
+			url := "/api/v1/families/" + cs.inputFamilyID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", url, nil)
 			impl.Gin.ServeHTTP(rec, req)
 
-			var body *service.AddressResponse
+			var body *service.FamilyResponse
 			json.Unmarshal(rec.Body.Bytes(), &body)
 
 			var httpError *api.HttpError
@@ -192,21 +193,21 @@ func TestComponentAddressApiFindOneByID(t *testing.T) {
 			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM addresses`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM families`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
 
-func TestComponentAddressApiCreate(t *testing.T) {
+func TestComponentFamilyApiCreate(t *testing.T) {
 	cases := map[string]struct {
-		inputDto     service.AddressCreateDto
+		inputDto     service.FamilyCreateDto
 		expectedCode int
-		expectedBody *service.AddressResponse
+		expectedBody *service.FamilyResponse
 		expectedErr  *api.HttpError
 	}{
-		"should return created address": {
-			inputDto: service.AddressCreateDto{
+		"should return created family": {
+			inputDto: service.FamilyCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -217,7 +218,7 @@ func TestComponentAddressApiCreate(t *testing.T) {
 				Zipcode:      "02180110",
 			},
 			expectedCode: http.StatusCreated,
-			expectedBody: &service.AddressResponse{Data: &service.Address{
+			expectedBody: &service.FamilyResponse{Data: &service.Family{
 				ID:           1,
 				Country:      "BR",
 				State:        "SP",
@@ -232,18 +233,18 @@ func TestComponentAddressApiCreate(t *testing.T) {
 		},
 		"should throw bad request error": {
 			expectedCode: http.StatusBadRequest,
-			expectedBody: &service.AddressResponse{},
+			expectedBody: &service.FamilyResponse{},
 			expectedErr: &api.HttpError{
 				Code: http.StatusBadRequest,
 				Message: strings.Join([]string{
-					"Key: 'AddressCreateDto.Country' Error:Field validation for 'Country' failed on the 'required' tag",
-					"Key: 'AddressCreateDto.State' Error:Field validation for 'State' failed on the 'required' tag",
-					"Key: 'AddressCreateDto.City' Error:Field validation for 'City' failed on the 'required' tag",
-					"Key: 'AddressCreateDto.Neighborhood' Error:Field validation for 'Neighborhood' failed on the 'required' tag",
-					"Key: 'AddressCreateDto.Street' Error:Field validation for 'Street' failed on the 'required' tag",
-					"Key: 'AddressCreateDto.Number' Error:Field validation for 'Number' failed on the 'required' tag",
-					"Key: 'AddressCreateDto.Complement' Error:Field validation for 'Complement' failed on the 'required' tag",
-					"Key: 'AddressCreateDto.Zipcode' Error:Field validation for 'Zipcode' failed on the 'required' tag",
+					"Key: 'FamilyCreateDto.Country' Error:Field validation for 'Country' failed on the 'required' tag",
+					"Key: 'FamilyCreateDto.State' Error:Field validation for 'State' failed on the 'required' tag",
+					"Key: 'FamilyCreateDto.City' Error:Field validation for 'City' failed on the 'required' tag",
+					"Key: 'FamilyCreateDto.Neighborhood' Error:Field validation for 'Neighborhood' failed on the 'required' tag",
+					"Key: 'FamilyCreateDto.Street' Error:Field validation for 'Street' failed on the 'required' tag",
+					"Key: 'FamilyCreateDto.Number' Error:Field validation for 'Number' failed on the 'required' tag",
+					"Key: 'FamilyCreateDto.Complement' Error:Field validation for 'Complement' failed on the 'required' tag",
+					"Key: 'FamilyCreateDto.Zipcode' Error:Field validation for 'Zipcode' failed on the 'required' tag",
 				}, "\n"),
 			},
 		},
@@ -256,23 +257,23 @@ func TestComponentAddressApiCreate(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
-			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
-			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			familyRepository := &repository.FamilyRepositoryImpl{DB: mysql}
+			familyService := &service.FamilyServiceImpl{FamilyRepository: familyRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", FamilyService: familyService}
 			impl.Configure()
 
 			// when
 			b, _ := json.Marshal(cs.inputDto)
-			url := "/api/v1/addresses"
+			url := "/api/v1/families"
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", url, strings.NewReader(string(b)))
 			impl.Gin.ServeHTTP(rec, req)
 
-			var body *service.AddressResponse
+			var body *service.FamilyResponse
 			json.Unmarshal(rec.Body.Bytes(), &body)
 			if body.Data != nil {
 				body.Data.CreatedAt = ""
@@ -288,32 +289,32 @@ func TestComponentAddressApiCreate(t *testing.T) {
 			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM addresses`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM families`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
 
-func TestComponentAddressApiUpdate(t *testing.T) {
+func TestComponentFamilyApiUpdate(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
-		before         func(db *sql.DB)
-		inputAddressID string
-		inputDto       service.AddressCreateDto
-		expectedCode   int
-		expectedErr    *api.HttpError
+		before        func(db *sql.DB)
+		inputFamilyID string
+		inputDto      service.FamilyCreateDto
+		expectedCode  int
+		expectedErr   *api.HttpError
 	}{
-		"should update address": {
+		"should update family": {
 			before: func(db *sql.DB) {
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, DATE, DATE)
 			},
-			inputAddressID: "1",
-			inputDto: service.AddressCreateDto{
+			inputFamilyID: "1",
+			inputDto: service.FamilyCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -325,34 +326,34 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 			},
 			expectedCode: http.StatusNoContent,
 		},
-		"should update address when is a partial update": {
+		"should update family when is a partial update": {
 			before: func(db *sql.DB) {
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, DATE, DATE)
 			},
-			inputAddressID: "1",
-			inputDto:       service.AddressCreateDto{Number: "2"},
-			expectedCode:   http.StatusNoContent,
+			inputFamilyID: "1",
+			inputDto:      service.FamilyCreateDto{Number: "2"},
+			expectedCode:  http.StatusNoContent,
 		},
-		"should throw bad request error when addressID is not a number": {
-			before:         func(db *sql.DB) {},
-			inputAddressID: "a",
-			expectedCode:   http.StatusBadRequest,
-			expectedErr:    &api.HttpError{Code: http.StatusBadRequest, Message: "invalid addressID"},
+		"should throw bad request error when familyID is not a number": {
+			before:        func(db *sql.DB) {},
+			inputFamilyID: "a",
+			expectedCode:  http.StatusBadRequest,
+			expectedErr:   &api.HttpError{Code: http.StatusBadRequest, Message: "invalid familyID"},
 		},
 		"should throw bad request error": {
-			before:         func(db *sql.DB) {},
-			inputAddressID: "1",
-			expectedCode:   http.StatusBadRequest,
-			expectedErr:    &api.HttpError{Code: http.StatusBadRequest, Message: "empty address model"},
+			before:        func(db *sql.DB) {},
+			inputFamilyID: "1",
+			expectedCode:  http.StatusBadRequest,
+			expectedErr:   &api.HttpError{Code: http.StatusBadRequest, Message: "empty family model"},
 		},
-		"should throw not found error when addresses not exists": {
-			before:         func(db *sql.DB) {},
-			inputAddressID: "1",
-			inputDto: service.AddressCreateDto{
+		"should throw not found error when families not exists": {
+			before:        func(db *sql.DB) {},
+			inputFamilyID: "1",
+			inputDto: service.FamilyCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -363,7 +364,7 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 				Zipcode:      "02180110",
 			},
 			expectedCode: http.StatusNotFound,
-			expectedErr:  &api.HttpError{Code: http.StatusNotFound, Message: "address 1 not found"},
+			expectedErr:  &api.HttpError{Code: http.StatusNotFound, Message: "family 1 not found"},
 		},
 	}
 	for name, cs := range cases {
@@ -374,20 +375,20 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
-			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
-			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			familyRepository := &repository.FamilyRepositoryImpl{DB: mysql}
+			familyService := &service.FamilyServiceImpl{FamilyRepository: familyRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", FamilyService: familyService}
 			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
 			b, _ := json.Marshal(cs.inputDto)
-			url := "/api/v1/addresses/" + cs.inputAddressID
+			url := "/api/v1/families/" + cs.inputFamilyID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("PATCH", url, strings.NewReader(string(b)))
 			impl.Gin.ServeHTTP(rec, req)
@@ -400,45 +401,45 @@ func TestComponentAddressApiUpdate(t *testing.T) {
 			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM addresses`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM families`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
 
-func TestComponentAddressApiDelete(t *testing.T) {
+func TestComponentFamilyApiDelete(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
-		before         func(db *sql.DB)
-		inputAddressID string
-		expectedCode   int
-		expectedBody   *service.AddressResponse
-		expectedErr    *api.HttpError
+		before        func(db *sql.DB)
+		inputFamilyID string
+		expectedCode  int
+		expectedBody  *service.FamilyResponse
+		expectedErr   *api.HttpError
 	}{
 		"should be successfull": {
 			before: func(db *sql.DB) {
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, DATE, DATE)
 			},
-			inputAddressID: "1",
-			expectedCode:   http.StatusNoContent,
-			expectedBody:   &service.AddressResponse{},
+			inputFamilyID: "1",
+			expectedCode:  http.StatusNoContent,
+			expectedBody:  &service.FamilyResponse{},
 		},
-		"should throw bad request error when addressID is not a number": {
-			before:         func(db *sql.DB) {},
-			inputAddressID: "a",
-			expectedCode:   http.StatusBadRequest,
-			expectedErr:    &api.HttpError{Code: http.StatusBadRequest, Message: "invalid addressID"},
+		"should throw bad request error when familyID is not a number": {
+			before:        func(db *sql.DB) {},
+			inputFamilyID: "a",
+			expectedCode:  http.StatusBadRequest,
+			expectedErr:   &api.HttpError{Code: http.StatusBadRequest, Message: "invalid familyID"},
 		},
-		"should be successfull when addresses not exists": {
-			before:         func(db *sql.DB) {},
-			inputAddressID: "1",
-			expectedCode:   http.StatusNoContent,
-			expectedBody:   &service.AddressResponse{},
+		"should be successfull when families not exists": {
+			before:        func(db *sql.DB) {},
+			inputFamilyID: "1",
+			expectedCode:  http.StatusNoContent,
+			expectedBody:  &service.FamilyResponse{},
 		},
 	}
 	for name, cs := range cases {
@@ -449,19 +450,19 @@ func TestComponentAddressApiDelete(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
-			addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
-			addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
-			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", AddressService: addressService}
+			familyRepository := &repository.FamilyRepositoryImpl{DB: mysql}
+			familyService := &service.FamilyServiceImpl{FamilyRepository: familyRepository}
+			impl := &api.ApiImpl{Addr: "0.0.0.0:8080", FamilyService: familyService}
 			impl.Configure()
 
 			cs.before(mysql.DB)
 
 			// when
-			url := "/api/v1/addresses/" + cs.inputAddressID
+			url := "/api/v1/families/" + cs.inputFamilyID
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest("DELETE", url, nil)
 			impl.Gin.ServeHTTP(rec, req)
@@ -474,8 +475,8 @@ func TestComponentAddressApiDelete(t *testing.T) {
 			assert.Equal(t, cs.expectedErr, httpError)
 
 			// after
-			mysql.DB.Exec(`DELETE FROM addresses`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`DELETE FROM families`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }

@@ -4,11 +4,11 @@ import (
 	"time"
 )
 
-type ResourceToAddress struct {
+type ResourceToFamily struct {
 	ID         int
 	CreatedAt  time.Time
 	DeletedAt  time.Time
 	ResourceID int
-	AddressID  int
+	FamilyID   int
 	Quantity   float64
 }

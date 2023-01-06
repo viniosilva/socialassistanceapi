@@ -26,20 +26,20 @@ func main() {
 	healthRepository := &repository.HealthRepositoryImpl{DB: mysql}
 	personRepository := &repository.PersonRepositoryImpl{DB: mysql}
 	resourceRepository := &repository.ResourceRepositoryImpl{DB: mysql}
-	addressRepository := &repository.AddressRepositoryImpl{DB: mysql}
+	familyRepository := &repository.FamilyRepositoryImpl{DB: mysql}
 	donateResourceRepository := &repository.DonateResourceRepositoryImpl{DB: mysql}
 
 	healthService := &service.HealthServiceImpl{HealthRepository: healthRepository}
 	personService := &service.PersonServiceImpl{PersonRepository: personRepository}
 	resourceService := &service.ResourceServiceImpl{ResourceRepository: resourceRepository}
-	addressService := &service.AddressServiceImpl{AddressRepository: addressRepository}
+	familyService := &service.FamilyServiceImpl{FamilyRepository: familyRepository}
 	donateResourceService := &service.DonateResourceServiceImpl{DonateResourceRepository: donateResourceRepository}
 
 	api := &api.ApiImpl{
 		Addr:                  fmt.Sprintf("%s:%d", cfg.Http.Host, cfg.Http.Port),
 		HealthService:         healthService,
 		PersonService:         personService,
-		AddressService:        addressService,
+		FamilyService:         familyService,
 		ResourceService:       resourceService,
 		DonateResourceService: donateResourceService,
 	}

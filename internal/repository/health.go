@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/infra"
 )
 
 //go:generate mockgen -destination ../../mock/health_repository_mock.go -package mock . HealthRepository
@@ -12,7 +12,7 @@ type HealthRepository interface {
 }
 
 type HealthRepositoryImpl struct {
-	DB configuration.MySQL
+	DB infra.MySQL
 }
 
 func (impl *HealthRepositoryImpl) Ping(ctx context.Context) error {

@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/addresses": {
+        "/api/v1/families": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -25,14 +25,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "address"
+                    "family"
                 ],
-                "summary": "find all addresses",
+                "summary": "find all families",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.AddressesResponse"
+                            "$ref": "#/definitions/service.FamiliesResponse"
                         }
                     }
                 }
@@ -45,17 +45,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "address"
+                    "family"
                 ],
-                "summary": "create an address",
+                "summary": "create an family",
                 "parameters": [
                     {
-                        "description": "Create address",
-                        "name": "address",
+                        "description": "Create family",
+                        "name": "family",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.CreateAddressDto"
+                            "$ref": "#/definitions/service.FamilyCreateDto"
                         }
                     }
                 ],
@@ -63,7 +63,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/service.AddressResponse"
+                            "$ref": "#/definitions/service.FamilyResponse"
                         }
                     },
                     "400": {
@@ -81,7 +81,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/addresses/{id}": {
+        "/api/v1/families/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -90,13 +90,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "address"
+                    "family"
                 ],
-                "summary": "find address by id",
+                "summary": "find family by id",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "address ID",
+                        "description": "family ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -106,7 +106,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.AddressesResponse"
+                            "$ref": "#/definitions/service.FamiliesResponse"
                         }
                     },
                     "404": {
@@ -125,13 +125,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "address"
+                    "family"
                 ],
-                "summary": "delete an address",
+                "summary": "delete an family",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "address ID",
+                        "description": "family ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -163,24 +163,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "address"
+                    "family"
                 ],
-                "summary": "update an address",
+                "summary": "update an family",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "address ID",
+                        "description": "family ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Update address",
-                        "name": "address",
+                        "description": "Update family",
+                        "name": "family",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.UpdateAddressDto"
+                            "$ref": "#/definitions/service.FamilyUpdateDto"
                         }
                     }
                 ],
@@ -242,7 +242,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.CreatePersonDto"
+                            "$ref": "#/definitions/service.PersonCreateDto"
                         }
                     }
                 ],
@@ -367,7 +367,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.UpdatePersonDto"
+                            "$ref": "#/definitions/service.PersonUpdateDto"
                         }
                     }
                 ],
@@ -530,7 +530,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.DonateResourceDto"
+                            "$ref": "#/definitions/service.DonateResourceDonateDto"
                         }
                     }
                 ],
@@ -601,6 +601,55 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/resources/{id}/return": {
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Return a doneted resource",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Return a doneted resource",
+                        "name": "resource",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.DonateResourceDonateDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.HttpError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -617,7 +666,65 @@ const docTemplate = `{
                 }
             }
         },
-        "service.Address": {
+        "service.CreateResourceDto": {
+            "type": "object",
+            "required": [
+                "amount",
+                "measurement",
+                "name",
+                "quantity"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 5
+                },
+                "measurement": {
+                    "type": "string",
+                    "example": "Kg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Arroz"
+                },
+                "quantity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                }
+            }
+        },
+        "service.DonateResourceDonateDto": {
+            "type": "object",
+            "required": [
+                "family_id",
+                "quantity"
+            ],
+            "properties": {
+                "family_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "quantity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                }
+            }
+        },
+        "service.FamiliesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.Family"
+                    }
+                }
+            }
+        },
+        "service.Family": {
             "type": "object",
             "properties": {
                 "city": {
@@ -670,26 +777,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.AddressResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/service.Address"
-                }
-            }
-        },
-        "service.AddressesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.Address"
-                    }
-                }
-            }
-        },
-        "service.CreateAddressDto": {
+        "service.FamilyCreateDto": {
             "type": "object",
             "required": [
                 "city",
@@ -736,77 +824,54 @@ const docTemplate = `{
                 }
             }
         },
-        "service.CreatePersonDto": {
+        "service.FamilyResponse": {
             "type": "object",
-            "required": [
-                "address_id",
-                "name"
-            ],
             "properties": {
-                "address_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Cláudio"
+                "data": {
+                    "$ref": "#/definitions/service.Family"
                 }
             }
         },
-        "service.CreateResourceDto": {
+        "service.FamilyUpdateDto": {
             "type": "object",
-            "required": [
-                "amount",
-                "measurement",
-                "name",
-                "quantity"
-            ],
             "properties": {
-                "amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 5
-                },
-                "measurement": {
+                "city": {
                     "type": "string",
-                    "example": "Kg"
+                    "example": "São Paulo"
                 },
-                "name": {
+                "complement": {
                     "type": "string",
-                    "example": "Arroz"
+                    "example": "1A"
                 },
-                "quantity": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 10
-                }
-            }
-        },
-        "service.DonateResourceDto": {
-            "type": "object",
-            "required": [
-                "address_id",
-                "quantity"
-            ],
-            "properties": {
-                "address_id": {
-                    "type": "integer",
-                    "example": 1
+                "country": {
+                    "type": "string",
+                    "example": "BR"
                 },
-                "quantity": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 10
+                "neighborhood": {
+                    "type": "string",
+                    "example": "Centro Histórico"
+                },
+                "number": {
+                    "type": "string",
+                    "example": "1000"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "SP"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "R. Vinte e Cinco de Março"
+                },
+                "zipcode": {
+                    "type": "string",
+                    "example": "01021100"
                 }
             }
         },
         "service.Person": {
             "type": "object",
             "properties": {
-                "address_id": {
-                    "type": "integer",
-                    "example": 1
-                },
                 "created_at": {
                     "type": "string",
                     "example": "2000-01-01T12:03:00"
@@ -814,6 +879,10 @@ const docTemplate = `{
                 "deleted_at": {
                     "type": "string",
                     "example": "2000-01-01T12:03:00"
+                },
+                "family_id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "id": {
                     "type": "integer",
@@ -829,11 +898,41 @@ const docTemplate = `{
                 }
             }
         },
+        "service.PersonCreateDto": {
+            "type": "object",
+            "required": [
+                "family_id",
+                "name"
+            ],
+            "properties": {
+                "family_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Cláudio"
+                }
+            }
+        },
         "service.PersonResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/service.Person"
+                }
+            }
+        },
+        "service.PersonUpdateDto": {
+            "type": "object",
+            "properties": {
+                "family_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Cláudio"
                 }
             }
         },
@@ -901,56 +1000,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/service.Resource"
                     }
-                }
-            }
-        },
-        "service.UpdateAddressDto": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string",
-                    "example": "São Paulo"
-                },
-                "complement": {
-                    "type": "string",
-                    "example": "1A"
-                },
-                "country": {
-                    "type": "string",
-                    "example": "BR"
-                },
-                "neighborhood": {
-                    "type": "string",
-                    "example": "Centro Histórico"
-                },
-                "number": {
-                    "type": "string",
-                    "example": "1000"
-                },
-                "state": {
-                    "type": "string",
-                    "example": "SP"
-                },
-                "street": {
-                    "type": "string",
-                    "example": "R. Vinte e Cinco de Março"
-                },
-                "zipcode": {
-                    "type": "string",
-                    "example": "01021100"
-                }
-            }
-        },
-        "service.UpdatePersonDto": {
-            "type": "object",
-            "properties": {
-                "address_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Cláudio"
                 }
             }
         },

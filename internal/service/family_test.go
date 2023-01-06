@@ -14,17 +14,17 @@ import (
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
-func TestAddressServiceFindAll(t *testing.T) {
+func TestFamilyServiceFindAll(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		expectedRes service.AddressesResponse
+		expectedRes service.FamiliesResponse
 		expectedErr error
-		prepareMock func(mockAddressRepository *mock.MockAddressRepository)
+		prepareMock func(mockFamilyRepository *mock.MockFamilyRepository)
 	}{
-		"should return addresses list": {
-			expectedRes: service.AddressesResponse{Data: []service.Address{{
+		"should return families list": {
+			expectedRes: service.FamiliesResponse{Data: []service.Family{{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -37,8 +37,8 @@ func TestAddressServiceFindAll(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			}}},
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().FindAll(gomock.Any()).Return([]model.Address{{
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().FindAll(gomock.Any()).Return([]model.Family{{
 					ID:           1,
 					CreatedAt:    DATETIME,
 					UpdatedAt:    DATETIME,
@@ -53,16 +53,16 @@ func TestAddressServiceFindAll(t *testing.T) {
 				}}, nil)
 			},
 		},
-		"should return empty addresses list": {
-			expectedRes: service.AddressesResponse{Data: []service.Address{}},
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().FindAll(gomock.Any()).Return([]model.Address{}, nil)
+		"should return empty families list": {
+			expectedRes: service.FamiliesResponse{Data: []service.Family{}},
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().FindAll(gomock.Any()).Return([]model.Family{}, nil)
 			},
 		},
 		"should throw error": {
 			expectedErr: fmt.Errorf("error"),
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().FindAll(gomock.Any()).Return(nil, fmt.Errorf("error"))
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().FindAll(gomock.Any()).Return(nil, fmt.Errorf("error"))
 			},
 		},
 	}
@@ -72,10 +72,10 @@ func TestAddressServiceFindAll(t *testing.T) {
 			ctrl, ctx := gomock.WithContext(context.Background(), t)
 			defer ctrl.Finish()
 
-			mockAddressRepository := mock.NewMockAddressRepository(ctrl)
-			cs.prepareMock(mockAddressRepository)
+			mockFamilyRepository := mock.NewMockFamilyRepository(ctrl)
+			cs.prepareMock(mockFamilyRepository)
 
-			impl := &service.AddressServiceImpl{AddressRepository: mockAddressRepository}
+			impl := &service.FamilyServiceImpl{FamilyRepository: mockFamilyRepository}
 
 			// when
 			res, err := impl.FindAll(ctx)
@@ -87,19 +87,19 @@ func TestAddressServiceFindAll(t *testing.T) {
 	}
 }
 
-func TestAddressServiceFindOneByID(t *testing.T) {
+func TestFamilyServiceFindOneByID(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputAddressID int
-		expectedRes    service.AddressResponse
-		expectedErr    error
-		prepareMock    func(mockAddressRepository *mock.MockAddressRepository)
+		inputFamilyID int
+		expectedRes   service.FamilyResponse
+		expectedErr   error
+		prepareMock   func(mockFamilyRepository *mock.MockFamilyRepository)
 	}{
-		"should return address when exists": {
-			inputAddressID: 1,
-			expectedRes: service.AddressResponse{Data: &service.Address{
+		"should return family when exists": {
+			inputFamilyID: 1,
+			expectedRes: service.FamilyResponse{Data: &service.Family{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -112,8 +112,8 @@ func TestAddressServiceFindOneByID(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			}},
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().FindOneById(gomock.Any(), 1).Return(&model.Address{
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().FindOneById(gomock.Any(), 1).Return(&model.Family{
 					ID:           1,
 					CreatedAt:    DATETIME,
 					UpdatedAt:    DATETIME,
@@ -128,19 +128,19 @@ func TestAddressServiceFindOneByID(t *testing.T) {
 				}, nil)
 			},
 		},
-		"should return empty when address not exists": {
-			inputAddressID: 1,
-			expectedErr:    &exception.NotFoundException{Err: fmt.Errorf("address 1 not found")},
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().FindOneById(gomock.Any(), 1).
-					Return(nil, &exception.NotFoundException{Err: fmt.Errorf("address 1 not found")})
+		"should return empty when family not exists": {
+			inputFamilyID: 1,
+			expectedErr:   &exception.NotFoundException{Err: fmt.Errorf("family 1 not found")},
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().FindOneById(gomock.Any(), 1).
+					Return(nil, &exception.NotFoundException{Err: fmt.Errorf("family 1 not found")})
 			},
 		},
 		"should throw error": {
-			inputAddressID: 1,
-			expectedErr:    fmt.Errorf("error"),
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().FindOneById(gomock.Any(), 1).Return(nil, fmt.Errorf("error"))
+			inputFamilyID: 1,
+			expectedErr:   fmt.Errorf("error"),
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().FindOneById(gomock.Any(), 1).Return(nil, fmt.Errorf("error"))
 			},
 		},
 	}
@@ -150,13 +150,13 @@ func TestAddressServiceFindOneByID(t *testing.T) {
 			ctrl, ctx := gomock.WithContext(context.Background(), t)
 			defer ctrl.Finish()
 
-			mockAddressRepository := mock.NewMockAddressRepository(ctrl)
-			cs.prepareMock(mockAddressRepository)
+			mockFamilyRepository := mock.NewMockFamilyRepository(ctrl)
+			cs.prepareMock(mockFamilyRepository)
 
-			impl := &service.AddressServiceImpl{AddressRepository: mockAddressRepository}
+			impl := &service.FamilyServiceImpl{FamilyRepository: mockFamilyRepository}
 
 			// when
-			res, err := impl.FindOneById(ctx, cs.inputAddressID)
+			res, err := impl.FindOneById(ctx, cs.inputFamilyID)
 
 			// then
 			assert.Equal(t, cs.expectedRes, res)
@@ -165,18 +165,18 @@ func TestAddressServiceFindOneByID(t *testing.T) {
 	}
 }
 
-func TestAddressServiceCreate(t *testing.T) {
+func TestFamilyServiceCreate(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
 	cases := map[string]struct {
-		inputDto    service.AddressCreateDto
-		expectedRes service.AddressResponse
+		inputDto    service.FamilyCreateDto
+		expectedRes service.FamilyResponse
 		expectedErr error
-		prepareMock func(mockAddressRepository *mock.MockAddressRepository)
+		prepareMock func(mockFamilyRepository *mock.MockFamilyRepository)
 	}{
-		"should create address": {
-			inputDto: service.AddressCreateDto{
+		"should create family": {
+			inputDto: service.FamilyCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -186,7 +186,7 @@ func TestAddressServiceCreate(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			},
-			expectedRes: service.AddressResponse{Data: &service.Address{
+			expectedRes: service.FamilyResponse{Data: &service.Family{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
@@ -199,8 +199,8 @@ func TestAddressServiceCreate(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			}},
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().Create(gomock.Any(), model.Address{
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().Create(gomock.Any(), model.Family{
 					Country:      "BR",
 					State:        "SP",
 					City:         "São Paulo",
@@ -209,7 +209,7 @@ func TestAddressServiceCreate(t *testing.T) {
 					Number:       "1",
 					Complement:   "1",
 					Zipcode:      "02180110",
-				}).Return(&model.Address{
+				}).Return(&model.Family{
 					ID:           1,
 					CreatedAt:    DATETIME,
 					UpdatedAt:    DATETIME,
@@ -225,7 +225,7 @@ func TestAddressServiceCreate(t *testing.T) {
 			},
 		},
 		"should throw error": {
-			inputDto: service.AddressCreateDto{
+			inputDto: service.FamilyCreateDto{
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -236,8 +236,8 @@ func TestAddressServiceCreate(t *testing.T) {
 				Zipcode:      "02180110",
 			},
 			expectedErr: fmt.Errorf("error"),
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().Create(gomock.Any(), model.Address{
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().Create(gomock.Any(), model.Family{
 					Country:      "BR",
 					State:        "SP",
 					City:         "São Paulo",
@@ -256,10 +256,10 @@ func TestAddressServiceCreate(t *testing.T) {
 			ctrl, ctx := gomock.WithContext(context.Background(), t)
 			defer ctrl.Finish()
 
-			mockAddressRepository := mock.NewMockAddressRepository(ctrl)
-			cs.prepareMock(mockAddressRepository)
+			mockFamilyRepository := mock.NewMockFamilyRepository(ctrl)
+			cs.prepareMock(mockFamilyRepository)
 
-			impl := &service.AddressServiceImpl{AddressRepository: mockAddressRepository}
+			impl := &service.FamilyServiceImpl{FamilyRepository: mockFamilyRepository}
 
 			// when
 			res, err := impl.Create(ctx, cs.inputDto)
@@ -271,14 +271,14 @@ func TestAddressServiceCreate(t *testing.T) {
 	}
 }
 
-func TestAddressServiceUpdate(t *testing.T) {
+func TestFamilyServiceUpdate(t *testing.T) {
 	cases := map[string]struct {
-		inputDto    service.AddressUpdateDto
+		inputDto    service.FamilyUpdateDto
 		expectedErr error
-		prepareMock func(mockAddressRepository *mock.MockAddressRepository)
+		prepareMock func(mockFamilyRepository *mock.MockFamilyRepository)
 	}{
-		"should update address": {
-			inputDto: service.AddressUpdateDto{
+		"should update family": {
+			inputDto: service.FamilyUpdateDto{
 				ID:           1,
 				Country:      "BR",
 				State:        "RS",
@@ -288,8 +288,8 @@ func TestAddressServiceUpdate(t *testing.T) {
 				Number:       "1",
 				Zipcode:      "91755450",
 			},
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().Update(gomock.Any(), model.Address{
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().Update(gomock.Any(), model.Family{
 					ID:           1,
 					Country:      "BR",
 					State:        "RS",
@@ -301,16 +301,16 @@ func TestAddressServiceUpdate(t *testing.T) {
 				}).Return(nil)
 			},
 		},
-		"should return empty when address not exists": {
-			inputDto:    service.AddressUpdateDto{ID: 1},
-			expectedErr: &exception.NotFoundException{Err: fmt.Errorf("address 1 not found")},
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().Update(gomock.Any(), model.Address{ID: 1}).
-					Return(&exception.NotFoundException{Err: fmt.Errorf("address 1 not found")})
+		"should return empty when family not exists": {
+			inputDto:    service.FamilyUpdateDto{ID: 1},
+			expectedErr: &exception.NotFoundException{Err: fmt.Errorf("family 1 not found")},
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().Update(gomock.Any(), model.Family{ID: 1}).
+					Return(&exception.NotFoundException{Err: fmt.Errorf("family 1 not found")})
 			},
 		},
 		"should throw error": {
-			inputDto: service.AddressUpdateDto{
+			inputDto: service.FamilyUpdateDto{
 				ID:           1,
 				Country:      "BR",
 				State:        "RS",
@@ -321,8 +321,8 @@ func TestAddressServiceUpdate(t *testing.T) {
 				Zipcode:      "91755450",
 			},
 			expectedErr: fmt.Errorf("error"),
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().Update(gomock.Any(), model.Address{
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().Update(gomock.Any(), model.Family{
 					ID:           1,
 					Country:      "BR",
 					State:        "RS",
@@ -341,10 +341,10 @@ func TestAddressServiceUpdate(t *testing.T) {
 			ctrl, ctx := gomock.WithContext(context.Background(), t)
 			defer ctrl.Finish()
 
-			mockAddressRepository := mock.NewMockAddressRepository(ctrl)
-			cs.prepareMock(mockAddressRepository)
+			mockFamilyRepository := mock.NewMockFamilyRepository(ctrl)
+			cs.prepareMock(mockFamilyRepository)
 
-			impl := &service.AddressServiceImpl{AddressRepository: mockAddressRepository}
+			impl := &service.FamilyServiceImpl{FamilyRepository: mockFamilyRepository}
 
 			// when
 			err := impl.Update(ctx, cs.inputDto)
@@ -355,23 +355,23 @@ func TestAddressServiceUpdate(t *testing.T) {
 	}
 }
 
-func TestAddressServiceDelete(t *testing.T) {
+func TestFamilyServiceDelete(t *testing.T) {
 	cases := map[string]struct {
-		inputAddressID int
-		expectedErr    error
-		prepareMock    func(mockAddressRepository *mock.MockAddressRepository)
+		inputFamilyID int
+		expectedErr   error
+		prepareMock   func(mockFamilyRepository *mock.MockFamilyRepository)
 	}{
-		"should delete address": {
-			inputAddressID: 1,
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().Delete(gomock.Any(), 1).Return(nil)
+		"should delete family": {
+			inputFamilyID: 1,
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().Delete(gomock.Any(), 1).Return(nil)
 			},
 		},
 		"should throw error": {
-			inputAddressID: 1,
-			expectedErr:    fmt.Errorf("error"),
-			prepareMock: func(mockAddressRepository *mock.MockAddressRepository) {
-				mockAddressRepository.EXPECT().Delete(gomock.Any(), 1).Return(fmt.Errorf("error"))
+			inputFamilyID: 1,
+			expectedErr:   fmt.Errorf("error"),
+			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
+				mockFamilyRepository.EXPECT().Delete(gomock.Any(), 1).Return(fmt.Errorf("error"))
 			},
 		},
 	}
@@ -381,13 +381,13 @@ func TestAddressServiceDelete(t *testing.T) {
 			ctrl, ctx := gomock.WithContext(context.Background(), t)
 			defer ctrl.Finish()
 
-			mockAddressRepository := mock.NewMockAddressRepository(ctrl)
-			cs.prepareMock(mockAddressRepository)
+			mockFamilyRepository := mock.NewMockFamilyRepository(ctrl)
+			cs.prepareMock(mockFamilyRepository)
 
-			impl := &service.AddressServiceImpl{AddressRepository: mockAddressRepository}
+			impl := &service.FamilyServiceImpl{FamilyRepository: mockFamilyRepository}
 
 			// when
-			err := impl.Delete(ctx, cs.inputAddressID)
+			err := impl.Delete(ctx, cs.inputFamilyID)
 
 			// then
 			assert.Equal(t, cs.expectedErr, err)

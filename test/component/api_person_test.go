@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/viniosilva/socialassistanceapi/internal/api"
 	"github.com/viniosilva/socialassistanceapi/internal/configuration"
+	"github.com/viniosilva/socialassistanceapi/internal/infra"
 	"github.com/viniosilva/socialassistanceapi/internal/repository"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
@@ -29,19 +30,19 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 
 				db.Exec(`
-					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					INSERT INTO persons (id, created_at, updated_at, family_id, name)
 					VALUES (1, ?, ?, 1, 'Test')
 				`, date, date)
 			},
 			expectedCode: http.StatusOK,
 			expectedBody: &service.PersonsResponse{
-				Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, AddressID: 1, Name: "Test"}},
+				Data: []service.Person{{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, FamilyID: 1, Name: "Test"}},
 			},
 		},
 		"should return empty list when persons not exists": {
@@ -58,7 +59,7 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -83,9 +84,9 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
-			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`DELETE FROM families`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
@@ -104,20 +105,20 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 
 				db.Exec(`
-					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					INSERT INTO persons (id, created_at, updated_at, family_id, name)
 					VALUES (1, ?, ?, 1, 'Test')
 				`, date, date)
 			},
 			inputPersonID: "1",
 			expectedCode:  http.StatusOK,
 			expectedBody: &service.PersonResponse{
-				Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, AddressID: 1, Name: "Test"},
+				Data: &service.Person{ID: 1, CreatedAt: DATE, UpdatedAt: DATE, FamilyID: 1, Name: "Test"},
 			},
 			expectedErr: &api.HttpError{},
 		},
@@ -144,7 +145,7 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -174,9 +175,9 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
-			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`DELETE FROM families`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
@@ -193,14 +194,14 @@ func TestComponentPersonApiCreate(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := "2000-01-01 12:03:00"
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 			},
-			inputDto:     service.PersonCreateDto{AddressID: 1, Name: "Test"},
+			inputDto:     service.PersonCreateDto{FamilyID: 1, Name: "Test"},
 			expectedCode: http.StatusCreated,
-			expectedBody: &service.PersonResponse{Data: &service.Person{ID: 1, AddressID: 1, Name: "Test"}},
+			expectedBody: &service.PersonResponse{Data: &service.Person{ID: 1, FamilyID: 1, Name: "Test"}},
 			expectedErr:  &api.HttpError{},
 		},
 		"should throw bad request error": {
@@ -210,7 +211,7 @@ func TestComponentPersonApiCreate(t *testing.T) {
 			expectedErr: &api.HttpError{
 				Code: http.StatusBadRequest,
 				Message: strings.Join([]string{
-					"Key: 'PersonCreateDto.AddressID' Error:Field validation for 'AddressID' failed on the 'required' tag",
+					"Key: 'PersonCreateDto.FamilyID' Error:Field validation for 'FamilyID' failed on the 'required' tag",
 					"Key: 'PersonCreateDto.Name' Error:Field validation for 'Name' failed on the 'required' tag",
 				}, "\n"),
 			},
@@ -224,7 +225,7 @@ func TestComponentPersonApiCreate(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -259,9 +260,9 @@ func TestComponentPersonApiCreate(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
-			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`DELETE FROM families`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
@@ -280,13 +281,13 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 
 				db.Exec(`
-					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					INSERT INTO persons (id, created_at, updated_at, family_id, name)
 					VALUES (1, ?, ?, 1, 'Test')
 				`, date, date)
 			},
@@ -322,7 +323,7 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -349,9 +350,9 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
-			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`DELETE FROM families`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
@@ -370,13 +371,13 @@ func TestComponentPersonApiDelete(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO addresses (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, country,
 						state, city, neighborhood, street, number, complement, zipcode)
 					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 
 				db.Exec(`
-					INSERT INTO persons (id, created_at, updated_at, address_id, name)
+					INSERT INTO persons (id, created_at, updated_at, family_id, name)
 					VALUES (1, ?, ?, 1, 'Test')
 				`, date, date)
 			},
@@ -405,7 +406,7 @@ func TestComponentPersonApiDelete(t *testing.T) {
 				log.Fatal("cannot load config: ", err)
 			}
 
-			mysql := configuration.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
+			mysql := infra.MySQLConfigure(cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Database, cfg.MySQL.Username,
 				cfg.MySQL.Password, time.Duration(cfg.MySQL.ConnMaxLifetimeMs), cfg.MySQL.MaxOpenConns, cfg.MySQL.MaxIdleConns)
 			defer mysql.DB.Close()
 
@@ -431,9 +432,9 @@ func TestComponentPersonApiDelete(t *testing.T) {
 
 			// after
 			mysql.DB.Exec(`DELETE FROM persons`)
-			mysql.DB.Exec(`DELETE FROM addresses`)
+			mysql.DB.Exec(`DELETE FROM families`)
 			mysql.DB.Exec(`ALTER TABLE persons AUTO_INCREMENT=1`)
-			mysql.DB.Exec(`ALTER TABLE addresses AUTO_INCREMENT=1`)
+			mysql.DB.Exec(`ALTER TABLE families AUTO_INCREMENT=1`)
 		})
 	}
 }
