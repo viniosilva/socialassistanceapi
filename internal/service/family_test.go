@@ -28,6 +28,7 @@ func TestFamilyServiceFindAll(t *testing.T) {
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -42,6 +43,7 @@ func TestFamilyServiceFindAll(t *testing.T) {
 					ID:           1,
 					CreatedAt:    DATETIME,
 					UpdatedAt:    DATETIME,
+					Name:         "Sauro",
 					Country:      "BR",
 					State:        "SP",
 					City:         "São Paulo",
@@ -103,6 +105,7 @@ func TestFamilyServiceFindOneByID(t *testing.T) {
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -117,6 +120,7 @@ func TestFamilyServiceFindOneByID(t *testing.T) {
 					ID:           1,
 					CreatedAt:    DATETIME,
 					UpdatedAt:    DATETIME,
+					Name:         "Sauro",
 					Country:      "BR",
 					State:        "SP",
 					City:         "São Paulo",
@@ -177,6 +181,7 @@ func TestFamilyServiceCreate(t *testing.T) {
 	}{
 		"should create family": {
 			inputDto: service.FamilyCreateDto{
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -190,6 +195,7 @@ func TestFamilyServiceCreate(t *testing.T) {
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -201,6 +207,7 @@ func TestFamilyServiceCreate(t *testing.T) {
 			}},
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
 				mockFamilyRepository.EXPECT().Create(gomock.Any(), model.Family{
+					Name:         "Sauro",
 					Country:      "BR",
 					State:        "SP",
 					City:         "São Paulo",
@@ -213,6 +220,7 @@ func TestFamilyServiceCreate(t *testing.T) {
 					ID:           1,
 					CreatedAt:    DATETIME,
 					UpdatedAt:    DATETIME,
+					Name:         "Sauro",
 					Country:      "BR",
 					State:        "SP",
 					City:         "São Paulo",
@@ -226,6 +234,7 @@ func TestFamilyServiceCreate(t *testing.T) {
 		},
 		"should throw error": {
 			inputDto: service.FamilyCreateDto{
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -238,6 +247,7 @@ func TestFamilyServiceCreate(t *testing.T) {
 			expectedErr: fmt.Errorf("error"),
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
 				mockFamilyRepository.EXPECT().Create(gomock.Any(), model.Family{
+					Name:         "Sauro",
 					Country:      "BR",
 					State:        "SP",
 					City:         "São Paulo",
@@ -280,6 +290,7 @@ func TestFamilyServiceUpdate(t *testing.T) {
 		"should update family": {
 			inputDto: service.FamilyUpdateDto{
 				ID:           1,
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "RS",
 				City:         "Porto Alegre",
@@ -291,6 +302,7 @@ func TestFamilyServiceUpdate(t *testing.T) {
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
 				mockFamilyRepository.EXPECT().Update(gomock.Any(), model.Family{
 					ID:           1,
+					Name:         "Sauro",
 					Country:      "BR",
 					State:        "RS",
 					City:         "Porto Alegre",
@@ -312,6 +324,7 @@ func TestFamilyServiceUpdate(t *testing.T) {
 		"should throw error": {
 			inputDto: service.FamilyUpdateDto{
 				ID:           1,
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "RS",
 				City:         "Porto Alegre",
@@ -324,6 +337,7 @@ func TestFamilyServiceUpdate(t *testing.T) {
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
 				mockFamilyRepository.EXPECT().Update(gomock.Any(), model.Family{
 					ID:           1,
+					Name:         "Sauro",
 					Country:      "BR",
 					State:        "RS",
 					City:         "Porto Alegre",

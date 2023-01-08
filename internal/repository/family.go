@@ -32,6 +32,7 @@ func (impl *FamilyRepositoryImpl) FindAll(ctx context.Context) ([]model.Family, 
 		SELECT id,
 			created_at,
 			updated_at,
+			name,
 			country,
 			state,
 			city,
@@ -64,6 +65,7 @@ func (impl *FamilyRepositoryImpl) FindOneById(ctx context.Context, familyID int)
 		SELECT id,
 			created_at,
 			updated_at,
+			name,
 			country,
 			state,
 			city,
@@ -99,11 +101,11 @@ func (impl *FamilyRepositoryImpl) Create(ctx context.Context, data model.Family)
 	now := time.Now()
 	nowMysql := now.Format("2006-01-02T15:04:05")
 	res, err := impl.DB.DB.ExecContext(ctx, `
-		INSERT INTO families (created_at, updated_at, country,
+		INSERT INTO families (created_at, updated_at, name, country,
 			state, city, neighborhood, street, number, complement, zipcode)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`, nowMysql, nowMysql, data.Country, data.State, data.City, data.Neighborhood,
-		data.Street, data.Number, data.Complement, data.Zipcode)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, nowMysql, nowMysql, data.Name, data.Country, data.State, data.City,
+		data.Neighborhood, data.Street, data.Number, data.Complement, data.Zipcode)
 	if err != nil {
 		return nil, err
 	}
@@ -121,6 +123,7 @@ func (impl *FamilyRepositoryImpl) Create(ctx context.Context, data model.Family)
 
 func (impl *FamilyRepositoryImpl) Update(ctx context.Context, data model.Family) error {
 	fields, values := impl.DB.BuildUpdateData(map[string]interface{}{
+		"name":         data.Name,
 		"country":      data.Country,
 		"state":        data.State,
 		"city":         data.City,
@@ -175,9 +178,9 @@ func (impl *FamilyRepositoryImpl) Scan(res *sql.Rows) (*model.Family, error) {
 	var data = &model.Family{}
 	var createdAt, updatedAt string
 
-	if err := res.Scan(&data.ID, &createdAt, &updatedAt, &data.Country,
-		&data.State, &data.City, &data.Neighborhood, &data.Street,
-		&data.Number, &data.Complement, &data.Zipcode); err != nil {
+	if err := res.Scan(&data.ID, &createdAt, &updatedAt, &data.Name, &data.Country,
+		&data.State, &data.City, &data.Neighborhood, &data.Street, &data.Number,
+		&data.Complement, &data.Zipcode); err != nil {
 		return nil, err
 	}
 

@@ -31,19 +31,20 @@ func (impl *FamilyServiceImpl) FindAll(ctx context.Context) (FamiliesResponse, e
 	}
 
 	res := []Family{}
-	for _, a := range data {
+	for _, d := range data {
 		res = append(res, Family{
-			ID:           a.ID,
-			CreatedAt:    a.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt:    a.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Country:      a.Country,
-			State:        a.State,
-			City:         a.City,
-			Neighborhood: a.Neighborhood,
-			Street:       a.Street,
-			Number:       a.Number,
-			Complement:   a.Complement,
-			Zipcode:      a.Zipcode,
+			ID:           d.ID,
+			CreatedAt:    d.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt:    d.UpdatedAt.Format("2006-01-02T15:04:05"),
+			Name:         d.Name,
+			Country:      d.Country,
+			State:        d.State,
+			City:         d.City,
+			Neighborhood: d.Neighborhood,
+			Street:       d.Street,
+			Number:       d.Number,
+			Complement:   d.Complement,
+			Zipcode:      d.Zipcode,
 		})
 	}
 
@@ -64,6 +65,7 @@ func (impl *FamilyServiceImpl) FindOneById(ctx context.Context, familyID int) (F
 			ID:           data.ID,
 			CreatedAt:    data.CreatedAt.Format("2006-01-02T15:04:05"),
 			UpdatedAt:    data.UpdatedAt.Format("2006-01-02T15:04:05"),
+			Name:         data.Name,
 			Country:      data.Country,
 			State:        data.State,
 			City:         data.City,
@@ -80,6 +82,7 @@ func (impl *FamilyServiceImpl) Create(ctx context.Context, dto FamilyCreateDto) 
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.family.create"})
 
 	data, err := impl.FamilyRepository.Create(ctx, model.Family{
+		Name:         dto.Name,
 		Country:      dto.Country,
 		State:        dto.State,
 		City:         dto.City,
@@ -100,6 +103,7 @@ func (impl *FamilyServiceImpl) Create(ctx context.Context, dto FamilyCreateDto) 
 			ID:           data.ID,
 			CreatedAt:    data.CreatedAt.Format("2006-01-02T15:04:05"),
 			UpdatedAt:    data.UpdatedAt.Format("2006-01-02T15:04:05"),
+			Name:         data.Name,
 			Country:      data.Country,
 			State:        data.State,
 			City:         data.City,
@@ -117,6 +121,7 @@ func (impl *FamilyServiceImpl) Update(ctx context.Context, dto FamilyUpdateDto) 
 
 	if err := impl.FamilyRepository.Update(ctx, model.Family{
 		ID:           dto.ID,
+		Name:         dto.Name,
 		Country:      dto.Country,
 		State:        dto.State,
 		City:         dto.City,

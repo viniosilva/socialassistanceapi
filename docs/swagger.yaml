@@ -70,6 +70,9 @@ definitions:
       id:
         example: 1
         type: integer
+      name:
+        example: Sauro
+        type: string
       neighborhood:
         example: Centro Histórico
         type: string
@@ -100,6 +103,9 @@ definitions:
       country:
         example: BR
         type: string
+      name:
+        example: Sauro
+        type: string
       neighborhood:
         example: Centro Histórico
         type: string
@@ -119,6 +125,7 @@ definitions:
     - city
     - complement
     - country
+    - name
     - neighborhood
     - number
     - state
@@ -140,6 +147,9 @@ definitions:
         type: string
       country:
         example: BR
+        type: string
+      name:
+        example: Sauro
         type: string
       neighborhood:
         example: Centro Histórico

@@ -31,13 +31,13 @@ func (impl *PersonServiceImpl) FindAll(ctx context.Context) (PersonsResponse, er
 	}
 
 	res := []Person{}
-	for _, p := range data {
+	for _, d := range data {
 		res = append(res, Person{
-			ID:        p.ID,
-			CreatedAt: p.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt: p.UpdatedAt.Format("2006-01-02T15:04:05"),
-			FamilyID:  p.FamilyID,
-			Name:      p.Name,
+			ID:        d.ID,
+			CreatedAt: d.CreatedAt.Format("2006-01-02T15:04:05"),
+			UpdatedAt: d.UpdatedAt.Format("2006-01-02T15:04:05"),
+			FamilyID:  d.FamilyID,
+			Name:      d.Name,
 		})
 	}
 

@@ -7,6 +7,7 @@ type Family struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time
+	Name         string
 	Country      string
 	State        string
 	City         string

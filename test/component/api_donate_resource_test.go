@@ -37,9 +37,9 @@ func TestComponentDonateResourceApiDonate(t *testing.T) {
 					VALUES (1, ?, ?, 'Test', '1', 'Kg', 1)
 				`, date, date)
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 			},
 			inputResourceID: "1",
@@ -159,9 +159,9 @@ func TestComponentDonateResourceApiReturn(t *testing.T) {
 					VALUES (1, ?, ?, 'Test', '1', 'Kg', 1)
 				`, date, date)
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 				db.Exec(`
 					INSERT INTO resources_to_families (id, created_at, resource_id, family_id, quantity)

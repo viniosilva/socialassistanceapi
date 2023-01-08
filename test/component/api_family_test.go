@@ -28,18 +28,18 @@ func TestComponentFamilyApiFindAll(t *testing.T) {
 	}{
 		"should return family list when families exists": {
 			before: func(db *sql.DB) {
-				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
-				`, date, date)
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+				`, DATE, DATE)
 			},
 			expectedCode: http.StatusOK,
 			expectedBody: &service.FamiliesResponse{Data: []service.Family{{
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -113,9 +113,9 @@ func TestComponentFamilyApiFindOneByID(t *testing.T) {
 		"should return family when families exists": {
 			before: func(db *sql.DB) {
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, DATE, DATE)
 			},
 			inputFamilyID: "1",
@@ -124,6 +124,7 @@ func TestComponentFamilyApiFindOneByID(t *testing.T) {
 				ID:           1,
 				CreatedAt:    DATE,
 				UpdatedAt:    DATE,
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -208,6 +209,7 @@ func TestComponentFamilyApiCreate(t *testing.T) {
 	}{
 		"should return created family": {
 			inputDto: service.FamilyCreateDto{
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -220,6 +222,7 @@ func TestComponentFamilyApiCreate(t *testing.T) {
 			expectedCode: http.StatusCreated,
 			expectedBody: &service.FamilyResponse{Data: &service.Family{
 				ID:           1,
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -237,6 +240,7 @@ func TestComponentFamilyApiCreate(t *testing.T) {
 			expectedErr: &api.HttpError{
 				Code: http.StatusBadRequest,
 				Message: strings.Join([]string{
+					"Key: 'FamilyCreateDto.Name' Error:Field validation for 'Name' failed on the 'required' tag",
 					"Key: 'FamilyCreateDto.Country' Error:Field validation for 'Country' failed on the 'required' tag",
 					"Key: 'FamilyCreateDto.State' Error:Field validation for 'State' failed on the 'required' tag",
 					"Key: 'FamilyCreateDto.City' Error:Field validation for 'City' failed on the 'required' tag",
@@ -308,13 +312,14 @@ func TestComponentFamilyApiUpdate(t *testing.T) {
 		"should update family": {
 			before: func(db *sql.DB) {
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, DATE, DATE)
 			},
 			inputFamilyID: "1",
 			inputDto: service.FamilyCreateDto{
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -329,9 +334,9 @@ func TestComponentFamilyApiUpdate(t *testing.T) {
 		"should update family when is a partial update": {
 			before: func(db *sql.DB) {
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, DATE, DATE)
 			},
 			inputFamilyID: "1",
@@ -354,6 +359,7 @@ func TestComponentFamilyApiUpdate(t *testing.T) {
 			before:        func(db *sql.DB) {},
 			inputFamilyID: "1",
 			inputDto: service.FamilyCreateDto{
+				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
 				City:         "São Paulo",
@@ -420,9 +426,9 @@ func TestComponentFamilyApiDelete(t *testing.T) {
 		"should be successfull": {
 			before: func(db *sql.DB) {
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, DATE, DATE)
 			},
 			inputFamilyID: "1",

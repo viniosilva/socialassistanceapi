@@ -30,9 +30,9 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 
 				db.Exec(`
@@ -105,9 +105,9 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 
 				db.Exec(`
@@ -194,9 +194,9 @@ func TestComponentPersonApiCreate(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := "2000-01-01 12:03:00"
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 			},
 			inputDto:     service.PersonCreateDto{FamilyID: 1, Name: "Test"},
@@ -281,9 +281,9 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 
 				db.Exec(`
@@ -371,9 +371,9 @@ func TestComponentPersonApiDelete(t *testing.T) {
 			before: func(db *sql.DB) {
 				date := strings.Replace(DATE, "T", " ", 1)
 				db.Exec(`
-					INSERT INTO families (id, created_at, updated_at, country,
+					INSERT INTO families (id, created_at, updated_at, name, country,
 						state, city, neighborhood, street, number, complement, zipcode)
-					VALUES (1, ?, ?, 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
+					VALUES (1, ?, ?, 'Sauro', 'BR', 'SP', 'São Paulo', 'Pq. Novo Mundo', 'R. Sd. Teodoro Francisco Ribeiro', '1', '1', '02180110')
 				`, date, date)
 
 				db.Exec(`

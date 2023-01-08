@@ -70,6 +70,7 @@ func TestE2EApi(t *testing.T) {
 
 		// when create family then return Created
 		b, _ := json.Marshal(service.FamilyCreateDto{
+			Name:         "Sauro",
 			Country:      "BR",
 			State:        "SP",
 			City:         "São Paulo",

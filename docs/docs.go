@@ -751,6 +751,10 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "name": {
+                    "type": "string",
+                    "example": "Sauro"
+                },
                 "neighborhood": {
                     "type": "string",
                     "example": "Centro Histórico"
@@ -783,6 +787,7 @@ const docTemplate = `{
                 "city",
                 "complement",
                 "country",
+                "name",
                 "neighborhood",
                 "number",
                 "state",
@@ -801,6 +806,10 @@ const docTemplate = `{
                 "country": {
                     "type": "string",
                     "example": "BR"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Sauro"
                 },
                 "neighborhood": {
                     "type": "string",
@@ -846,6 +855,10 @@ const docTemplate = `{
                 "country": {
                     "type": "string",
                     "example": "BR"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Sauro"
                 },
                 "neighborhood": {
                     "type": "string",
