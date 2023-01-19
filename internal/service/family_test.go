@@ -14,20 +14,22 @@ import (
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
-func TestFamilyServiceFindAll(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
-	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
-
+func Test_FamilyService_FindAll(t *testing.T) {
 	cases := map[string]struct {
-		expectedRes service.FamiliesResponse
-		expectedErr error
-		prepareMock func(mockFamilyRepository *mock.MockFamilyRepository)
+		inputLimit    int
+		inputOffset   int
+		expectedRes   []model.Family
+		expectedTotal int
+		expectedErr   error
+		prepareMock   func(mockFamilyRepository *mock.MockFamilyRepository)
 	}{
 		"should return families list": {
-			expectedRes: service.FamiliesResponse{Data: []service.Family{{
+			inputLimit:  10,
+			inputOffset: 0,
+			expectedRes: []model.Family{{
 				ID:           1,
-				CreatedAt:    DATE,
-				UpdatedAt:    DATE,
+				CreatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
+				UpdatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
 				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
@@ -37,12 +39,13 @@ func TestFamilyServiceFindAll(t *testing.T) {
 				Number:       "1",
 				Complement:   "1",
 				Zipcode:      "02180110",
-			}}},
+			}},
+			expectedTotal: 1,
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
-				mockFamilyRepository.EXPECT().FindAll(gomock.Any()).Return([]model.Family{{
+				mockFamilyRepository.EXPECT().FindAll(gomock.Any(), 10, 0).Return([]model.Family{{
 					ID:           1,
-					CreatedAt:    DATETIME,
-					UpdatedAt:    DATETIME,
+					CreatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
+					UpdatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
 					Name:         "Sauro",
 					Country:      "BR",
 					State:        "SP",
@@ -53,18 +56,25 @@ func TestFamilyServiceFindAll(t *testing.T) {
 					Complement:   "1",
 					Zipcode:      "02180110",
 				}}, nil)
+				mockFamilyRepository.EXPECT().Count(gomock.Any()).Return(1, nil)
 			},
 		},
 		"should return empty families list": {
-			expectedRes: service.FamiliesResponse{Data: []service.Family{}},
+			inputLimit:    10,
+			inputOffset:   0,
+			expectedRes:   []model.Family{},
+			expectedTotal: 0,
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
-				mockFamilyRepository.EXPECT().FindAll(gomock.Any()).Return([]model.Family{}, nil)
+				mockFamilyRepository.EXPECT().FindAll(gomock.Any(), 10, 0).Return([]model.Family{}, nil)
 			},
 		},
-		"should throw error": {
-			expectedErr: fmt.Errorf("error"),
+		"should throw error when FindAll": {
+			inputLimit:    10,
+			inputOffset:   0,
+			expectedErr:   fmt.Errorf("error"),
+			expectedTotal: 0,
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
-				mockFamilyRepository.EXPECT().FindAll(gomock.Any()).Return(nil, fmt.Errorf("error"))
+				mockFamilyRepository.EXPECT().FindAll(gomock.Any(), 10, 0).Return(nil, fmt.Errorf("error"))
 			},
 		},
 	}
@@ -80,31 +90,29 @@ func TestFamilyServiceFindAll(t *testing.T) {
 			impl := &service.FamilyServiceImpl{FamilyRepository: mockFamilyRepository}
 
 			// when
-			res, err := impl.FindAll(ctx)
+			res, total, err := impl.FindAll(ctx, cs.inputLimit, cs.inputOffset)
 
 			// then
 			assert.Equal(t, cs.expectedRes, res)
+			assert.Equal(t, cs.expectedTotal, total)
 			assert.Equal(t, cs.expectedErr, err)
 		})
 	}
 }
 
-func TestFamilyServiceFindOneByID(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
-	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
-
+func Test_FamilyService_FindOneByID(t *testing.T) {
 	cases := map[string]struct {
 		inputFamilyID int
-		expectedRes   service.FamilyResponse
+		expectedRes   *model.Family
 		expectedErr   error
 		prepareMock   func(mockFamilyRepository *mock.MockFamilyRepository)
 	}{
 		"should return family when exists": {
 			inputFamilyID: 1,
-			expectedRes: service.FamilyResponse{Data: &service.Family{
+			expectedRes: &model.Family{
 				ID:           1,
-				CreatedAt:    DATE,
-				UpdatedAt:    DATE,
+				CreatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
+				UpdatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
 				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
@@ -114,12 +122,12 @@ func TestFamilyServiceFindOneByID(t *testing.T) {
 				Number:       "1",
 				Complement:   "1",
 				Zipcode:      "02180110",
-			}},
+			},
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
 				mockFamilyRepository.EXPECT().FindOneById(gomock.Any(), 1).Return(&model.Family{
 					ID:           1,
-					CreatedAt:    DATETIME,
-					UpdatedAt:    DATETIME,
+					CreatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
+					UpdatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
 					Name:         "Sauro",
 					Country:      "BR",
 					State:        "SP",
@@ -169,13 +177,10 @@ func TestFamilyServiceFindOneByID(t *testing.T) {
 	}
 }
 
-func TestFamilyServiceCreate(t *testing.T) {
-	DATE := "2000-01-01T12:03:00"
-	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
-
+func Test_FamilyService_Create(t *testing.T) {
 	cases := map[string]struct {
 		inputDto    service.FamilyCreateDto
-		expectedRes service.FamilyResponse
+		expectedRes *model.Family
 		expectedErr error
 		prepareMock func(mockFamilyRepository *mock.MockFamilyRepository)
 	}{
@@ -191,10 +196,10 @@ func TestFamilyServiceCreate(t *testing.T) {
 				Complement:   "1",
 				Zipcode:      "02180110",
 			},
-			expectedRes: service.FamilyResponse{Data: &service.Family{
+			expectedRes: &model.Family{
 				ID:           1,
-				CreatedAt:    DATE,
-				UpdatedAt:    DATE,
+				CreatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
+				UpdatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
 				Name:         "Sauro",
 				Country:      "BR",
 				State:        "SP",
@@ -204,7 +209,7 @@ func TestFamilyServiceCreate(t *testing.T) {
 				Number:       "1",
 				Complement:   "1",
 				Zipcode:      "02180110",
-			}},
+			},
 			prepareMock: func(mockFamilyRepository *mock.MockFamilyRepository) {
 				mockFamilyRepository.EXPECT().Create(gomock.Any(), model.Family{
 					Name:         "Sauro",
@@ -218,8 +223,8 @@ func TestFamilyServiceCreate(t *testing.T) {
 					Zipcode:      "02180110",
 				}).Return(&model.Family{
 					ID:           1,
-					CreatedAt:    DATETIME,
-					UpdatedAt:    DATETIME,
+					CreatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
+					UpdatedAt:    time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC),
 					Name:         "Sauro",
 					Country:      "BR",
 					State:        "SP",
@@ -281,7 +286,7 @@ func TestFamilyServiceCreate(t *testing.T) {
 	}
 }
 
-func TestFamilyServiceUpdate(t *testing.T) {
+func Test_FamilyService_Update(t *testing.T) {
 	cases := map[string]struct {
 		inputDto    service.FamilyUpdateDto
 		expectedErr error
@@ -369,7 +374,7 @@ func TestFamilyServiceUpdate(t *testing.T) {
 	}
 }
 
-func TestFamilyServiceDelete(t *testing.T) {
+func Test_FamilyService_Delete(t *testing.T) {
 	cases := map[string]struct {
 		inputFamilyID int
 		expectedErr   error

@@ -9,7 +9,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/infra"
 )
 
-func TestInfraMySQLBuildUpdateData(t *testing.T) {
+func Test_MySQLBuild_UpdateData(t *testing.T) {
 	cases := map[string]struct {
 		inputData      map[string]interface{}
 		expectedFields []string

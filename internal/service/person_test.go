@@ -14,7 +14,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
-func TestPersonServiceFindAll(t *testing.T) {
+func Test_PersonService_FindAll(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
@@ -63,7 +63,7 @@ func TestPersonServiceFindAll(t *testing.T) {
 	}
 }
 
-func TestPersonServiceFindOneByID(t *testing.T) {
+func Test_PersonService_FindOneByID(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
@@ -117,7 +117,7 @@ func TestPersonServiceFindOneByID(t *testing.T) {
 	}
 }
 
-func TestPersonServiceCreate(t *testing.T) {
+func Test_PersonService_Create(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
@@ -165,7 +165,7 @@ func TestPersonServiceCreate(t *testing.T) {
 	}
 }
 
-func TestPersonServiceUpdate(t *testing.T) {
+func Test_PersonService_Update(t *testing.T) {
 	cases := map[string]struct {
 		inputDto    service.PersonUpdateDto
 		expectedErr error
@@ -213,7 +213,7 @@ func TestPersonServiceUpdate(t *testing.T) {
 	}
 }
 
-func TestPersonServiceDelete(t *testing.T) {
+func Test_PersonService_Delete(t *testing.T) {
 	cases := map[string]struct {
 		inputPersonID int
 		expectedErr   error

@@ -35,6 +35,21 @@ func (m *MockFamilyRepository) EXPECT() *MockFamilyRepositoryMockRecorder {
 	return m.recorder
 }
 
+// Count mocks base method.
+func (m *MockFamilyRepository) Count(arg0 context.Context) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Count", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Count indicates an expected call of Count.
+func (mr *MockFamilyRepositoryMockRecorder) Count(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockFamilyRepository)(nil).Count), arg0)
+}
+
 // Create mocks base method.
 func (m *MockFamilyRepository) Create(arg0 context.Context, arg1 model.Family) (*model.Family, error) {
 	m.ctrl.T.Helper()
@@ -65,18 +80,18 @@ func (mr *MockFamilyRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomo
 }
 
 // FindAll mocks base method.
-func (m *MockFamilyRepository) FindAll(arg0 context.Context) ([]model.Family, error) {
+func (m *MockFamilyRepository) FindAll(arg0 context.Context, arg1, arg2 int) ([]model.Family, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAll", arg0)
+	ret := m.ctrl.Call(m, "FindAll", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]model.Family)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAll indicates an expected call of FindAll.
-func (mr *MockFamilyRepositoryMockRecorder) FindAll(arg0 interface{}) *gomock.Call {
+func (mr *MockFamilyRepositoryMockRecorder) FindAll(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockFamilyRepository)(nil).FindAll), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockFamilyRepository)(nil).FindAll), arg0, arg1, arg2)
 }
 
 // FindOneById mocks base method.

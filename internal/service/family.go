@@ -10,9 +10,9 @@ import (
 
 //go:generate mockgen -destination ../../mock/family_service_mock.go -package mock . FamilyService
 type FamilyService interface {
-	FindAll(ctx context.Context) (FamiliesResponse, error)
-	FindOneById(ctx context.Context, familyID int) (FamilyResponse, error)
-	Create(ctx context.Context, dto FamilyCreateDto) (FamilyResponse, error)
+	FindAll(ctx context.Context, limit, offset int) ([]model.Family, int, error)
+	FindOneById(ctx context.Context, familyID int) (*model.Family, error)
+	Create(ctx context.Context, dto FamilyCreateDto) (*model.Family, error)
 	Update(ctx context.Context, dto FamilyUpdateDto) error
 	Delete(ctx context.Context, familyID int) error
 }
@@ -21,64 +21,40 @@ type FamilyServiceImpl struct {
 	FamilyRepository repository.FamilyRepository
 }
 
-func (impl *FamilyServiceImpl) FindAll(ctx context.Context) (FamiliesResponse, error) {
+func (impl *FamilyServiceImpl) FindAll(ctx context.Context, limit, offset int) ([]model.Family, int, error) {
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.family.find_all"})
 
-	data, err := impl.FamilyRepository.FindAll(ctx)
+	data, err := impl.FamilyRepository.FindAll(ctx, limit, offset)
 	if err != nil {
 		log.Error(err.Error())
-		return FamiliesResponse{}, err
+		return nil, 0, err
 	}
 
-	res := []Family{}
-	for _, d := range data {
-		res = append(res, Family{
-			ID:           d.ID,
-			CreatedAt:    d.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt:    d.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:         d.Name,
-			Country:      d.Country,
-			State:        d.State,
-			City:         d.City,
-			Neighborhood: d.Neighborhood,
-			Street:       d.Street,
-			Number:       d.Number,
-			Complement:   d.Complement,
-			Zipcode:      d.Zipcode,
-		})
+	total := 0
+	if len(data) > 0 {
+		total, err = impl.FamilyRepository.Count(ctx)
+		if err != nil {
+			log.Error(err.Error())
+			return nil, 0, err
+		}
 	}
 
-	return FamiliesResponse{Data: res}, nil
+	return data, total, nil
 }
 
-func (impl *FamilyServiceImpl) FindOneById(ctx context.Context, familyID int) (FamilyResponse, error) {
+func (impl *FamilyServiceImpl) FindOneById(ctx context.Context, familyID int) (*model.Family, error) {
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.family.find_one_by_id"})
 
 	data, err := impl.FamilyRepository.FindOneById(ctx, familyID)
-	if err != nil || data == nil {
+	if err != nil {
 		log.Error(err.Error())
-		return FamilyResponse{}, err
+		return nil, err
 	}
 
-	return FamilyResponse{
-		Data: &Family{
-			ID:           data.ID,
-			CreatedAt:    data.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt:    data.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:         data.Name,
-			Country:      data.Country,
-			State:        data.State,
-			City:         data.City,
-			Neighborhood: data.Neighborhood,
-			Street:       data.Street,
-			Number:       data.Number,
-			Complement:   data.Complement,
-			Zipcode:      data.Zipcode,
-		},
-	}, nil
+	return data, nil
 }
 
-func (impl *FamilyServiceImpl) Create(ctx context.Context, dto FamilyCreateDto) (FamilyResponse, error) {
+func (impl *FamilyServiceImpl) Create(ctx context.Context, dto FamilyCreateDto) (*model.Family, error) {
 	log := logrus.WithFields(logrus.Fields{"span_id": ctx.Value("span_id"), "path": "internal.service.family.create"})
 
 	data, err := impl.FamilyRepository.Create(ctx, model.Family{
@@ -95,25 +71,10 @@ func (impl *FamilyServiceImpl) Create(ctx context.Context, dto FamilyCreateDto) 
 
 	if err != nil {
 		log.Error(err.Error())
-		return FamilyResponse{}, err
+		return nil, err
 	}
 
-	return FamilyResponse{
-		Data: &Family{
-			ID:           data.ID,
-			CreatedAt:    data.CreatedAt.Format("2006-01-02T15:04:05"),
-			UpdatedAt:    data.UpdatedAt.Format("2006-01-02T15:04:05"),
-			Name:         data.Name,
-			Country:      data.Country,
-			State:        data.State,
-			City:         data.City,
-			Neighborhood: data.Neighborhood,
-			Street:       data.Street,
-			Number:       data.Number,
-			Complement:   data.Complement,
-			Zipcode:      data.Zipcode,
-		},
-	}, nil
+	return data, nil
 }
 
 func (impl *FamilyServiceImpl) Update(ctx context.Context, dto FamilyUpdateDto) error {

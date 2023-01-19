@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/gin-contrib/cors"
@@ -56,6 +57,7 @@ func (impl *ApiImpl) Configure() {
 		Router:          api.Group("/api/v1/families"),
 		FamilyService:   impl.FamilyService,
 		TraceMiddleware: impl.TraceMiddleware,
+		Addr:            fmt.Sprintf("%s/api/v1/families", impl.Addr),
 	}
 	resourceApi := &ResourceApiImpl{
 		Router:          api.Group("/api/v1/resources"),

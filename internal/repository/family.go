@@ -14,18 +14,19 @@ import (
 
 //go:generate mockgen -destination ../../mock/family_repository_mock.go -package mock . FamilyRepository
 type FamilyRepository interface {
-	FindAll(ctx context.Context) ([]model.Family, error)
+	FindAll(ctx context.Context, limit, offset int) ([]model.Family, error)
 	FindOneById(ctx context.Context, familyID int) (*model.Family, error)
 	Create(ctx context.Context, data model.Family) (*model.Family, error)
 	Update(ctx context.Context, data model.Family) error
 	Delete(ctx context.Context, data int) error
+	Count(ctx context.Context) (int, error)
 }
 
 type FamilyRepositoryImpl struct {
 	DB infra.MySQL
 }
 
-func (impl *FamilyRepositoryImpl) FindAll(ctx context.Context) ([]model.Family, error) {
+func (impl *FamilyRepositoryImpl) FindAll(ctx context.Context, limit, offset int) ([]model.Family, error) {
 	data := []model.Family{}
 
 	res, err := impl.DB.DB.Query(`
@@ -43,7 +44,9 @@ func (impl *FamilyRepositoryImpl) FindAll(ctx context.Context) ([]model.Family, 
 			zipcode
 		FROM families
 		WHERE deleted_at IS NULL
-	`)
+		LIMIT ?
+		OFFSET ?
+	`, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -172,6 +175,26 @@ func (impl *FamilyRepositoryImpl) Delete(ctx context.Context, familyID int) erro
 	`, familyID)
 
 	return err
+}
+
+func (impl *FamilyRepositoryImpl) Count(ctx context.Context) (int, error) {
+	total := 0
+
+	res, err := impl.DB.DB.QueryContext(ctx, `
+		SELECT count(id) as total
+		FROM families
+	`)
+	if err != nil {
+		return total, err
+	}
+
+	for res.Next() {
+		if err = res.Scan(&total); err != nil {
+			return total, err
+		}
+	}
+
+	return total, nil
 }
 
 func (impl *FamilyRepositoryImpl) Scan(res *sql.Rows) (*model.Family, error) {

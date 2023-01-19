@@ -28,6 +28,20 @@ const docTemplate = `{
                     "family"
                 ],
                 "summary": "find all families",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit pagination",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -785,7 +799,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "city",
-                "complement",
                 "country",
                 "name",
                 "neighborhood",

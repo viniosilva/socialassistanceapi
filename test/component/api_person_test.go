@@ -18,7 +18,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-func TestComponentPersonApiFindAll(t *testing.T) {
+func Test_PersonApi_FindAll(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -91,7 +91,7 @@ func TestComponentPersonApiFindAll(t *testing.T) {
 	}
 }
 
-func TestComponentPersonApiFindOneByID(t *testing.T) {
+func Test_PersonApi_FindOneByID(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -182,7 +182,7 @@ func TestComponentPersonApiFindOneByID(t *testing.T) {
 	}
 }
 
-func TestComponentPersonApiCreate(t *testing.T) {
+func Test_PersonApi_Create(t *testing.T) {
 	cases := map[string]struct {
 		before       func(db *sql.DB)
 		inputDto     service.PersonCreateDto
@@ -267,7 +267,7 @@ func TestComponentPersonApiCreate(t *testing.T) {
 	}
 }
 
-func TestComponentPersonApiUpdate(t *testing.T) {
+func Test_PersonApi_Update(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -357,7 +357,7 @@ func TestComponentPersonApiUpdate(t *testing.T) {
 	}
 }
 
-func TestComponentPersonApiDelete(t *testing.T) {
+func Test_PersonApi_Delete(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {

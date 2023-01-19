@@ -11,7 +11,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
-func TestDonateResourceServiceDonate(t *testing.T) {
+func Test_DonateResourceService_Donate(t *testing.T) {
 	cases := map[string]struct {
 		inputDto    service.DonateResourceDonateDto
 		expectedErr error
@@ -59,7 +59,7 @@ func TestDonateResourceServiceDonate(t *testing.T) {
 	}
 }
 
-func TestDonateResourceServiceReturn(t *testing.T) {
+func Test_DonateResourceService_Return(t *testing.T) {
 	cases := map[string]struct {
 		inputResourceID int
 		expectedErr     error

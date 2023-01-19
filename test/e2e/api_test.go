@@ -17,7 +17,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-func TestE2EApi(t *testing.T) {
+func Test_Api(t *testing.T) {
 	t.Run("E2E API", func(t *testing.T) {
 		// given
 		cfg, err := configuration.LoadConfig("../..")

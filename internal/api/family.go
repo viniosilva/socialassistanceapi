@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/viniosilva/socialassistanceapi/internal/exception"
+	"github.com/viniosilva/socialassistanceapi/internal/model"
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
@@ -18,6 +19,7 @@ type FamilyApiImpl struct {
 	Router          *gin.RouterGroup
 	FamilyService   service.FamilyService
 	TraceMiddleware func(c *gin.Context)
+	Addr            string
 }
 
 func (impl *FamilyApiImpl) Configure() {
@@ -28,22 +30,40 @@ func (impl *FamilyApiImpl) Configure() {
 	impl.Router.DELETE("/:familyID", impl.TraceMiddleware, impl.Delete)
 }
 
-// c.Set("span_id", c.Request.Header.Get("Request-Id"))
-
 // @Summary find all families
 // @Tags family
 // @Accept json
 // @Produce json
+// @Param limit query integer false "limit pagination"
+// @Param offset query integer false "offset pagination"
 // @Success 200 {object} service.FamiliesResponse
 // @Router /api/v1/families [get]
 func (impl *FamilyApiImpl) FindAll(c *gin.Context) {
-	res, err := impl.FamilyService.FindAll(c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, res)
+	var p PaginationQuery
+	if err := c.BindQuery(&p); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	res, total, err := impl.FamilyService.FindAll(c, p.Limit, p.Offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+
+	data := []Family{}
+	for _, d := range res {
+		data = append(data, *impl.Scan(d))
+	}
+
+	c.JSON(http.StatusOK, FamiliesResponse{
+		PaginationResponse: PaginationResponse{
+			Previous: BuildPreviousURL(impl.Addr, p.Limit, p.Offset),
+			Next:     BuildNextURL(impl.Addr, p.Limit, p.Offset, total),
+			Total:    total,
+		},
+		Data: data,
+	})
 }
 
 // @Summary	find family by id
@@ -72,7 +92,7 @@ func (impl *FamilyApiImpl) FindOneByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, FamilyResponse{Data: impl.Scan(*res)})
 }
 
 // @Summary	create an family
@@ -97,7 +117,7 @@ func (impl *FamilyApiImpl) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusCreated, FamilyResponse{Data: impl.Scan(*res)})
 }
 
 // @Summary	update an family
@@ -160,4 +180,21 @@ func (impl *FamilyApiImpl) Delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (impl *FamilyApiImpl) Scan(data model.Family) *Family {
+	return &Family{
+		ID:           data.ID,
+		CreatedAt:    data.CreatedAt.Format("2006-01-02T15:04:05"),
+		UpdatedAt:    data.UpdatedAt.Format("2006-01-02T15:04:05"),
+		Name:         data.Name,
+		Country:      data.Country,
+		State:        data.State,
+		City:         data.City,
+		Neighborhood: data.Neighborhood,
+		Street:       data.Street,
+		Number:       data.Number,
+		Complement:   data.Complement,
+		Zipcode:      data.Zipcode,
+	}
 }

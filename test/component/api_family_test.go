@@ -18,7 +18,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-func TestComponentFamilyApiFindAll(t *testing.T) {
+func Test_FamilyApi_FindAll(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -100,7 +100,7 @@ func TestComponentFamilyApiFindAll(t *testing.T) {
 	}
 }
 
-func TestComponentFamilyApiFindOneByID(t *testing.T) {
+func Test_FamilyApi_FindOneByID(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -200,7 +200,7 @@ func TestComponentFamilyApiFindOneByID(t *testing.T) {
 	}
 }
 
-func TestComponentFamilyApiCreate(t *testing.T) {
+func Test_FamilyApi_Create(t *testing.T) {
 	cases := map[string]struct {
 		inputDto     service.FamilyCreateDto
 		expectedCode int
@@ -247,7 +247,6 @@ func TestComponentFamilyApiCreate(t *testing.T) {
 					"Key: 'FamilyCreateDto.Neighborhood' Error:Field validation for 'Neighborhood' failed on the 'required' tag",
 					"Key: 'FamilyCreateDto.Street' Error:Field validation for 'Street' failed on the 'required' tag",
 					"Key: 'FamilyCreateDto.Number' Error:Field validation for 'Number' failed on the 'required' tag",
-					"Key: 'FamilyCreateDto.Complement' Error:Field validation for 'Complement' failed on the 'required' tag",
 					"Key: 'FamilyCreateDto.Zipcode' Error:Field validation for 'Zipcode' failed on the 'required' tag",
 				}, "\n"),
 			},
@@ -299,7 +298,7 @@ func TestComponentFamilyApiCreate(t *testing.T) {
 	}
 }
 
-func TestComponentFamilyApiUpdate(t *testing.T) {
+func Test_FamilyApi_Update(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -413,7 +412,7 @@ func TestComponentFamilyApiUpdate(t *testing.T) {
 	}
 }
 
-func TestComponentFamilyApiDelete(t *testing.T) {
+func Test_FamilyApi_Delete(t *testing.T) {
 	DATE := "2000-01-01T12:03:00"
 
 	cases := map[string]struct {

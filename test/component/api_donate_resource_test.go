@@ -19,7 +19,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-func TestComponentDonateResourceApiDonate(t *testing.T) {
+func Test_DonateResourceApi_Donate(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -142,7 +142,7 @@ func TestComponentDonateResourceApiDonate(t *testing.T) {
 	}
 }
 
-func TestComponentDonateResourceApiReturn(t *testing.T) {
+func Test_DonateResourceApi_Return(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {

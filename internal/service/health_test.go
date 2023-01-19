@@ -11,7 +11,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
-func TestHealthServicePing(t *testing.T) {
+func Test_HealthService_Ping(t *testing.T) {
 	cases := map[string]struct {
 		expectedRes service.HealthResponse
 		prepareMock func(mockHealthRepository *mock.MockHealthRepository)

@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/viniosilva/socialassistanceapi/internal/model"
 	service "github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
@@ -36,10 +37,10 @@ func (m *MockFamilyService) EXPECT() *MockFamilyServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockFamilyService) Create(arg0 context.Context, arg1 service.FamilyCreateDto) (service.FamilyResponse, error) {
+func (m *MockFamilyService) Create(arg0 context.Context, arg1 service.FamilyCreateDto) (*model.Family, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(service.FamilyResponse)
+	ret0, _ := ret[0].(*model.Family)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -65,25 +66,26 @@ func (mr *MockFamilyServiceMockRecorder) Delete(arg0, arg1 interface{}) *gomock.
 }
 
 // FindAll mocks base method.
-func (m *MockFamilyService) FindAll(arg0 context.Context) (service.FamiliesResponse, error) {
+func (m *MockFamilyService) FindAll(arg0 context.Context, arg1, arg2 int) ([]model.Family, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAll", arg0)
-	ret0, _ := ret[0].(service.FamiliesResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "FindAll", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.Family)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // FindAll indicates an expected call of FindAll.
-func (mr *MockFamilyServiceMockRecorder) FindAll(arg0 interface{}) *gomock.Call {
+func (mr *MockFamilyServiceMockRecorder) FindAll(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockFamilyService)(nil).FindAll), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockFamilyService)(nil).FindAll), arg0, arg1, arg2)
 }
 
 // FindOneById mocks base method.
-func (m *MockFamilyService) FindOneById(arg0 context.Context, arg1 int) (service.FamilyResponse, error) {
+func (m *MockFamilyService) FindOneById(arg0 context.Context, arg1 int) (*model.Family, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindOneById", arg0, arg1)
-	ret0, _ := ret[0].(service.FamilyResponse)
+	ret0, _ := ret[0].(*model.Family)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

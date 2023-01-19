@@ -16,7 +16,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-func TestComponentHealthApiPing(t *testing.T) {
+func Test_HealthApi_Ping(t *testing.T) {
 	cases := map[string]struct {
 		expectedCode int
 		expectedBody *service.HealthResponse

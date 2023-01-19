@@ -14,7 +14,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/mock"
 )
 
-func TestResourceServiceFindAll(t *testing.T) {
+func Test_ResourceService_FindAll(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
@@ -63,7 +63,7 @@ func TestResourceServiceFindAll(t *testing.T) {
 	}
 }
 
-func TestResourceServiceFindOneByID(t *testing.T) {
+func Test_ResourceService_FindOneByID(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
@@ -118,7 +118,7 @@ func TestResourceServiceFindOneByID(t *testing.T) {
 	}
 }
 
-func TestResourceServiceCreate(t *testing.T) {
+func Test_ResourceService_Create(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 	DATETIME := time.Date(2000, 1, 1, 12, 3, 0, 0, time.UTC)
 
@@ -194,7 +194,7 @@ func TestResourceServiceCreate(t *testing.T) {
 	}
 }
 
-func TestResourceServiceUpdate(t *testing.T) {
+func Test_ResourceService_Update(t *testing.T) {
 	cases := map[string]struct {
 		inputDto    service.UpdateResourceDto
 		expectedErr error
@@ -242,7 +242,7 @@ func TestResourceServiceUpdate(t *testing.T) {
 	}
 }
 
-func TestResourceServiceUpdateQuantity(t *testing.T) {
+func Test_ResourceService_UpdateQuantity(t *testing.T) {
 	cases := map[string]struct {
 		inputResourceID int
 		inputDto        service.UpdateResourceQuantityDto

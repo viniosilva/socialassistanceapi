@@ -19,7 +19,7 @@ import (
 	"github.com/viniosilva/socialassistanceapi/internal/service"
 )
 
-func TestComponentResourceApiFindAll(t *testing.T) {
+func Test_ResourceApi_FindAll(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -88,7 +88,7 @@ func TestComponentResourceApiFindAll(t *testing.T) {
 	}
 }
 
-func TestComponentResourceApiFindOneByID(t *testing.T) {
+func Test_ResourceApi_FindOneByID(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -175,7 +175,7 @@ func TestComponentResourceApiFindOneByID(t *testing.T) {
 	}
 }
 
-func TestComponentResourceApiCreate(t *testing.T) {
+func Test_ResourceApi_Create(t *testing.T) {
 	cases := map[string]struct {
 		inputDto     service.CreateResourceDto
 		expectedCode int
@@ -247,7 +247,7 @@ func TestComponentResourceApiCreate(t *testing.T) {
 	}
 }
 
-func TestComponentResourceApiUpdate(t *testing.T) {
+func Test_ResourceApi_Update(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
@@ -329,7 +329,7 @@ func TestComponentResourceApiUpdate(t *testing.T) {
 	}
 }
 
-func TestComponentResourceApiUpdateQuantity(t *testing.T) {
+func Test_ResourceApi_UpdateQuantity(t *testing.T) {
 	const DATE = "2000-01-01T12:03:00"
 
 	cases := map[string]struct {
